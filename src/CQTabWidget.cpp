@@ -181,7 +181,9 @@ mouseDoubleClickEvent(QMouseEvent *event)
             this, SLOT(tabEditFinished(const QString &)));
   }
 
-  edit_->display(rect, tabText(ind_));
+  QPoint gpos = mapToGlobal(rect.topLeft());
+
+  edit_->display(QRect(gpos, rect.size()), tabText(ind_));
 }
 
 #ifndef CQTAB_WIDGET_MOVABLE

@@ -1,4 +1,5 @@
 #include <CQFloatEdit.h>
+#include <CQAutoHide.h>
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -9,7 +10,15 @@ CQFloatEdit(QWidget *parent) :
 {
   connect(this, SIGNAL(editingFinished()), this, SLOT(acceptSlot()));
 
+  hider_ = new CQAutoHide(this);
+
   hide();
+}
+
+CQFloatEdit::
+~CQFloatEdit()
+{
+  delete hider_;
 }
 
 void
@@ -22,34 +31,27 @@ display(const QRect &rect, const QString &text)
 
   saveText_ = text;
 
-  move(rect.topLeft());
+  setParent(0, Qt::Tool | Qt::FramelessWindowHint);
 
-  resize(rect.size());
+  setGeometry(rect);
 
   show();
   raise();
 
   setFocus();
 
+  qApp->setActiveWindow(this);
+
   selectAll();
 
-  qApp->installEventFilter(this);
-}
-
-void
-CQFloatEdit::
-hide()
-{
-  qApp->removeEventFilter(this);
-
-  QLineEdit::hide();
+  hider_->setActive(true);
 }
 
 bool
 CQFloatEdit::
 event(QEvent *e)
 {
-  if (e->type() == QEvent::KeyPress) {
+  if      (e->type() == QEvent::KeyPress) {
     QKeyEvent *ke = dynamic_cast<QKeyEvent *>(e);
 
     if (ke->key() == Qt::Key_Escape) {
@@ -60,32 +62,11 @@ event(QEvent *e)
       hide();
     }
   }
-
-  return QLineEdit::event(e);
-}
-
-bool
-CQFloatEdit::
-eventFilter(QObject *obj, QEvent *event)
-{
-  QEvent::Type type = event->type();
-
-  // ignore if not a widget
-  QWidget *w = qobject_cast<QWidget *>(obj);
-  if (! w) return QObject::eventFilter(obj, event);
-
-  bool validEvent = false;
-
-  if (type == QEvent::MouseButtonPress || type == QEvent::MouseButtonDblClick)
-    validEvent = true;
-
-  if (validEvent) {
-    if (w != this)
-      hide();
+  else if (e->type() == QEvent::Hide) {
+    hider_->setActive(false);
   }
 
-  // standard event processing
-  return QObject::eventFilter(obj, event);
+  return QLineEdit::event(e);
 }
 
 void

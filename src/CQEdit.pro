@@ -23,6 +23,7 @@ CQTabWidget.cpp \
 CQDialog.cpp \
 CQImageButton.cpp \
 CQFloatEdit.cpp \
+CQAutoHide.cpp \
 CQWinWidget.cpp \
 CQUtil.cpp \
 CQImage.cpp \
@@ -81,6 +82,7 @@ CQTabWidget.h \
 CQDialog.h \
 CQImageButton.h \
 CQFloatEdit.h \
+CQAutoHide.h \
 CQWinWidget.h \
 CQUtil.h \
 CQImage.h \

@@ -3,20 +3,20 @@
 
 #include <QLineEdit>
 
+class CQAutoHide;
+
 class CQFloatEdit : public QLineEdit {
   Q_OBJECT
 
  public:
-  CQFloatEdit(QWidget *parent);
+  CQFloatEdit(QWidget *parent=0);
+
+ ~CQFloatEdit();
 
   void display(const QRect &rect, const QString &text);
 
-  void hide();
-
  private:
   bool event(QEvent *e);
-
-  bool eventFilter(QObject *obj, QEvent *event);
 
  private slots:
   void acceptSlot();
@@ -25,8 +25,9 @@ class CQFloatEdit : public QLineEdit {
   void valueChanged(const QString &text);
 
  private:
-  bool    valid_;
-  QString saveText_;
+  bool        valid_;
+  QString     saveText_;
+  CQAutoHide *hider_;
 };
 
 #endif
