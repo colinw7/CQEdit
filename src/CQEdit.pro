@@ -13,9 +13,6 @@ CQEdit.cpp \
 CQEditCanvas.cpp \
 CQEditFile.cpp \
 CQHistoryLineEdit.cpp \
-CQApp.cpp \
-CQWindow.cpp \
-CQMainWindow.cpp \
 CQFontChooser.cpp \
 CQColorChooser.cpp \
 CQAlphaButton.cpp \
@@ -25,9 +22,6 @@ CQImageButton.cpp \
 CQFloatEdit.cpp \
 CQAutoHide.cpp \
 CQWinWidget.cpp \
-CQUtil.cpp \
-CQImage.cpp \
-CQFont.cpp \
 CVEditChar.cpp \
 CVEditCursor.cpp \
 CVEditFile.cpp \
@@ -50,19 +44,6 @@ CEd.cpp \
 CSyntax.cpp \
 CSyntaxCPP.cpp \
 CSyntaxC.cpp \
-CCommand.cpp \
-CCommandDest.cpp \
-CCommandFileDest.cpp \
-CCommandFileSrc.cpp \
-CCommandPipe.cpp \
-CCommandPipeDest.cpp \
-CCommandPipeSrc.cpp \
-CCommandSrc.cpp \
-CCommandStringDest.cpp \
-CCommandStringSrc.cpp \
-CCommandUtil.cpp \
-CWindow.cpp \
-CEvent.cpp \
 
 HEADERS += \
 CQEditTest.h \
@@ -72,9 +53,6 @@ CQEditCanvas.h \
 CQEditFile.h \
 CQEditMgr.h \
 CQHistoryLineEdit.h \
-CQApp.h \
-CQWindow.h \
-CQMainWindow.h \
 CQFontChooser.h \
 CQColorChooser.h \
 CQAlphaButton.h \
@@ -84,9 +62,6 @@ CQImageButton.h \
 CQFloatEdit.h \
 CQAutoHide.h \
 CQWinWidget.h \
-CQUtil.h \
-CQImage.h \
-CQFont.h \
 CVEditChar.h \
 CVEditCursor.h \
 CVEditFile.h \
@@ -112,10 +87,6 @@ CEd.h \
 CSyntax.h \
 CSyntaxCPP.h \
 CSyntaxC.h \
-CCommand.h \
-CCommandI.h \
-CWindow.h \
-CEvent.h \
 
 DESTDIR     = ../bin
 OBJECTS_DIR = ../obj
@@ -124,6 +95,8 @@ LIB_DIR     = ../lib
 INCLUDEPATH += \
 ../include \
 . \
+../../CQUtil/include \
+../../CCommand/include \
 ../../CImageLib/include \
 ../../CUndo/include \
 ../../CFont/include \
@@ -139,6 +112,8 @@ INCLUDEPATH += \
 
 unix:LIBS += \
 -L$$LIB_DIR \
+-L../../CQUtil/lib \
+-L../../CCommand/lib \
 -L../../CImageLib/lib \
 -L../../CConfig/lib \
 -L../../CUndo/lib \
@@ -146,9 +121,10 @@ unix:LIBS += \
 -L../../CReadLine/lib \
 -L../../CFile/lib \
 -L../../CStrUtil/lib \
+-L../../CUtil/lib \
 -L../../COS/lib \
 -L../../CRGBName/lib \
 -L../../CRegExp/lib \
--lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile -lCStrUtil \
--lCRGBName -lCOS -lCRegExp \
+-lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile -lCStrUtil \
+-lCRGBName -lCUtil -lCOS -lCRegExp \
 -ljpeg -lpng -lcurses -ltre
