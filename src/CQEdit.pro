@@ -1,5 +1,7 @@
 TEMPLATE = app
-TARGET = 
+
+TARGET = CQEdit
+
 DEPENDPATH += .
 
 CONFIG += debug
