@@ -191,7 +191,7 @@ class CTextFileCursor {
   void moveTo(uint x, uint y) { x_ = x; y_ = y; }
 
   void rmoveTo(int dx, int dy) {
-    assert((dx > 0 || std::abs(dx) <= x_) || (dy > 0 || std::abs(dy) <= y_));
+    assert((dx > 0 || std::abs(dx) <= int(x_)) || (dy > 0 || std::abs(dy) <= int(y_)));
 
     x_ += dx;
     y_ += dy;

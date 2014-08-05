@@ -6,6 +6,8 @@ DEPENDPATH += .
 
 CONFIG += debug
 
+QT += widgets
+
 # Input
 SOURCES += \
 main.cpp \
@@ -15,9 +17,6 @@ CQEdit.cpp \
 CQEditCanvas.cpp \
 CQEditFile.cpp \
 CQHistoryLineEdit.cpp \
-CQFontChooser.cpp \
-CQColorChooser.cpp \
-CQAlphaButton.cpp \
 CQTabWidget.cpp \
 CQDialog.cpp \
 CQImageButton.cpp \
@@ -55,9 +54,6 @@ CQEditCanvas.h \
 CQEditFile.h \
 CQEditMgr.h \
 CQHistoryLineEdit.h \
-CQFontChooser.h \
-CQColorChooser.h \
-CQAlphaButton.h \
 CQTabWidget.h \
 CQDialog.h \
 CQImageButton.h \

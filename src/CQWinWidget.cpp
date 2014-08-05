@@ -13,6 +13,16 @@
 #include "cursors/select.xbm"
 #include "cursors/selectmask.xbm"
 
+extern void qDrawShadeRect(QPainter *p, int x, int y, int w, int h,
+                           const QPalette &pal, bool sunken = false,
+                           int lineWidth = 1, int midLineWidth = 0,
+                           const QBrush *fill = 0);
+extern void qDrawShadePanel(QPainter *p, int x, int y, int w, int h,
+                            const QPalette &pal, bool sunken = false,
+                            int lineWidth = 1, const QBrush *fill = 0);
+extern void qDrawPlainRect(QPainter *p, int x, int y, int w, int h, const QColor &,
+                           int lineWidth = 1, const QBrush *fill = 0);
+
 CQWinWidget::
 CQWinWidget(QWidget *parent, const char *name) :
  QWidget        (parent),
