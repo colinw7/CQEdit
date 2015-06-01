@@ -1,12 +1,14 @@
 TEMPLATE = app
 
+QT += widgets
+
 TARGET = CQEdit
 
 DEPENDPATH += .
 
-CONFIG += debug
+QMAKE_CXXFLAGS += -std=c++11
 
-QT += widgets
+CONFIG += debug
 
 # Input
 SOURCES += \
