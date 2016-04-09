@@ -10,8 +10,8 @@
 #include <QStyleOption>
 #include <QFileDialog>
 
-#include "cursors/select.xbm"
-#include "cursors/selectmask.xbm"
+#include <cursors/select.xbm>
+#include <cursors/selectmask.xbm>
 
 extern void qDrawShadeRect(QPainter *p, int x, int y, int w, int h,
                            const QPalette &pal, bool sunken = false,
@@ -44,17 +44,12 @@ CQWinWidget(QWidget *parent, const char *name) :
   setAutoFillBackground(true);
 }
 
-CQWinWidget::
-~CQWinWidget()
-{
-}
-
 void
 CQWinWidget::
 setChild(QWidget *child)
 {
   if (child_)
-    child_->setParent(NULL);
+    child_->setParent(0);
 
   child_ = child;
 
