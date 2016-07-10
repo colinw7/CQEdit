@@ -65,6 +65,8 @@ read(const char *filename)
     rmoveTo(0, 1);
   }
 
+  moveTo(0, 0);
+
   notifyMgr_->notifyFileOpened();
 
   cursor_.moveTo(0, 0);

@@ -23,31 +23,31 @@ class LineEditRenderer : public CVLineEditRenderer {
 
 CVEditVi::
 CVEditVi(CVEditFile *file) :
- file_         (file),
- last_key_     (CKEY_TYPE_NUL),
- count_        (0),
- insert_mode_  (false),
- cmd_line_mode_(false),
- cmd_line_     (NULL),
- register_     ('\0'),
- last_command_ (file),
- find_char_    ('\0'),
- find_forward_ (true),
- find_till_    (false)
+ file_       (file),
+ lastKey_    (CKEY_TYPE_NUL),
+ count_      (0),
+ insertMode_ (false),
+ cmdLineMode_(false),
+ cmdLine_    (NULL),
+ register_   ('\0'),
+ lastCommand_(file),
+ findChar_   ('\0'),
+ findForward_(true),
+ findTill_   (false)
 {
 }
 
 CVEditVi::
 ~CVEditVi()
 {
-  delete cmd_line_;
+  delete cmdLine_;
 }
 
 std::string
 CVEditVi::
 getCmdLineString() const
 {
-  return cmd_line_->getLine();
+  return cmdLine_->getLine();
 }
 
 void
@@ -66,9 +66,9 @@ void
 CVEditVi::
 processCommandChar(const CKeyEvent &event)
 {
-  CKeyType type = event.getType();
+  CKeyType key = event.getType();
 
-  switch (type) {
+  switch (key) {
     case CKEY_TYPE_Shift_L  : case CKEY_TYPE_Shift_R:
     case CKEY_TYPE_Control_L: case CKEY_TYPE_Control_R:
     case CKEY_TYPE_Caps_Lock: case CKEY_TYPE_Shift_Lock:
@@ -83,10 +83,10 @@ processCommandChar(const CKeyEvent &event)
 
   //------
 
-  if (last_key_ != CKEY_TYPE_NUL) {
-    char c = CEvent::keyTypeChar(type);
+  if (lastKey_ != CKEY_TYPE_NUL) {
+    char c = CEvent::keyTypeChar(key);
 
-    switch (last_key_) {
+    switch (lastKey_) {
       case CKEY_TYPE_QuoteLeft: { // goto mark line and char
         file_->markReturn();
 
@@ -98,10 +98,11 @@ processCommandChar(const CKeyEvent &event)
         goto done;
       }
       case CKEY_TYPE_QuoteDbl: { // set register
-        if      (type == CKEY_TYPE_TAB ||
-                 type == CKEY_TYPE_Tab ||
-                 type == CKEY_TYPE_KP_Tab)
+        if      (key == CKEY_TYPE_TAB ||
+                 key == CKEY_TYPE_Tab ||
+                 key == CKEY_TYPE_KP_Tab) {
           file_->displayRegisters();
+        }
         else if (isalnum(c) || strchr("#/", c))
           register_ = c;
         else
@@ -110,9 +111,9 @@ processCommandChar(const CKeyEvent &event)
         goto done;
       }
       case CKEY_TYPE_Apostrophe: { // goto mark line
-        if (type == CKEY_TYPE_TAB ||
-            type == CKEY_TYPE_Tab ||
-            type == CKEY_TYPE_KP_Tab)
+        if (key == CKEY_TYPE_TAB ||
+            key == CKEY_TYPE_Tab ||
+            key == CKEY_TYPE_KP_Tab)
           file_->displayMarks();
         else {
           file_->markReturn();
@@ -126,18 +127,18 @@ processCommandChar(const CKeyEvent &event)
         goto done;
       }
       case CKEY_TYPE_c: { // change
-        if      (type == CKEY_TYPE_c) {
+        if      (key == CKEY_TYPE_c) {
           setInsertMode(true);
 
           file_->cursorToLeft();
           file_->deleteEOL();
         }
-        else if (type == CKEY_TYPE_w) {
+        else if (key == CKEY_TYPE_w) {
           setInsertMode(true);
 
           file_->deleteWord();
         }
-        else if (type == CKEY_TYPE_l) {
+        else if (key == CKEY_TYPE_l) {
           setInsertMode(true);
 
           for (uint i = 0; i < std::max(count_, 1U); ++i)
@@ -156,19 +157,19 @@ processCommandChar(const CKeyEvent &event)
           }
         }
 
-        last_command_.clear();
-        last_command_.addCount(count_);
-        last_command_.addKey(last_key_);
-        last_command_.addKey(type);
+        lastCommand_.clear();
+        lastCommand_.addCount(count_);
+        lastCommand_.addKey(lastKey_);
+        lastCommand_.addKey(key);
 
         break;
       }
       case CKEY_TYPE_d: { // delete
-        if      (type == CKEY_TYPE_d)
+        if      (key == CKEY_TYPE_d)
           file_->deleteLine();
-        else if (type == CKEY_TYPE_w)
+        else if (key == CKEY_TYPE_w)
           file_->deleteWord();
-        else if (type == CKEY_TYPE_l)
+        else if (key == CKEY_TYPE_l)
           file_->deleteChar();
         else {
           CIPoint2D start = file_->getPos();
@@ -180,9 +181,9 @@ processCommandChar(const CKeyEvent &event)
             file_->deleteTo(start.y, start.x, end.y, end.x);
         }
 
-        last_command_.clear();
-        last_command_.addKey(last_key_);
-        last_command_.addKey(type);
+        lastCommand_.clear();
+        lastCommand_.addKey(lastKey_);
+        lastCommand_.addKey(key);
 
         break;
       }
@@ -218,9 +219,9 @@ processCommandChar(const CKeyEvent &event)
 
         file_->cursorLeft(1);
 
-        last_command_.clear();
-        last_command_.addKey(last_key_);
-        last_command_.addKey(type);
+        lastCommand_.clear();
+        lastCommand_.addKey(lastKey_);
+        lastCommand_.addKey(key);
 
         break;
       }
@@ -235,9 +236,9 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_y: { // yank
-        if      (type == CKEY_TYPE_y)
+        if      (key == CKEY_TYPE_y)
           file_->yankLines(register_, std::max(count_, 1U));
-        else if (type == CKEY_TYPE_w)
+        else if (key == CKEY_TYPE_w)
           file_->yankWords(register_, std::max(count_, 1U));
         else {
           CIPoint2D start = file_->getPos();
@@ -252,24 +253,24 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_z: { // scroll to
-        if      (type == CKEY_TYPE_Return ||
-                 type == CKEY_TYPE_Plus)
+        if      (key == CKEY_TYPE_Return ||
+                 key == CKEY_TYPE_Plus)
           file_->scrollTop();
-        else if (type == CKEY_TYPE_Period ||
-                 type == CKEY_TYPE_z)
+        else if (key == CKEY_TYPE_Period ||
+                 key == CKEY_TYPE_z)
           file_->scrollMiddle();
-        else if (type == CKEY_TYPE_b ||
-                 type == CKEY_TYPE_Minus)
+        else if (key == CKEY_TYPE_b ||
+                 key == CKEY_TYPE_Minus)
           file_->scrollBottom();
-        else if (type == CKEY_TYPE_t)
+        else if (key == CKEY_TYPE_t)
           file_->scrollTop();
 
         break;
       }
       case CKEY_TYPE_Z: {
-        if      (type == CKEY_TYPE_Q)
+        if      (key == CKEY_TYPE_Q)
           file_->quit();
-        else if (type == CKEY_TYPE_Z) {
+        else if (key == CKEY_TYPE_Z) {
           file_->saveLines(file_->getFileName());
 
           file_->quit();
@@ -280,7 +281,7 @@ processCommandChar(const CKeyEvent &event)
       case CKEY_TYPE_Exclam: {
         std::string str;
 
-        if      (type == CKEY_TYPE_Exclam)
+        if      (key == CKEY_TYPE_Exclam)
           str = ":.!";
         else {
           CIPoint2D pos = file_->getPos();
@@ -310,7 +311,7 @@ processCommandChar(const CKeyEvent &event)
         CIPoint2D start = file_->getPos();
         CIPoint2D end   = start;
 
-        if      (type == CKEY_TYPE_Less)
+        if      (key == CKEY_TYPE_Less)
           file_->shiftLeft(start.y, end.y);
         else {
           bool rc = processMoveChar(event, end);
@@ -325,7 +326,7 @@ processCommandChar(const CKeyEvent &event)
         CIPoint2D start = file_->getPos();
         CIPoint2D end   = start;
 
-        if      (type == CKEY_TYPE_Greater)
+        if      (key == CKEY_TYPE_Greater)
           file_->shiftRight(start.y, end.y);
         else {
           bool rc = processMoveChar(event, end);
@@ -337,13 +338,13 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_BracketLeft: {
-        if (type == CKEY_TYPE_BracketLeft)
+        if (key == CKEY_TYPE_BracketLeft)
           file_->prevSection();
 
         break;
       }
       case CKEY_TYPE_BracketRight: {
-        if (type == CKEY_TYPE_BracketRight)
+        if (key == CKEY_TYPE_BracketRight)
           file_->nextSection();
 
         break;
@@ -357,24 +358,24 @@ processCommandChar(const CKeyEvent &event)
 
   //------
 
-  if      (type == CKEY_TYPE_0) {
+  if      (key == CKEY_TYPE_0) {
     if (count_ == 0) {
       file_->cursorToLeft();
 
       goto done;
     }
     else {
-      count_ = count_*10 + (type - CKEY_TYPE_0);
+      count_ = count_*10 + (key - CKEY_TYPE_0);
 
-      //count_str_ += CEvent::keyTypeChar(type);
+      //count_str_ += CEvent::keyTypeChar(key);
 
       return;
     }
   }
-  else if (type >= CKEY_TYPE_1 && type <= CKEY_TYPE_9) {
-    count_ = count_*10 + (type - CKEY_TYPE_0);
+  else if (key >= CKEY_TYPE_1 && key <= CKEY_TYPE_9) {
+    count_ = count_*10 + (key - CKEY_TYPE_0);
 
-    //count_str_ += CEvent::keyTypeChar(type);
+    //count_str_ += CEvent::keyTypeChar(key);
 
     return;
   }
@@ -390,16 +391,16 @@ processCommandChar(const CKeyEvent &event)
 
  done:
   count_    = 0;
-  last_key_ = CKEY_TYPE_NUL;
+  lastKey_ = CKEY_TYPE_NUL;
 }
 
 void
 CVEditVi::
 processNormalChar(const CKeyEvent &event)
 {
-  CKeyType type = event.getType();
+  CKeyType key = event.getType();
 
-  switch (type) {
+  switch (key) {
     // cursor movement
     case CKEY_TYPE_h:
     case CKEY_TYPE_BackSpace: {
@@ -642,7 +643,7 @@ processNormalChar(const CKeyEvent &event)
     case CKEY_TYPE_BracketLeft:
     case CKEY_TYPE_BracketRight:
     case CKEY_TYPE_Exclam: {
-      last_key_ = type;
+      lastKey_ = key;
       return;
     }
 
@@ -766,8 +767,8 @@ processNormalChar(const CKeyEvent &event)
 
       file_->endGroup();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
     }
@@ -779,8 +780,8 @@ processNormalChar(const CKeyEvent &event)
 
       file_->endGroup();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
     }
@@ -818,16 +819,16 @@ processNormalChar(const CKeyEvent &event)
 
       file_->newLineAbove();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
 
     case CKEY_TYPE_D:
       file_->deleteEOL();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
 
@@ -869,8 +870,8 @@ processNormalChar(const CKeyEvent &event)
     case CKEY_TYPE_J:
       file_->joinLine();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
 
@@ -907,8 +908,8 @@ processNormalChar(const CKeyEvent &event)
 
       file_->deleteEOL();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
 
@@ -979,17 +980,17 @@ processNormalChar(const CKeyEvent &event)
 #endif
 
     case CKEY_TYPE_Semicolon:
-      if (find_char_ != '\0')
-        doFindChar(find_char_, count_, find_forward_, find_till_);
+      if (findChar_ != '\0')
+        doFindChar(findChar_, count_, findForward_, findTill_);
 
       break;
     case CKEY_TYPE_Comma:
-      if (find_char_ != '\0') {
-        bool save_find_forward = find_forward_;
+      if (findChar_ != '\0') {
+        bool saveFindForward = findForward_;
 
-        doFindChar(find_char_, count_, ! find_forward_, find_till_);
+        doFindChar(findChar_, count_, ! findForward_, findTill_);
 
-        find_forward_ = save_find_forward;
+        findForward_ = saveFindForward;
       }
 
       break;
@@ -998,16 +999,16 @@ processNormalChar(const CKeyEvent &event)
     case CKEY_TYPE_DEL:
       file_->deleteChar();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
     case CKEY_TYPE_X:
       file_->cursorLeft(1);
       file_->deleteChar();
 
-      last_command_.clear();
-      last_command_.addKey(type);
+      lastCommand_.clear();
+      lastCommand_.addKey(key);
 
       break;
 
@@ -1023,7 +1024,7 @@ processNormalChar(const CKeyEvent &event)
       break;
 
     case CKEY_TYPE_Period: {
-      last_command_.exec();
+      lastCommand_.exec();
 
       break;
     }
@@ -1040,13 +1041,13 @@ processNormalChar(const CKeyEvent &event)
       break;
 
     default:
-      error("Unsupported key " + CEvent::keyTypeName(type));
+      error("Unsupported key " + CEvent::keyTypeName(key));
       goto done;
   }
 
  done:
   count_    = 0;
-  last_key_ = CKEY_TYPE_NUL;
+  lastKey_ = CKEY_TYPE_NUL;
   register_ = '\0';
 }
 
@@ -1054,9 +1055,9 @@ void
 CVEditVi::
 processControlChar(const CKeyEvent &event)
 {
-  CKeyType type = event.getType();
+  CKeyType key = event.getType();
 
-  switch (type) {
+  switch (key) {
     case CKEY_TYPE_b:
     case CKEY_TYPE_STX: {
       int num = file_->getPageLength();
@@ -1178,18 +1179,18 @@ void
 CVEditVi::
 processInsertChar(const CKeyEvent &event)
 {
-  CKeyType type = event.getType();
+  CKeyType key = event.getType();
 
-  last_command_.addKey(type);
+  lastCommand_.addKey(key);
 
-  if (CEvent::keyTypeIsAlpha(type) ||
-      CEvent::keyTypeIsDigit(type)) {
+  if (CEvent::keyTypeIsAlpha(key) ||
+      CEvent::keyTypeIsDigit(key)) {
     normalInsertChar(event);
 
     return;
   }
 
-  switch (type) {
+  switch (key) {
     case CKEY_TYPE_QuoteLeft:
     case CKEY_TYPE_Minus:
     case CKEY_TYPE_Equal:
@@ -1324,12 +1325,12 @@ processInsertChar(const CKeyEvent &event)
       break;
 
     default:
-      error("Unsupported key " + CEvent::keyTypeName(type));
+      error("Unsupported key " + CEvent::keyTypeName(key));
       break;
   }
 
   count_    = 0;
-  last_key_ = CKEY_TYPE_NUL;
+  lastKey_ = CKEY_TYPE_NUL;
   register_ = '\0';
 }
 
@@ -1337,18 +1338,18 @@ void
 CVEditVi::
 processCmdLineChar(const CKeyEvent &event)
 {
-  CKeyType type = event.getType();
+  CKeyType key = event.getType();
 
-  if (type == CKEY_TYPE_Escape) {
+  if (key == CKEY_TYPE_Escape) {
     setCmdLineMode(false, "");
     return;
   }
 
-  cmd_line_->keyPress(event);
+  cmdLine_->keyPress(event);
 
   std::string line = getCmdLineString();
 
-  if (type == CKEY_TYPE_Return) {
+  if (key == CKEY_TYPE_Return) {
     bool quit;
 
     if (line[0] == ':')
@@ -1376,7 +1377,7 @@ normalInsertChar(const CKeyEvent &event)
     file_->insertChar(event.getText()[0]);
 
   count_    = 0;
-  last_key_ = CKEY_TYPE_NUL;
+  lastKey_  = CKEY_TYPE_NUL;
   register_ = '\0';
 }
 
@@ -1384,14 +1385,14 @@ bool
 CVEditVi::
 processMoveChar(const CKeyEvent &event, CIPoint2D &new_pos)
 {
+  CKeyType key = event.getType();
+
   uint x = new_pos.x;
   uint y = new_pos.y;
 
-  CKeyType type = event.getType();
-
   bool rc = true;
 
-  switch (type) {
+  switch (key) {
     case CKEY_TYPE_b:
       file_->prevWord(&y, &x);
       break;
@@ -1466,9 +1467,9 @@ bool
 CVEditVi::
 doFindChar(char c, uint count, bool forward, bool till)
 {
-  find_char_    = c;
-  find_forward_ = forward;
-  find_till_    = till;
+  findChar_    = c;
+  findForward_ = forward;
+  findTill_    = till;
 
   bool rc = true;
 
@@ -1496,18 +1497,18 @@ doFindChar(char c, uint count, bool forward, bool till)
 
 void
 CVEditVi::
-setInsertMode(bool insert_mode)
+setInsertMode(bool insertMode)
 {
-  if (insert_mode == insert_mode_)
+  if (insertMode == insertMode_)
     return;
 
-  insert_mode_ = insert_mode;
+  insertMode_ = insertMode;
 
   file_->setOverwriteMode(false);
 
   file_->stateChanged();
 
-  if (insert_mode) {
+  if (insertMode) {
     file_->startGroup();
 
     file_->setExtraLineChar(true);
@@ -1521,19 +1522,19 @@ setInsertMode(bool insert_mode)
 
 void
 CVEditVi::
-setCmdLineMode(bool cmd_line_mode, const std::string &str)
+setCmdLineMode(bool cmdLineMode, const std::string &str)
 {
-  cmd_line_mode_ = cmd_line_mode;
+  cmdLineMode_ = cmdLineMode;
 
-  if (! cmd_line_)
-    cmd_line_ = dynamic_cast<CVLineEdit *>(CEditMgrInst->createLineEdit(file_));
+  if (! cmdLine_)
+    cmdLine_ = dynamic_cast<CVLineEdit *>(CEditMgrInst->createLineEdit(file_));
 
-  if (cmd_line_mode_)
-    cmd_line_->setLine(str);
+  if (cmdLineMode_)
+    cmdLine_->setLine(str);
   else
-    cmd_line_->setLine(str);
+    cmdLine_->setLine(str);
 
-  cmd_line_->cursorEnd();
+  cmdLine_->cursorEnd();
 }
 
 void
@@ -1542,9 +1543,9 @@ drawCmdLine(const CIBBox2D &bbox)
 {
   LineEditRenderer r;
 
-  cmd_line_->setFont(file_->getFont());
+  cmdLine_->setFont(file_->getFont());
 
-  cmd_line_->drawInside(&r, bbox);
+  cmdLine_->drawInside(&r, bbox);
 }
 
 void

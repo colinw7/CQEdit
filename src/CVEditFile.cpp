@@ -67,37 +67,25 @@ loadConfig(CVEditFile *file, CConfig &config)
   }
 
   if (config.getValue("bg", "", str)) {
-    CRGBA bg;
-
-    if (! CRGBName::toRGBA(str, bg))
-      bg = CRGBA(0,0,0);
+    CRGBA bg = CRGBName::toRGBA(str, CRGBA(0,0,0));
 
     file->setBg(bg);
   }
 
   if (config.getValue("fg", "", str)) {
-    CRGBA fg;
-
-    if (! CRGBName::toRGBA(str, fg))
-      fg = CRGBA(1,1,1);
+    CRGBA fg = CRGBName::toRGBA(str, CRGBA(1,1,1));
 
     file->setFg(fg);
   }
 
   if (config.getValue("cursorBg", "", str)) {
-    CRGBA bg;
-
-    if (! CRGBName::toRGBA(str, bg))
-      bg = CRGBA(1,0,0);
+    CRGBA bg = CRGBName::toRGBA(str, CRGBA(1,0,0));
 
     file->setCursorBg(bg);
   }
 
   if (config.getValue("cursorFg", "", str)) {
-    CRGBA fg;
-
-    if (! CRGBName::toRGBA(str, fg))
-      fg = CRGBA(0,1,0);
+    CRGBA fg = CRGBName::toRGBA(str, CRGBA(0,1,0));
 
     file->setCursorFg(fg);
   }

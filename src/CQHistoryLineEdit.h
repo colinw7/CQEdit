@@ -9,11 +9,8 @@ class CHistory;
 class CQHistoryLineEdit : public QLineEdit {
   Q_OBJECT
 
- private:
-  CAutoPtr<CHistory> history_;
-
  public:
-  CQHistoryLineEdit(QWidget *parent=NULL);
+  CQHistoryLineEdit(QWidget *parent=0);
  ~CQHistoryLineEdit();
 
  private slots:
@@ -24,6 +21,9 @@ class CQHistoryLineEdit : public QLineEdit {
 
  private:
   void keyPressEvent(QKeyEvent *event);
+
+ private:
+  CAutoPtr<CHistory> history_;
 };
 
 #endif

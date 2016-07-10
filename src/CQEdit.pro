@@ -93,8 +93,8 @@ OBJECTS_DIR = ../obj
 LIB_DIR     = ../lib
 
 INCLUDEPATH += \
-../include \
 . \
+../include \
 ../../CQUtil/include \
 ../../CCommand/include \
 ../../CImageLib/include \
@@ -120,11 +120,12 @@ unix:LIBS += \
 -L../../CFont/lib \
 -L../../CReadLine/lib \
 -L../../CFile/lib \
+-L../../CFileUtil/lib \
 -L../../CStrUtil/lib \
 -L../../CUtil/lib \
 -L../../COS/lib \
 -L../../CRGBName/lib \
 -L../../CRegExp/lib \
--lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile -lCStrUtil \
--lCRGBName -lCUtil -lCOS -lCRegExp \
+-lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile \
+-lCFileUtil -lCStrUtil -lCRGBName -lCUtil -lCOS -lCRegExp \
 -ljpeg -lpng -lcurses -ltre

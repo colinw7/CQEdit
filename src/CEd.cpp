@@ -503,10 +503,8 @@ execCmd(const std::string &cmd)
   }
 
   // ensure valid range
-  if (line_num1.getValue() < 1 ||
-      line_num1.getValue() > (int) file_->getNumLines() + 1 ||
-      line_num2.getValue() < 1 ||
-      line_num2.getValue() > (int) file_->getNumLines() + 1) {
+  if (line_num1.getValue() < 1 || line_num1.getValue() > (int) file_->getNumLines() + 1 ||
+      line_num2.getValue() < 1 || line_num2.getValue() > (int) file_->getNumLines() + 1) {
     error("Invalid range");
     return false;
   }

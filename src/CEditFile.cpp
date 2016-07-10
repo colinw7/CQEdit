@@ -3,7 +3,7 @@
 #include <CEditCursor.h>
 #include <CEditEd.h>
 #include <CEditFileUtil.h>
-#include "CEditFileCharIterator.h"
+#include <CEditFileCharIterator.h>
 #include <CFile.h>
 #include <CRegExp.h>
 #include <CStrUtil.h>

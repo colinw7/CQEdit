@@ -311,7 +311,8 @@ class CTextFile : public CTextFileIFace {
   void moveToLine(int y);
   void moveToChar(int x);
 
-  CTextLine *allocLine(const std::string &line);
+ protected:
+  virtual CTextLine *allocLine(const std::string &line);
 
  private:
   typedef std::vector<CTextLine *> LineList;

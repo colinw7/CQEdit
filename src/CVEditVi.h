@@ -36,11 +36,11 @@ class CVEditVi {
   CVEditVi(CVEditFile *file);
  ~CVEditVi();
 
-  void setInsertMode(bool insert_mode);
-  bool getInsertMode() const { return insert_mode_; }
+  void setInsertMode(bool insertMode);
+  bool getInsertMode() const { return insertMode_; }
 
-  void setCmdLineMode(bool cmd_line_mode, const std::string &str="");
-  bool getCmdLineMode() const { return cmd_line_mode_; }
+  void setCmdLineMode(bool cmdLineMode, const std::string &str="");
+  bool getCmdLineMode() const { return cmdLineMode_; }
 
   std::string getCmdLineString() const;
   int         getCmdLinePos() const;
@@ -55,7 +55,7 @@ class CVEditVi {
 
   void normalInsertChar(const CKeyEvent &event);
 
-  bool processMoveChar(const CKeyEvent &event, CIPoint2D &new_pos);
+  bool processMoveChar(const CKeyEvent &event, CIPoint2D &newPos);
 
   bool doFindChar(char c, uint count, bool forward, bool till);
 
@@ -65,16 +65,16 @@ class CVEditVi {
 
  private:
   CVEditFile        *file_;
-  CKeyType           last_key_;
+  CKeyType           lastKey_;
   uint               count_;
-  bool               insert_mode_;
-  bool               cmd_line_mode_;
-  CVLineEdit        *cmd_line_;
+  bool               insertMode_;
+  bool               cmdLineMode_;
+  CVLineEdit        *cmdLine_;
   char               register_;
-  CVEditLastCommand  last_command_;
-  char               find_char_;
-  bool               find_forward_;
-  bool               find_till_;
+  CVEditLastCommand  lastCommand_;
+  char               findChar_;
+  bool               findForward_;
+  bool               findTill_;
 };
 
 #endif
