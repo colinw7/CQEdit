@@ -123,11 +123,12 @@ unix:LIBS += \
 -L../../CReadLine/lib \
 -L../../CFile/lib \
 -L../../CFileUtil/lib \
+-L../../CMath/lib \
 -L../../CStrUtil/lib \
 -L../../CUtil/lib \
 -L../../COS/lib \
 -L../../CRGBName/lib \
 -L../../CRegExp/lib \
 -lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile \
--lCFileUtil -lCStrUtil -lCRGBName -lCUtil -lCOS -lCRegExp \
+-lCFileUtil -lCMath -lCStrUtil -lCRGBName -lCUtil -lCOS -lCRegExp \
 -ljpeg -lpng -lcurses -ltre

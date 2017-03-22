@@ -36,7 +36,7 @@ DISTNAME      = CQEdit1.0.0
 DISTDIR = /home/colinw/git/CQEdit/obj/CQEdit1.0.0
 LINK          = g++
 LFLAGS        = -m64
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L../lib -L../../CQUtil/lib -L../../CCommand/lib -L../../CImageLib/lib -L../../CConfig/lib -L../../CUndo/lib -L../../CFont/lib -L../../CReadLine/lib -L../../CFile/lib -L../../CFileUtil/lib -L../../CStrUtil/lib -L../../CUtil/lib -L../../COS/lib -L../../CRGBName/lib -L../../CRegExp/lib -lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile -lCFileUtil -lCStrUtil -lCRGBName -lCUtil -lCOS -lCRegExp -ljpeg -lpng -lcurses -ltre -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L../lib -L../../CQUtil/lib -L../../CCommand/lib -L../../CImageLib/lib -L../../CConfig/lib -L../../CUndo/lib -L../../CFont/lib -L../../CReadLine/lib -L../../CFile/lib -L../../CFileUtil/lib -L../../CMath/lib -L../../CStrUtil/lib -L../../CUtil/lib -L../../COS/lib -L../../CRGBName/lib -L../../CRegExp/lib -lCQUtil -lCCommand -lCImageLib -lCConfig -lCUndo -lCFont -lCReadLine -lCFile -lCFileUtil -lCMath -lCStrUtil -lCRGBName -lCUtil -lCOS -lCRegExp -ljpeg -lpng -lcurses -ltre -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -494,6 +494,8 @@ compiler_moc_header_clean:
 
 .moc/moc_CQEdit.cpp: ../../CUtil/include/CAutoPtr.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
@@ -513,15 +515,13 @@ compiler_moc_header_clean:
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CScrollType.h \
 		../../CConfig/include/CConfig.h \
@@ -570,22 +570,22 @@ compiler_moc_header_clean:
 		../../CUtil/include/CAlignType.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CImageLib/include/CImageState.h \
 		../../CImageLib/include/CImage.h \
 		../../CUtil/include/CRGBACombineDef.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/COptVal.h \
 		../../CImageLib/include/CImagePtr.h \
@@ -628,6 +628,8 @@ compiler_clean: compiler_moc_header_clean
 		CQEdit.h \
 		../../CUtil/include/CAutoPtr.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
@@ -646,15 +648,13 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CScrollType.h \
 		../../CConfig/include/CConfig.h \
@@ -689,6 +689,8 @@ compiler_clean: compiler_moc_header_clean
 		CQEdit.h \
 		../../CUtil/include/CAutoPtr.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
@@ -707,15 +709,13 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CScrollType.h \
 		../../CConfig/include/CConfig.h \
@@ -739,7 +739,7 @@ compiler_clean: compiler_moc_header_clean
 		CEditCursor.h \
 		CQWinWidget.h \
 		../../CQUtil/include/CQFont.h \
-		CQFontChooser.h \
+		../../CQUtil/include/CQFontChooser.h \
 		../../CQUtil/include/CQColorChooser.h \
 		CQTabWidget.h \
 		../../CQUtil/include/CQUtil.h \
@@ -782,6 +782,8 @@ compiler_clean: compiler_moc_header_clean
 ../obj/CQEdit.o: CQEdit.cpp CQEdit.h \
 		../../CUtil/include/CAutoPtr.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
@@ -801,15 +803,13 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CScrollType.h \
 		../../CConfig/include/CConfig.h \
@@ -873,15 +873,15 @@ compiler_clean: compiler_moc_header_clean
 		../../CQUtil/include/CQUtil.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CLineDash.h \
 		../../CUtil/include/CILineDash.h \
@@ -955,19 +955,19 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CPOptVal.h \
 		../../CUtil/include/CThrow.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
 		../../CUtil/include/CKeyType.h \
@@ -1010,22 +1010,22 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CAlignType.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CImageLib/include/CImageState.h \
 		../../CImageLib/include/CImage.h \
 		../../CUtil/include/CRGBACombineDef.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/COptVal.h \
 		../../CImageLib/include/CImagePtr.h \
@@ -1051,22 +1051,22 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CAlignType.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CImageLib/include/CImageState.h \
 		../../CImageLib/include/CImage.h \
 		../../CUtil/include/CRGBACombineDef.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/COptVal.h \
 		../../CImageLib/include/CImagePtr.h \
@@ -1095,18 +1095,18 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		CEditChar.h \
@@ -1149,15 +1149,15 @@ compiler_clean: compiler_moc_header_clean
 		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CMath/include/CIBBox2D.h \
 		../../CMath/include/CISize2D.h \
@@ -1214,19 +1214,19 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CPOptVal.h \
 		../../CUtil/include/CThrow.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
 		../../CUtil/include/CKeyType.h \
@@ -1280,19 +1280,19 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CPOptVal.h \
 		../../CUtil/include/CThrow.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
 		../../CUtil/include/CKeyType.h \
@@ -1323,18 +1323,18 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/accessor.h \
@@ -1390,19 +1390,19 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CPOptVal.h \
 		../../CUtil/include/CThrow.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
 		../../CUtil/include/CKeyType.h \
@@ -1438,6 +1438,8 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CKeyType.h \
 		../../CMath/include/CIPoint2D.h \
 		../../CMath/include/CIBBox2D.h \
+		../../CMath/include/CMathGen.h \
+		../../COS/include/NaN.h \
 		../../CMath/include/CISize2D.h \
 		../../CMath/include/CIVector2D.h \
 		CVEditMgr.h \
@@ -1456,15 +1458,13 @@ compiler_clean: compiler_moc_header_clean
 		../../CUtil/include/CThrow.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
-		../../CMath/include/CMathGen.h \
-		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
 		../../CUtil/include/CScrollType.h \
@@ -1499,18 +1499,18 @@ compiler_clean: compiler_moc_header_clean
 		CLineEdit.h \
 		../../CUtil/include/CRGBA.h \
 		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CHSV.h \
+		../../CRGBName/include/CRGBName.h \
 		../../CUtil/include/CRGBUtil.h \
 		../../CUtil/include/CCMYK.h \
 		../../CUtil/include/CHSL.h \
+		../../CUtil/include/CHSV.h \
 		../../CUtil/include/CHSB.h \
 		../../CUtil/include/CHSI.h \
 		../../CMath/include/CMathGen.h \
 		../../COS/include/NaN.h \
-		../../CRGBName/include/CRGBName.h \
+		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CColorComponent.h \
 		../../CUtil/include/CEvent.h \
-		../../CMath/include/CIPoint2D.h \
 		../../CUtil/include/CKeyType.h \
 		../../CMath/include/CIBBox2D.h \
 		../../CMath/include/CISize2D.h \
