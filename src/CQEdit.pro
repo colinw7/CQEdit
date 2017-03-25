@@ -15,18 +15,13 @@ CONFIG += debug
 # Input
 SOURCES += \
 main.cpp \
+\
 CQEditTest.cpp \
 CQEditBg.cpp \
 CQEdit.cpp \
 CQEditCanvas.cpp \
 CQEditFile.cpp \
-CQHistoryLineEdit.cpp \
-CQTabWidget.cpp \
-CQDialog.cpp \
-CQImageButton.cpp \
-CQFloatEdit.cpp \
-CQAutoHide.cpp \
-CQWinWidget.cpp \
+\
 CVEditChar.cpp \
 CVEditCursor.cpp \
 CVEditFile.cpp \
@@ -35,6 +30,7 @@ CVEditLine.cpp \
 CVEditMgr.cpp \
 CVEditVi.cpp \
 CVLineEdit.cpp \
+\
 CEditChar.cpp \
 CEditCmd.cpp \
 CEditCursor.cpp \
@@ -43,12 +39,20 @@ CEditFile.cpp \
 CEditFileUtil.cpp \
 CEditLine.cpp \
 CEditMgr.cpp \
+\
 CTextFile.cpp \
 CLineEdit.cpp \
+\
 CEd.cpp \
+\
 CSyntax.cpp \
 CSyntaxCPP.cpp \
 CSyntaxC.cpp \
+\
+CQHistoryLineEdit.cpp \
+CQTabWidget.cpp \
+CQDialog.cpp \
+CQWinWidget.cpp \
 
 HEADERS += \
 CQEditTest.h \
@@ -57,13 +61,7 @@ CQEdit.h \
 CQEditCanvas.h \
 CQEditFile.h \
 CQEditMgr.h \
-CQHistoryLineEdit.h \
-CQTabWidget.h \
-CQDialog.h \
-CQImageButton.h \
-CQFloatEdit.h \
-CQAutoHide.h \
-CQWinWidget.h \
+\
 CVEditChar.h \
 CVEditCursor.h \
 CVEditFile.h \
@@ -73,6 +71,7 @@ CVEditLine.h \
 CVEditMgr.h \
 CVEditVi.h \
 CVLineEdit.h \
+\
 CEditChar.h \
 CEditCmd.h \
 CEditCursor.h \
@@ -83,12 +82,20 @@ CEditFileUtil.h \
 CEdit.h \
 CEditLine.h \
 CEditMgr.h \
+\
 CTextFile.h \
 CLineEdit.h \
+\
 CEd.h \
+\
 CSyntax.h \
 CSyntaxCPP.h \
 CSyntaxC.h \
+\
+CQHistoryLineEdit.h \
+CQTabWidget.h \
+CQDialog.h \
+CQWinWidget.h \
 
 DESTDIR     = ../bin
 OBJECTS_DIR = ../obj
