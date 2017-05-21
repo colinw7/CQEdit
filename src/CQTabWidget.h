@@ -37,10 +37,12 @@ class CQTabWidget : public QTabWidget {
   void swapTabs(int ind1, int ind2);
 
  private:
-  CQTabBar *tabBar_;
-  bool      moveButtons_;
-  QWidget  *moveTabWidget_;
+  CQTabBar *tabBar_ { nullptr };
+  bool      moveButtons_ { false };
+  QWidget  *moveTabWidget_ { nullptr };
 };
+
+//------
 
 class CQTabBar : public QTabBar {
   Q_OBJECT
@@ -63,11 +65,6 @@ class CQTabBar : public QTabBar {
 
   void paintEvent(QPaintEvent *event);
 
- private:
-  CQFloatEdit *edit_;
-  int          ind_;
-  QPoint       press_pos_;
-
  signals:
   void tabChanged(int ind);
 
@@ -75,6 +72,11 @@ class CQTabBar : public QTabBar {
 
  private slots:
   void tabEditFinished(const QString &text);
+
+ private:
+  CQFloatEdit *edit_ { nullptr };
+  int          ind_ { 0 };
+  QPoint       press_pos_;
 };
 
 #endif

@@ -35,6 +35,8 @@ class CTextFileNotifier {
   virtual void endGroup  ();
 };
 
+//------
+
 // interface
 class CTextFileIFace {
  public:
@@ -60,6 +62,8 @@ class CTextFileIFace {
     CTextFileIFace *file_;
     bool            end_;
   };
+
+  //------
 
   class SimpleLineIteratorImpl : public LineIteratorImpl {
    public:
@@ -89,6 +93,8 @@ class CTextFileIFace {
   };
 
   typedef CRefPtr<LineIteratorImpl> LineIteratorImplP;
+
+  //------
 
   class LineIterator {
    public:
@@ -184,9 +190,11 @@ class CTextFileIFace {
   virtual LineIterator endLine  () = 0;
 };
 
+//------
+
 class CTextFileCursor {
  public:
-  CTextFileCursor() : x_(0), y_(0) { }
+  CTextFileCursor() { }
 
   void moveTo(uint x, uint y) { x_ = x; y_ = y; }
 
@@ -204,8 +212,10 @@ class CTextFileCursor {
   uint getY() const { return y_; }
 
  private:
-  uint x_, y_;
+  uint x_ { 0 }, y_ { 0 };
 };
+
+//------
 
 struct CTextFileInfo {
   std::string fileName;
@@ -214,6 +224,8 @@ struct CTextFileInfo {
    fileName("") {
   }
 };
+
+//------
 
 class CTextLine {
  public:
@@ -241,9 +253,11 @@ class CTextLine {
   std::string line_;
 };
 
+//------
+
 class CTextFile : public CTextFileIFace {
  public:
-  CTextFile(const char *fileName=NULL);
+  CTextFile(const char *fileName=nullptr);
  ~CTextFile();
 
   void addNotifier   (CTextFileNotifier *notifier);
@@ -321,9 +335,12 @@ class CTextFile : public CTextFileIFace {
   CTextFileCursor     cursor_;
   LineList            oldLines_;
   LineList            lines_;
-  int                 pageTop_, pageBottom_;
-  CTextFileNotifyMgr* notifyMgr_;
+  int                 pageTop_    { -1 };
+  int                 pageBottom_ { -1 };
+  CTextFileNotifyMgr* notifyMgr_  { nullptr };
 };
+
+//------
 
 class CTextFileNotifyMgr {
  public:
@@ -349,7 +366,7 @@ class CTextFileNotifyMgr {
  private:
   typedef std::list<CTextFileNotifier *> NotifierList;
 
-  CTextFile    *file_;
+  CTextFile    *file_ { nullptr };
   NotifierList  notifierList_;
 };
 

@@ -29,7 +29,7 @@ class CLineEdit {
 
  protected:
   std::string line_;
-  uint         pos_;
+  uint        pos_ { 0 };
 };
 
 #endif

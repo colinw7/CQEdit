@@ -1769,7 +1769,7 @@ CEditFile::
 findNext(const std::string &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num)
 {
-  setFindPattern(pattern);
+  setFindPattern(CRegExp(pattern));
 
   if (getEditLine(line_num1)->findNext(pattern, char_num1, -1, fchar_num)) {
     *fline_num = line_num1;
@@ -1919,7 +1919,7 @@ CEditFile::
 findPrev(const std::string &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num)
 {
-  setFindPattern(pattern);
+  setFindPattern(CRegExp(pattern));
 
   if (getEditLine(line_num1)->findPrev(pattern, char_num1, 0, fchar_num)) {
     *fline_num = line_num1;

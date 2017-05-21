@@ -2,14 +2,7 @@
 #include <CFile.h>
 
 CTextFile::
-CTextFile(const char *filename) :
- fileInfo_  (),
- cursor_    (),
- oldLines_  (),
- lines_     (),
- pageTop_   (-1),
- pageBottom_(-1),
- notifyMgr_ (NULL)
+CTextFile(const char *filename)
 {
   notifyMgr_ = new CTextFileNotifyMgr(this);
 

@@ -8,8 +8,10 @@
 
 CQEditArea::
 CQEditArea(CQEdit *edit) :
- QWidget(NULL), edit_(edit)
+ QWidget(nullptr), edit_(edit)
 {
+  setObjectName("area");
+
   QGridLayout *grid = new QGridLayout(this);
   grid->setMargin(0); grid->setSpacing(0);
 
@@ -85,8 +87,10 @@ vscrollSlot(int y)
 
 CQEditCanvas::
 CQEditCanvas(CQEditArea *area) :
- QWidget(NULL), area_(area), edit_(area->getEdit())
+ QWidget(nullptr), area_(area), edit_(area->getEdit())
 {
+  setObjectName("canvas");
+
   setFocusPolicy(Qt::StrongFocus);
 }
 

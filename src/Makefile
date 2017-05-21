@@ -78,15 +78,13 @@ SOURCES       = main.cpp \
 		CSyntaxC.cpp \
 		CQHistoryLineEdit.cpp \
 		CQTabWidget.cpp \
-		CQDialog.cpp \
-		CQWinWidget.cpp .moc/moc_CQEditTest.cpp \
+		CQDialog.cpp .moc/moc_CQEditTest.cpp \
 		.moc/moc_CQEditBg.cpp \
 		.moc/moc_CQEdit.cpp \
 		.moc/moc_CQEditCanvas.cpp \
 		.moc/moc_CQHistoryLineEdit.cpp \
 		.moc/moc_CQTabWidget.cpp \
-		.moc/moc_CQDialog.cpp \
-		.moc/moc_CQWinWidget.cpp
+		.moc/moc_CQDialog.cpp
 OBJECTS       = ../obj/main.o \
 		../obj/CQEditTest.o \
 		../obj/CQEditBg.o \
@@ -118,15 +116,13 @@ OBJECTS       = ../obj/main.o \
 		../obj/CQHistoryLineEdit.o \
 		../obj/CQTabWidget.o \
 		../obj/CQDialog.o \
-		../obj/CQWinWidget.o \
 		../obj/moc_CQEditTest.o \
 		../obj/moc_CQEditBg.o \
 		../obj/moc_CQEdit.o \
 		../obj/moc_CQEditCanvas.o \
 		../obj/moc_CQHistoryLineEdit.o \
 		../obj/moc_CQTabWidget.o \
-		../obj/moc_CQDialog.o \
-		../obj/moc_CQWinWidget.o
+		../obj/moc_CQDialog.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -168,6 +164,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_webkitwidgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_x11extras.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri \
@@ -223,8 +220,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		CSyntaxC.h \
 		CQHistoryLineEdit.h \
 		CQTabWidget.h \
-		CQDialog.h \
-		CQWinWidget.h main.cpp \
+		CQDialog.h main.cpp \
 		CQEditTest.cpp \
 		CQEditBg.cpp \
 		CQEdit.cpp \
@@ -254,8 +250,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		CSyntaxC.cpp \
 		CQHistoryLineEdit.cpp \
 		CQTabWidget.cpp \
-		CQDialog.cpp \
-		CQWinWidget.cpp
+		CQDialog.cpp
 QMAKE_TARGET  = CQEdit
 DESTDIR       = ../bin/#avoid trailing-slash linebreak
 TARGET        = ../bin/CQEdit
@@ -328,6 +323,7 @@ Makefile: CQEdit.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64/qmake.co
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_webkitwidgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_x11extras.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri \
@@ -396,6 +392,7 @@ Makefile: CQEdit.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64/qmake.co
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_webkitwidgets.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_widgets_private.pri:
+/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_x11extras.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri:
@@ -436,8 +433,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents CQEditTest.h CQEditBg.h CQEdit.h CQEditCanvas.h CQEditFile.h CQEditMgr.h CVEditChar.h CVEditCursor.h CVEditFile.h CVEditGen.h CVEdit.h CVEditLine.h CVEditMgr.h CVEditVi.h CVLineEdit.h CEditChar.h CEditCmd.h CEditCursor.h CEditEd.h CEditFileCharIterator.h CEditFile.h CEditFileUtil.h CEdit.h CEditLine.h CEditMgr.h CTextFile.h CLineEdit.h CEd.h CSyntax.h CSyntaxCPP.h CSyntaxC.h CQHistoryLineEdit.h CQTabWidget.h CQDialog.h CQWinWidget.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp CQEditTest.cpp CQEditBg.cpp CQEdit.cpp CQEditCanvas.cpp CQEditFile.cpp CVEditChar.cpp CVEditCursor.cpp CVEditFile.cpp CVEditGen.cpp CVEditLine.cpp CVEditMgr.cpp CVEditVi.cpp CVLineEdit.cpp CEditChar.cpp CEditCmd.cpp CEditCursor.cpp CEditEd.cpp CEditFile.cpp CEditFileUtil.cpp CEditLine.cpp CEditMgr.cpp CTextFile.cpp CLineEdit.cpp CEd.cpp CSyntax.cpp CSyntaxCPP.cpp CSyntaxC.cpp CQHistoryLineEdit.cpp CQTabWidget.cpp CQDialog.cpp CQWinWidget.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents CQEditTest.h CQEditBg.h CQEdit.h CQEditCanvas.h CQEditFile.h CQEditMgr.h CVEditChar.h CVEditCursor.h CVEditFile.h CVEditGen.h CVEdit.h CVEditLine.h CVEditMgr.h CVEditVi.h CVLineEdit.h CEditChar.h CEditCmd.h CEditCursor.h CEditEd.h CEditFileCharIterator.h CEditFile.h CEditFileUtil.h CEdit.h CEditLine.h CEditMgr.h CTextFile.h CLineEdit.h CEd.h CSyntax.h CSyntaxCPP.h CSyntaxC.h CQHistoryLineEdit.h CQTabWidget.h CQDialog.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp CQEditTest.cpp CQEditBg.cpp CQEdit.cpp CQEditCanvas.cpp CQEditFile.cpp CVEditChar.cpp CVEditCursor.cpp CVEditFile.cpp CVEditGen.cpp CVEditLine.cpp CVEditMgr.cpp CVEditVi.cpp CVLineEdit.cpp CEditChar.cpp CEditCmd.cpp CEditCursor.cpp CEditEd.cpp CEditFile.cpp CEditFileUtil.cpp CEditLine.cpp CEditMgr.cpp CTextFile.cpp CLineEdit.cpp CEd.cpp CSyntax.cpp CSyntaxCPP.cpp CSyntaxC.cpp CQHistoryLineEdit.cpp CQTabWidget.cpp CQDialog.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -460,9 +457,9 @@ check: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all: .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp .moc/moc_CQWinWidget.cpp
+compiler_moc_header_make_all: .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp .moc/moc_CQWinWidget.cpp
+	-$(DEL_FILE) .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp
 .moc/moc_CQEditTest.cpp: ../../CQUtil/include/CQMainWindow.h \
 		../../CQUtil/include/CQMenu.h \
 		../../CQUtil/include/CQToolBar.h \
@@ -525,7 +522,7 @@ compiler_moc_header_clean:
 		../../CImageLib/include/CImageFile.h \
 		CVEditCursor.h \
 		CEditCursor.h \
-		CQWinWidget.h \
+		../../CQUtil/include/CQWinWidget.h \
 		CQEdit.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include CQEdit.h -o .moc/moc_CQEdit.cpp
 
@@ -544,9 +541,6 @@ compiler_moc_header_clean:
 
 .moc/moc_CQDialog.cpp: CQDialog.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include CQDialog.h -o .moc/moc_CQDialog.cpp
-
-.moc/moc_CQWinWidget.cpp: CQWinWidget.h
-	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include CQWinWidget.h -o .moc/moc_CQWinWidget.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -618,7 +612,7 @@ compiler_clean: compiler_moc_header_clean
 		../../CImageLib/include/CImageFile.h \
 		CVEditCursor.h \
 		CEditCursor.h \
-		CQWinWidget.h \
+		../../CQUtil/include/CQWinWidget.h \
 		../../CQUtil/include/CQApp.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/main.o main.cpp
 
@@ -679,7 +673,7 @@ compiler_clean: compiler_moc_header_clean
 		../../CImageLib/include/CImageFile.h \
 		CVEditCursor.h \
 		CEditCursor.h \
-		CQWinWidget.h \
+		../../CQUtil/include/CQWinWidget.h \
 		../../CQUtil/include/CQFont.h \
 		../../CQUtil/include/CQFontChooser.h \
 		../../CQUtil/include/CQColorChooser.h \
@@ -773,7 +767,7 @@ compiler_clean: compiler_moc_header_clean
 		../../CImageLib/include/CImageFile.h \
 		CVEditCursor.h \
 		CEditCursor.h \
-		CQWinWidget.h \
+		../../CQUtil/include/CQWinWidget.h \
 		CEdit.h \
 		CEditLine.h \
 		CEditChar.h \
@@ -879,7 +873,7 @@ compiler_clean: compiler_moc_header_clean
 		../../CConfig/include/CConfig.h \
 		CVEditCursor.h \
 		CEditCursor.h \
-		CQWinWidget.h
+		../../CQUtil/include/CQWinWidget.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQEditCanvas.o CQEditCanvas.cpp
 
 ../obj/CQEditFile.o: CQEditFile.cpp CQEditFile.h \
@@ -934,7 +928,7 @@ compiler_clean: compiler_moc_header_clean
 		CVEditCursor.h \
 		CEditCursor.h \
 		CQEdit.h \
-		CQWinWidget.h \
+		../../CQUtil/include/CQWinWidget.h \
 		../../CQUtil/include/CQFont.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQEditFile.o CQEditFile.cpp
 
@@ -1595,18 +1589,11 @@ compiler_clean: compiler_moc_header_clean
 		../../CImageLib/include/CImageAnim.h \
 		../../CImageLib/include/CImageFile.h \
 		../../CQUtil/include/CQFloatEdit.h \
-		new.xpm \
-		left.xpm \
-		right.xpm
+		xpm/new.xpm
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQTabWidget.o CQTabWidget.cpp
 
 ../obj/CQDialog.o: CQDialog.cpp CQDialog.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQDialog.o CQDialog.cpp
-
-../obj/CQWinWidget.o: CQWinWidget.cpp CQWinWidget.h \
-		cursors/select.xbm \
-		cursors/selectmask.xbm
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQWinWidget.o CQWinWidget.cpp
 
 ../obj/moc_CQEditTest.o: .moc/moc_CQEditTest.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQEditTest.o .moc/moc_CQEditTest.cpp
@@ -1628,9 +1615,6 @@ compiler_clean: compiler_moc_header_clean
 
 ../obj/moc_CQDialog.o: .moc/moc_CQDialog.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQDialog.o .moc/moc_CQDialog.cpp
-
-../obj/moc_CQWinWidget.o: .moc/moc_CQWinWidget.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQWinWidget.o .moc/moc_CQWinWidget.cpp
 
 ####### Install
 

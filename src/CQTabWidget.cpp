@@ -6,12 +6,12 @@
 #include <QMouseEvent>
 #include <QHBoxLayout>
 
-#include "new.xpm"
-#include "left.xpm"
-#include "right.xpm"
+#include <xpm/new.xpm>
+#include <svg/left_svg.h>
+#include <svg/right_svg.h>
 
 #ifndef CQTAB_WIDGET_MOVABLE
-#include "tab.xpm"
+#include <xpm/tab.xpm>
 #endif
 
 CQTabWidget::
@@ -32,8 +32,8 @@ CQTabWidget(QWidget *parent) :
   connect(tabBar_, SIGNAL(tabMoved(int,int)), this, SIGNAL(swapTabs(int,int)));
 #endif
 
-  CQImageButton *left_button  = new CQImageButton(QPixmap(left_data ));
-  CQImageButton *right_button = new CQImageButton(QPixmap(right_data));
+  CQImageButton *left_button  = new CQImageButton(CQPixmapCacheInst->getIcon("LEFT" ));
+  CQImageButton *right_button = new CQImageButton(CQPixmapCacheInst->getIcon("RIGHT"));
 
   connect(left_button , SIGNAL(clicked()), this, SLOT(moveTabLeft ()));
   connect(right_button, SIGNAL(clicked()), this, SLOT(moveTabRight()));
@@ -116,7 +116,7 @@ addCreateButton()
 
 CQTabBar::
 CQTabBar(QWidget *parent) :
- QTabBar(parent), edit_(NULL), ind_(-1)
+ QTabBar(parent), edit_(nullptr), ind_(-1)
 {
   setObjectName("tabBar");
 
@@ -174,7 +174,7 @@ mouseDoubleClickEvent(QMouseEvent *event)
 
   QRect rect = tabRect(ind_);
 
-  if (edit_ == NULL) {
+  if (! edit_) {
     edit_ = new CQFloatEdit(this);
 
     connect(edit_, SIGNAL(valueChanged(const QString &)),

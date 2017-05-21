@@ -28,7 +28,7 @@ class CEdLineCondition : public CEdPointCondition {
   int getLine() const { return line_; }
 
  private:
-  int line_;
+  int line_ { 0 };
 };
 
 class CEdRegExpCondition : public CEdPointCondition {
@@ -47,12 +47,6 @@ class CEd {
 
   // structure to represent an entered command
   class InputData {
-   private:
-    CEdLineCondition start_; // start position
-    CEdLineCondition end_;   // end position
-    char             cmd_;   // command name
-    StringList       lines_; // lines (for a, c, i, ...)
-
    public:
     InputData() :
      start_(), end_(), cmd_('\0'), lines_() {
@@ -91,6 +85,12 @@ class CEd {
     void clearLines() {
       lines_.clear();
     }
+
+   private:
+    CEdLineCondition start_;        // start position
+    CEdLineCondition end_;          // end position
+    char             cmd_ { '\0' }; // command name
+    StringList       lines_;        // lines (for a, c, i, ...)
   };
 
  public:
@@ -158,7 +158,7 @@ class CEd {
   void addLine(uint row, const std::string &line);
   void deleteLine(uint row);
 
-  void setPos(const CIPoint2D &p);
+  virtual void setPos(const CIPoint2D &p);
 
   uint getRow() const;
   uint getCol() const;
@@ -170,12 +170,12 @@ class CEd {
   CEd &operator=(const CEd &rhs);
 
  private:
-  CEditFile *file_;
-  Mode       mode_; // current mode, command or input
+  CEditFile *file_           { nullptr };
+  Mode       mode_           { COMMAND }; // current mode, command or input
   InputData  input_data_;
-  bool       ex_; // vi/ex mode
-  bool       case_sensitive_; // vi/ex mode
-  bool       quit_;
+  bool       ex_             { false };   // vi/ex mode
+  bool       case_sensitive_ { true  };   // case sensitive
+  bool       quit_           { false };   // quit
 };
 
 #endif

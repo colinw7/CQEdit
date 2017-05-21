@@ -11,7 +11,6 @@ CEd::
 CEd(CEditFile *file) :
  file_          (file),
  mode_          (COMMAND),
- input_data_    (),
  ex_            (false),
  case_sensitive_(true),
  quit_          (false)
