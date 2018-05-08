@@ -1,4 +1,1 @@
-CQEdit
-======
-
-Qt Vi Like Graphical Text Editor
+doc/README.md
