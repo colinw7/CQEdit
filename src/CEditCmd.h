@@ -50,6 +50,8 @@ class CEditCmd : public CUndoData {
   CEditCmd(const CEditCmd &rhs);
   CEditCmd &operator=(const CEditCmd &rhs);
 
+  using CUndoData::exec;
+
  protected:
   CEditCmdMgr *mgr_;
 };

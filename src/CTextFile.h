@@ -1,7 +1,6 @@
 #ifndef CTEXT_FILE_H
 #define CTEXT_FILE_H
 
-#include <CAutoPtr.h>
 #include <CRefPtr.h>
 
 #include <string>

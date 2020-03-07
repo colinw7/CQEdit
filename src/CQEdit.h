@@ -1,13 +1,13 @@
 #ifndef CQEDIT_H
 #define CQEDIT_H
 
-#include <QWidget>
-
-#include <CAutoPtr.h>
-#include <CIBBox2D.h>
-#include <CEvent.h>
 #include <CQEditFile.h>
 #include <CQWinWidget.h>
+#include <CIBBox2D.h>
+#include <CEvent.h>
+
+#include <QWidget>
+#include <memory>
 
 class QTimer;
 class QPainter;
@@ -20,13 +20,6 @@ class CQEditRegisters;
 class CQEdit : public QWidget {
   Q_OBJECT
 
- private:
-  CAutoPtr<CQEditFile>  file_;
-  CAutoPtr<CQEditArea>  area_;
-  CQHistoryLineEdit    *cmd_;
-  CQEditMarks          *marks_;
-  CQEditRegisters      *registers_;
-
  public:
   static void init();
 
@@ -34,8 +27,8 @@ class CQEdit : public QWidget {
 
   virtual ~CQEdit();
 
-  CQEditFile *getFile() const { return file_; }
-  CQEditArea *getArea() const { return area_; }
+  CQEditFile *getFile() const;
+  CQEditArea *getArea() const;
 
   QWidget *getCanvasWidget() const;
 
@@ -87,13 +80,22 @@ class CQEdit : public QWidget {
   void errorMsg (const QString &msg);
 
   void quitCommand();
+
+ private:
+  using FileP = std::unique_ptr<CQEditFile>;
+  using AreaP = std::unique_ptr<CQEditArea>;
+
+  FileP              file_;
+  AreaP              area_;
+  CQHistoryLineEdit* cmd_       { nullptr };
+  CQEditMarks*       marks_     { nullptr };
+  CQEditRegisters*   registers_ { nullptr };
 };
+
+//---
 
 class CQEditMarks : public CQWinTree {
   Q_OBJECT
-
- private:
-  CQEdit *edit_;
 
  public:
   CQEditMarks(CQEdit *edit, QWidget *parent);
@@ -102,13 +104,15 @@ class CQEditMarks : public CQWinTree {
 
  private slots:
   void itemClickedSlot(QTreeWidgetItem *);
+
+ private:
+  CQEdit* edit_ { nullptr };
 };
+
+//---
 
 class CQEditRegisters : public CQWinTree {
   Q_OBJECT
-
- private:
-  CQEdit *edit_;
 
  public:
   CQEditRegisters(CQEdit *edit, QWidget *parent);
@@ -117,6 +121,9 @@ class CQEditRegisters : public CQWinTree {
 
  private slots:
   void itemClickedSlot(QTreeWidgetItem *);
+
+ private:
+  CQEdit* edit_ { nullptr };
 };
 
 #endif

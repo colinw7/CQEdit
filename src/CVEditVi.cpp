@@ -208,6 +208,8 @@ processCommandChar(const CKeyEvent &event)
           file_->rangeSelect(file_->getSelectStart(), select_end, true);
         else
           file_->clearSelection();
+
+        break;
       }
       case CKEY_TYPE_m: { // mark
         file_->setMarkPos(std::string(&c, 1));

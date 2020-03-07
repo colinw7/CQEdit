@@ -1,8 +1,8 @@
-#ifndef CQHISTORY_LINE_EDIT_H
-#define CQHISTORY_LINE_EDIT_H
+#ifndef CQHistoryLineEdit_H
+#define CQHistoryLineEdit_H
 
 #include <QLineEdit>
-#include <CAutoPtr.h>
+#include <memory>
 
 class CHistory;
 
@@ -28,8 +28,10 @@ class CQHistoryLineEdit : public QLineEdit {
   void keyPressEvent(QKeyEvent *event);
 
  private:
-  CAutoPtr<CHistory> history_;
-  bool               autoClear_ { true };
+  using CHistoryP = std::unique_ptr<CHistory>;
+
+  CHistoryP history_;
+  bool      autoClear_ { true };
 };
 
 #endif

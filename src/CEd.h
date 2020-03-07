@@ -2,7 +2,6 @@
 #define CED_H
 
 #include <CRegExp.h>
-#include <CAutoPtr.h>
 #include <CIPoint2D.h>
 #include <sys/types.h>
 

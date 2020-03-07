@@ -4,6 +4,8 @@
 #include <CQEditCanvas.h>
 #include <CQHistoryLineEdit.h>
 #include <CQEditMgr.h>
+#include <CQFontUtil.h>
+#include <CStrUtil.h>
 
 #include <QApplication>
 #include <QVBoxLayout>
@@ -21,9 +23,9 @@ init()
 
 CQEdit::
 CQEdit(QWidget *parent) :
- QWidget(parent), cmd_(NULL), marks_(NULL), registers_(NULL)
+ QWidget(parent)
 {
-  file_ = new CQEditFile(this);
+  file_ = std::make_unique<CQEditFile>(this);
 
   file_->init();
 
@@ -32,11 +34,11 @@ CQEdit(QWidget *parent) :
   QVBoxLayout *vlayout = new QVBoxLayout(this);
   vlayout->setMargin(0); vlayout->setSpacing(0);
 
-  area_ = new CQEditArea(this);
+  area_ = std::make_unique<CQEditArea>(this);
 
-  connect(area_, SIGNAL(sizeChanged()), this, SIGNAL(sizeChanged()));
+  connect(area_.get(), SIGNAL(sizeChanged()), this, SIGNAL(sizeChanged()));
 
-  vlayout->addWidget(area_);
+  vlayout->addWidget(area_.get());
 
   cmd_ = new CQHistoryLineEdit;
 
@@ -52,6 +54,20 @@ CQEdit(QWidget *parent) :
 CQEdit::
 ~CQEdit()
 {
+}
+
+CQEditFile *
+CQEdit::
+getFile() const
+{
+  return file_.get();
+}
+
+CQEditArea *
+CQEdit::
+getArea() const
+{
+  return area_.get();
 }
 
 QWidget *
@@ -198,7 +214,7 @@ displayMarks()
   if (! marks_)
     marks_ = new CQEditMarks(this, area_->getCanvas());
 
-  marks_->populate(file_);
+  marks_->populate(file_.get());
 
   marks_->show();
 }
@@ -222,7 +238,7 @@ displayRegisters()
   if (! registers_)
     registers_ = new CQEditRegisters(this, area_->getCanvas());
 
-  registers_->populate(file_);
+  registers_->populate(file_.get());
 
   registers_->show();
 }
@@ -414,7 +430,7 @@ void
 CQEditRenderer::
 setFont(CFontPtr font)
 {
-  QFont qfont = CQUtil::toQFont(font);
+  QFont qfont = CQFontUtil::toQFont(font);
 
   painter_->setFont(qfont);
 

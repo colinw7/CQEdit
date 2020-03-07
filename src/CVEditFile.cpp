@@ -127,18 +127,7 @@ saveConfig(CVEditFile *file, CConfig &config)
 //------------------
 
 CVEditFile::
-CVEditFile() :
- CEditFile      (),
- width_         (100),
- height_        (100),
- x_offset_      (0),
- y_offset_      (0),
- mode_          (ModeVi),
- overwrite_mode_(false),
- tab_stop_      (8),
- visual_        (false),
- bbox_select_   (false),
- ignore_changed_(false)
+CVEditFile()
 {
   CFontPtr font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);
 
@@ -147,8 +136,8 @@ CVEditFile() :
   setBg(CRGBA(1,1,1));
   setFg(CRGBA(0,0,0));
 
-  gen_ = new CVEditGen(this);
-  vi_  = new CVEditVi (this);
+  gen_ = std::make_unique<CVEditGen>(this);
+  vi_  = std::make_unique<CVEditVi >(this);
 }
 
 CVEditFile::
@@ -168,6 +157,13 @@ CVEditFile::
 setYOffset(int y_offset)
 {
   y_offset_ = y_offset;
+}
+
+CVEditVi *
+CVEditFile::
+getVi() const
+{
+  return vi_.get();
 }
 
 void
@@ -1153,7 +1149,7 @@ void
 CVEditFile::
 setSyntax(CSyntax *syntax)
 {
-  syntax_ = syntax;
+  syntax_ = std::unique_ptr<CSyntax>(syntax);
 
   updateSyntax();
 }
@@ -1162,7 +1158,7 @@ void
 CVEditFile::
 updateSyntax()
 {
-  if (! syntax_.isValid()) return;
+  if (! syntax_) return;
 
   class Notifier : public CSyntaxNotifier {
    private:
@@ -1174,6 +1170,8 @@ updateSyntax()
    public:
     Notifier(CVEditFile *file) :
      file_(file) {
+      assert(file_);
+
       bg_ = CRGBA(0,0,0);
 
       fg_[TOKEN_PREPRO ] = CRGBA(1.0,0.5,1.0);

@@ -6,7 +6,7 @@ CQHistoryLineEdit::
 CQHistoryLineEdit(QWidget *parent) :
  QLineEdit(parent)
 {
-  history_ = new CHistory;
+  history_ = std::make_unique<CHistory>();
 
   connect(this, SIGNAL(returnPressed()), this, SLOT(execSlot()));
 }

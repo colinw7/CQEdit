@@ -827,6 +827,8 @@ execCmd(const std::string &cmd)
         return false;
 
       doSubstitute(line_num1.getValue(), line_num2.getValue(), find, replace, mod);
+
+      break;
     }
     case 't': { // (.,.)t(.) - copy lines
       COptValT<int> line_num3;

@@ -12,13 +12,13 @@ class CSyntax;
 
 #include <CEditFile.h>
 #include <CPOptVal.h>
-#include <CAutoPtr.h>
 #include <CIBBox2D.h>
 #include <CRGBA.h>
 #include <CEvent.h>
 #include <CScrollType.h>
 #include <CConfig.h>
 #include <CFont.h>
+#include <memory>
 
 class CVEditVi;
 class CVEditGen;
@@ -91,7 +91,7 @@ class CVEditFile : public CEditFile {
   ACCESSOR(Visual       , bool  , visual        )
   ACCESSOR(TabStop      , uint  , tab_stop      )
 
-  CVEditVi *getVi() const { return vi_; }
+  CVEditVi *getVi() const;
 
   virtual void loadConfig();
   virtual void loadConfig(const std::string &name);
@@ -226,31 +226,41 @@ class CVEditFile : public CEditFile {
   virtual void applyOffset(CIPoint2D &p) const;
 
  protected:
-  CIBBox2D                   bbox_;
-  uint                       indent_;
-  int                        line_num1_;
-  int                        line_num2_;
-  CPOptValT<CVEditFileStyle> style_;
-  CAutoPtr<CVEditVi>         vi_;
-  CAutoPtr<CVEditGen>        gen_;
-  CAutoPtr<CSyntax>          syntax_;
-  uint                       char_width_;
-  uint                       char_height_;
-  uint                       num_rows_;
-  uint                       num_cols_;
-  uint                       width_, height_;
-  int                        x_offset_, y_offset_;
-  CISize2D                   vsize_;
-  Mode                       mode_;
-  bool                       overwrite_mode_;
-  uint                       tab_stop_;
-  bool                       visual_;
-  CIPoint2D                  select_start_;
-  CIPoint2D                  select_end_;
-  bool                       bbox_select_;
-  uint                       press_row_, press_col_;
-  uint                       release_row_, release_col_;
-  bool                       ignore_changed_;
+  using EditViP  = std::unique_ptr<CVEditVi>;
+  using EditGenP = std::unique_ptr<CVEditGen>;
+  using SyntaxP  = std::unique_ptr<CSyntax>;
+
+  using StyleP = CPOptValT<CVEditFileStyle>;
+
+  CIBBox2D  bbox_;
+  uint      indent_         { 0 };
+  int       line_num1_      { -1 };
+  int       line_num2_      { -1 };
+  StyleP    style_;
+  EditViP   vi_;
+  EditGenP  gen_;
+  SyntaxP   syntax_;
+  uint      char_width_     { 8 };
+  uint      char_height_    { 12 };
+  uint      num_rows_       { 0 };
+  uint      num_cols_       { 0 };
+  uint      width_          { 100 };
+  uint      height_         { 100 };
+  int       x_offset_       { 0 };
+  int       y_offset_       { 0 };
+  CISize2D  vsize_;
+  Mode      mode_           { ModeVi };
+  bool      overwrite_mode_ { false };
+  uint      tab_stop_       { 8 };
+  bool      visual_         { false };
+  CIPoint2D select_start_;
+  CIPoint2D select_end_;
+  bool      bbox_select_    { false };
+  uint      press_row_      { 0 };
+  uint      press_col_      { 0 };
+  uint      release_row_    { 0 };
+  uint      release_col_    { 0 };
+  bool      ignore_changed_ { false };
 };
 
 #endif
