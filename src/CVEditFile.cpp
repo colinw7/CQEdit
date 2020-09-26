@@ -472,11 +472,11 @@ draw(uint width, uint height)
       if (number && (getIgnoreChanged() || line->getChanged())) {
         CVEditMgrInst->setForeground(CRGBA(1,0,1));
 
-        CIPoint2D p(0, pos.y);
+        CIPoint2D p1(0, pos.y);
 
-        applyOffset(p);
+        applyOffset(p1);
 
-        CVEditMgrInst->drawString(p, CStrUtil::toString(line_num));
+        CVEditMgrInst->drawString(p1, CStrUtil::toString(line_num));
       }
 
       if (cpos.y == (int) line_num) {
@@ -499,11 +499,11 @@ draw(uint width, uint height)
   vsize_ = CISize2D(max_x, (num_lines + 1)*char_height_);
 
   if (getIgnoreChanged() || getChanged()) {
-    CIBBox2D bbox(indent_, pos.y, w, pos.y + h);
+    CIBBox2D bbox1(indent_, pos.y, w, pos.y + h);
 
-    applyOffset(bbox);
+    applyOffset(bbox1);
 
-    CVEditMgrInst->fillRectangle(bbox, getBg());
+    CVEditMgrInst->fillRectangle(bbox1, getBg());
 
     setChanged(false);
   }
@@ -793,16 +793,16 @@ mouseRelease(const CMouseEvent &event)
       CIPoint2D end = getPos();
 
       if (isWordChar(getChar(end.y, end.x))) {
-        uint x = end.x;
-        uint y = end.y;
+        uint wx = end.x;
+        uint wy = end.y;
 
-        endWord(&y, &x);
+        endWord(&wy, &wx);
 
-        end = CIPoint2D(x, y);
+        end = CIPoint2D(wx, wy);
 
-        prevWord(&y, &x);
+        prevWord(&wy, &wx);
 
-        CIPoint2D start(x, y);
+        CIPoint2D start(wx, wy);
 
         rangeSelect(start, end, true);
       }
@@ -1174,10 +1174,10 @@ updateSyntax()
 
       bg_ = CRGBA(0,0,0);
 
-      fg_[TOKEN_PREPRO ] = CRGBA(1.0,0.5,1.0);
-      fg_[TOKEN_KEYWORD] = CRGBA(1.0,1.0,0.5);
-      fg_[TOKEN_STRING ] = CRGBA(1.0,0.5,0.0);
-      fg_[TOKEN_COMMENT] = CRGBA(0.5,0.5,1.0);
+      fg_[(int) CSyntaxToken::PREPRO ] = CRGBA(1.0,0.5,1.0);
+      fg_[(int) CSyntaxToken::KEYWORD] = CRGBA(1.0,1.0,0.5);
+      fg_[(int) CSyntaxToken::STRING ] = CRGBA(1.0,0.5,0.0);
+      fg_[(int) CSyntaxToken::COMMENT] = CRGBA(0.5,0.5,1.0);
     }
 
     void setLine(CVEditLine *line) {
@@ -1185,7 +1185,7 @@ updateSyntax()
     }
 
     void addToken(uint, uint word_start, const std::string &word, CSyntaxToken token) {
-      line_->addAnnotation(word_start, word_start + word.size() - 1, bg_, fg_[token]);
+      line_->addAnnotation(word_start, word_start + word.size() - 1, bg_, fg_[(int) token]);
     }
   };
 

@@ -1484,13 +1484,13 @@ doFindChar(char c, uint count, bool forward, bool till)
       file_->cursorLeft(1);
   }
   else {
-    bool rc = true;
+    bool rc1 = true;
 
     for (uint i = 0; i < std::max(count, 1U); ++i)
-      if (! (rc = file_->findPrevChar(c, false)))
+      if (! (rc1 = file_->findPrevChar(c, false)))
         break;
 
-    if (till && rc)
+    if (till && rc1)
       file_->cursorRight(1);
   }
 

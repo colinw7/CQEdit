@@ -45,13 +45,15 @@ class CQEditFile : public CVEditFile {
 };
 
 class CQEditCursor  : public CVEditCursor {
- private:
-  CQEditFile *file_;
-
  public:
   CQEditCursor(CQEditFile *file);
 
+  CQEditFile *file() const { return file_; }
+
   virtual void setPos(const CIPoint2D &pos);
+
+ private:
+  CQEditFile *file_;
 };
 
 #endif

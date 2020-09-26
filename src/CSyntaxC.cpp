@@ -124,7 +124,7 @@ pre_pros[] = {
 };
 #endif
 
-typedef std::map<std::string,CSyntaxToken> TokenHash;
+using TokenHash = std::map<std::string,CSyntaxToken>;
 
 #define MAX_TOKEN_LEN 64
 
@@ -134,39 +134,20 @@ CSyntaxC::
 CSyntaxC()
 {
   continued_  = false;
-  last_token_ = TOKEN_NONE;
+  last_token_ = CSyntaxToken::NONE;
 
   uint num_keywords = sizeof(keywords)/sizeof(char *);
 
   for (uint i = 0; i < num_keywords; ++i) {
     uint len = strlen(keywords[i]);
 
-    token_hash[len][keywords[i]] = TOKEN_KEYWORD;
+    token_hash[len][keywords[i]] = CSyntaxToken::KEYWORD;
   }
 }
 
 CSyntaxC::
 ~CSyntaxC()
 {
-}
-
-void
-CSyntaxC::
-parseFile(CFile *file)
-{
-  init();
-
-  line_num_ = 0;
-
-  std::string line;
-
-  while (file->readLine(line)) {
-    processLine(line);
-
-    ++line_num_;
-  }
-
-  term();
 }
 
 void
@@ -179,12 +160,12 @@ processLine(const std::string &line)
 
   uint len = line.size();
 
-  if (continued && last_token_ == TOKEN_PREPRO) {
-    addToken(line_num_, 0, line, TOKEN_PREPRO);
+  if (continued && last_token_ == CSyntaxToken::PREPRO) {
+    addToken(line_num_, 0, line, CSyntaxToken::PREPRO);
 
     if (len > 0 && line[len - 1] == '\\') {
       continued_  = true;
-      last_token_ = TOKEN_PREPRO;
+      last_token_ = CSyntaxToken::PREPRO;
     }
 
     return;
@@ -206,11 +187,11 @@ processLine(const std::string &line)
   // preprocessor line
 
   if (i < len && cstr[i] == '#') {
-    addToken(line_num_, i, line.substr(i), TOKEN_PREPRO);
+    addToken(line_num_, i, line.substr(i), CSyntaxToken::PREPRO);
 
     if (len > 0 && line[len - 1] == '\\') {
       continued_  = true;
-      last_token_ = TOKEN_PREPRO;
+      last_token_ = CSyntaxToken::PREPRO;
     }
 
     return;
@@ -232,7 +213,7 @@ processLine(const std::string &line)
       else {
         CSyntaxToken token = findWord(word);
 
-        if (token != TOKEN_NONE) {
+        if (token != CSyntaxToken::NONE) {
           addToken(line_num_, word_start, word, token);
 
           word = c;
@@ -252,7 +233,7 @@ processLine(const std::string &line)
       if (c == word[0]) {
         word += c;
 
-        addToken(line_num_, word_start, word, TOKEN_STRING);
+        addToken(line_num_, word_start, word, CSyntaxToken::STRING);
 
         in_string = false;
       }
@@ -281,13 +262,13 @@ processLine(const std::string &line)
   if      (in_word) {
     CSyntaxToken token = findWord(word);
 
-    if (token != TOKEN_NONE)
+    if (token != CSyntaxToken::NONE)
       addToken(line_num_, word_start, word, token);
     else
       addText(line_num_, word_start, word);
   }
   else if (in_string)
-    addToken(line_num_, word_start, word, TOKEN_STRING);
+    addToken(line_num_, word_start, word, CSyntaxToken::STRING);
 }
 
 CSyntaxToken
@@ -297,14 +278,14 @@ findWord(const std::string &word)
   uint len = word.size();
 
   if (len >= MAX_TOKEN_LEN)
-    return TOKEN_NONE;
+    return CSyntaxToken::NONE;
 
   const TokenHash &hash = token_hash[len];
 
   TokenHash::const_iterator p = hash.find(word);
 
   if (p == hash.end())
-    return TOKEN_NONE;
+    return CSyntaxToken::NONE;
 
   return (*p).second;
 }

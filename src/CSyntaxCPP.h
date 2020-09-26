@@ -11,16 +11,14 @@ class CSyntaxCPP : public CSyntax {
 
   virtual ~CSyntaxCPP();
 
-  void parseFile(CFile *file);
-
-  void processLine(const std::string &line);
+  void processLine(const std::string &line) override;
 
  private:
   CSyntaxToken findWord(const std::string &str);
 
  private:
-  bool         in_comment_;
-  bool         continued_;
+  bool         in_comment_ { false };
+  bool         continued_  { false };
   CSyntaxToken last_token_;
 };
 

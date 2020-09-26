@@ -18,6 +18,8 @@ class CTextFileNotifier {
  public:
   CTextFileNotifier();
 
+  virtual ~CTextFileNotifier() { }
+
   virtual void fileOpened(const std::string &fileName);
 
   virtual void positionChanged(uint x, uint y);
@@ -130,6 +132,8 @@ class CTextFileIFace {
   //------
 
   CTextFileIFace() { }
+
+  virtual ~CTextFileIFace() { }
 
   // read/write
   virtual bool read (const char *fileName) = 0;
