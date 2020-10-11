@@ -81,13 +81,11 @@ SOURCES       = main.cpp \
 		CSyntaxCPP.cpp \
 		CSyntaxC.cpp \
 		CQHistoryLineEdit.cpp \
-		CQTabWidget.cpp \
 		CQDialog.cpp .moc/moc_CQEditTest.cpp \
 		.moc/moc_CQEditBg.cpp \
 		.moc/moc_CQEdit.cpp \
 		.moc/moc_CQEditCanvas.cpp \
 		.moc/moc_CQHistoryLineEdit.cpp \
-		.moc/moc_CQTabWidget.cpp \
 		.moc/moc_CQDialog.cpp
 OBJECTS       = ../obj/main.o \
 		../obj/CQEditTest.o \
@@ -118,14 +116,12 @@ OBJECTS       = ../obj/main.o \
 		../obj/CSyntaxCPP.o \
 		../obj/CSyntaxC.o \
 		../obj/CQHistoryLineEdit.o \
-		../obj/CQTabWidget.o \
 		../obj/CQDialog.o \
 		../obj/moc_CQEditTest.o \
 		../obj/moc_CQEditBg.o \
 		../obj/moc_CQEdit.o \
 		../obj/moc_CQEditCanvas.o \
 		../obj/moc_CQHistoryLineEdit.o \
-		../obj/moc_CQTabWidget.o \
 		../obj/moc_CQDialog.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -251,7 +247,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		CSyntaxCPP.h \
 		CSyntaxC.h \
 		CQHistoryLineEdit.h \
-		CQTabWidget.h \
 		CQDialog.h main.cpp \
 		CQEditTest.cpp \
 		CQEditBg.cpp \
@@ -281,7 +276,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		CSyntaxCPP.cpp \
 		CSyntaxC.cpp \
 		CQHistoryLineEdit.cpp \
-		CQTabWidget.cpp \
 		CQDialog.cpp
 QMAKE_TARGET  = CQEdit
 DESTDIR       = ../bin/
@@ -497,8 +491,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents CQEditTest.h CQEditBg.h CQEdit.h CQEditCanvas.h CQEditFile.h CQEditMgr.h CVEditChar.h CVEditCursor.h CVEditFile.h CVEditGen.h CVEdit.h CVEditLine.h CVEditMgr.h CVEditVi.h CVLineEdit.h CEditChar.h CEditCmd.h CEditCursor.h CEditEd.h CEditFileCharIterator.h CEditFile.h CEditFileUtil.h CEdit.h CEditLine.h CEditMgr.h CTextFile.h CLineEdit.h CEd.h CSyntax.h CSyntaxCPP.h CSyntaxC.h CQHistoryLineEdit.h CQTabWidget.h CQDialog.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp CQEditTest.cpp CQEditBg.cpp CQEdit.cpp CQEditCanvas.cpp CQEditFile.cpp CVEditChar.cpp CVEditCursor.cpp CVEditFile.cpp CVEditGen.cpp CVEditLine.cpp CVEditMgr.cpp CVEditVi.cpp CVLineEdit.cpp CEditChar.cpp CEditCmd.cpp CEditCursor.cpp CEditEd.cpp CEditFile.cpp CEditFileUtil.cpp CEditLine.cpp CEditMgr.cpp CTextFile.cpp CLineEdit.cpp CEd.cpp CSyntax.cpp CSyntaxCPP.cpp CSyntaxC.cpp CQHistoryLineEdit.cpp CQTabWidget.cpp CQDialog.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents CQEditTest.h CQEditBg.h CQEdit.h CQEditCanvas.h CQEditFile.h CQEditMgr.h CVEditChar.h CVEditCursor.h CVEditFile.h CVEditGen.h CVEdit.h CVEditLine.h CVEditMgr.h CVEditVi.h CVLineEdit.h CEditChar.h CEditCmd.h CEditCursor.h CEditEd.h CEditFileCharIterator.h CEditFile.h CEditFileUtil.h CEdit.h CEditLine.h CEditMgr.h CTextFile.h CLineEdit.h CEd.h CSyntax.h CSyntaxCPP.h CSyntaxC.h CQHistoryLineEdit.h CQDialog.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp CQEditTest.cpp CQEditBg.cpp CQEdit.cpp CQEditCanvas.cpp CQEditFile.cpp CVEditChar.cpp CVEditCursor.cpp CVEditFile.cpp CVEditGen.cpp CVEditLine.cpp CVEditMgr.cpp CVEditVi.cpp CVLineEdit.cpp CEditChar.cpp CEditCmd.cpp CEditCursor.cpp CEditEd.cpp CEditFile.cpp CEditFileUtil.cpp CEditLine.cpp CEditMgr.cpp CTextFile.cpp CLineEdit.cpp CEd.cpp CSyntax.cpp CSyntaxCPP.cpp CSyntaxC.cpp CQHistoryLineEdit.cpp CQDialog.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -530,9 +524,9 @@ compiler_moc_predefs_clean:
 .moc/moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -std=c++14 -DCQUTIL_IMAGE -DCQUTIL_FONT -g -Wall -W -dM -E -o .moc/moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp
+compiler_moc_header_make_all: .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQDialog.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQTabWidget.cpp .moc/moc_CQDialog.cpp
+	-$(DEL_FILE) .moc/moc_CQEditTest.cpp .moc/moc_CQEditBg.cpp .moc/moc_CQEdit.cpp .moc/moc_CQEditCanvas.cpp .moc/moc_CQHistoryLineEdit.cpp .moc/moc_CQDialog.cpp
 .moc/moc_CQEditTest.cpp: CQEditTest.h \
 		../../CQUtil/include/CQMainWindow.h \
 		../../CQUtil/include/CQMenu.h \
@@ -597,11 +591,6 @@ compiler_moc_header_clean:
 		.moc/moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/colinw/git/CQEdit/src/.moc/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include CQHistoryLineEdit.h -o .moc/moc_CQHistoryLineEdit.cpp
-
-.moc/moc_CQTabWidget.cpp: CQTabWidget.h \
-		.moc/moc_predefs.h \
-		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/colinw/git/CQEdit/src/.moc/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/src -I/home/colinw/git/CQEdit/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include CQTabWidget.h -o .moc/moc_CQTabWidget.cpp
 
 .moc/moc_CQDialog.cpp: CQDialog.h \
 		.moc/moc_predefs.h \
@@ -705,7 +694,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 		../../CQUtil/include/CQFont.h \
 		../../CQUtil/include/CQFontChooser.h \
 		../../CQUtil/include/CQColorChooser.h \
-		CQTabWidget.h \
+		../../CQUtil/include/CQTabWidget.h \
 		../../CQUtil/include/CQUtil.h \
 		../../CUtil/include/CLineDash.h \
 		../../CUtil/include/CILineDash.h \
@@ -1402,38 +1391,6 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 		../../CReadLine/include/CHistory.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQHistoryLineEdit.o CQHistoryLineEdit.cpp
 
-../obj/CQTabWidget.o: CQTabWidget.cpp CQTabWidget.h \
-		../../CQUtil/include/CQImageButton.h \
-		../../CImageLib/include/CImageLib.h \
-		../../CUtil/include/CAlignType.h \
-		../../CUtil/include/CRGBA.h \
-		../../CUtil/include/CRGB.h \
-		../../CUtil/include/CRGBName.h \
-		../../CImageLib/include/CImageState.h \
-		../../CImageLib/include/CImage.h \
-		../../CUtil/include/CRGBACombineDef.h \
-		../../CMath/include/CISize2D.h \
-		../../CMath/include/CIBBox2D.h \
-		../../CMath/include/CIPoint2D.h \
-		../../CMath/include/CIVector2D.h \
-		../../CMath/include/CMathGen.h \
-		../../CFile/include/CFileType.h \
-		../../CUtil/include/COptVal.h \
-		../../CImageLib/include/CImagePtr.h \
-		../../CUtil/include/CRefPtr.h \
-		../../CImageLib/include/CImageMgr.h \
-		../../CFile/include/CFile.h \
-		../../CFile/include/CFileBase.h \
-		../../CStrUtil/include/CStrUtil.h \
-		../../CImageLib/include/CImageAnim.h \
-		../../CImageLib/include/CImageFile.h \
-		../../CQUtil/include/CQFloatEdit.h \
-		svg/new_svg.h \
-		../../CQUtil/include/CQPixmapCache.h \
-		svg/left_svg.h \
-		svg/right_svg.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQTabWidget.o CQTabWidget.cpp
-
 ../obj/CQDialog.o: CQDialog.cpp CQDialog.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQDialog.o CQDialog.cpp
 
@@ -1451,9 +1408,6 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ../obj/moc_CQHistoryLineEdit.o: .moc/moc_CQHistoryLineEdit.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQHistoryLineEdit.o .moc/moc_CQHistoryLineEdit.cpp
-
-../obj/moc_CQTabWidget.o: .moc/moc_CQTabWidget.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQTabWidget.o .moc/moc_CQTabWidget.cpp
 
 ../obj/moc_CQDialog.o: .moc/moc_CQDialog.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQDialog.o .moc/moc_CQDialog.cpp

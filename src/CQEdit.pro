@@ -50,7 +50,6 @@ CSyntaxCPP.cpp \
 CSyntaxC.cpp \
 \
 CQHistoryLineEdit.cpp \
-CQTabWidget.cpp \
 CQDialog.cpp \
 
 HEADERS += \
@@ -92,7 +91,6 @@ CSyntaxCPP.h \
 CSyntaxC.h \
 \
 CQHistoryLineEdit.h \
-CQTabWidget.h \
 CQDialog.h \
 
 DESTDIR     = ../bin
