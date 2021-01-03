@@ -64,17 +64,17 @@ class CVEditVi {
   void error(const std::string &mgs) const;
 
  private:
-  CVEditFile        *file_;
-  CKeyType           lastKey_;
-  uint               count_;
-  bool               insertMode_;
-  bool               cmdLineMode_;
-  CVLineEdit        *cmdLine_;
-  char               register_;
+  CVEditFile        *file_        { nullptr };
+  CKeyType           lastKey_     { CKEY_TYPE_NUL };
+  uint               count_       { 0 };
+  bool               insertMode_  { false };
+  bool               cmdLineMode_ { false };
+  CVLineEdit        *cmdLine_     { nullptr };
+  char               register_    { '\0' };
   CVEditLastCommand  lastCommand_;
-  char               findChar_;
-  bool               findForward_;
-  bool               findTill_;
+  char               findChar_    { '\0' };
+  bool               findForward_ { true };
+  bool               findTill_    { false };
 };
 
 #endif

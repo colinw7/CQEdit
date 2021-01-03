@@ -72,6 +72,8 @@ class CVEditFile : public CEditFile {
 
   virtual ~CVEditFile();
 
+  void initFont();
+
   uint getCharWidth () const { return char_width_ ; }
   uint getCharHeight() const { return char_height_; }
 
@@ -111,6 +113,8 @@ class CVEditFile : public CEditFile {
 
   const CRGBA &getFg() const;
   virtual void setFg(const CRGBA &fg);
+
+  void setFontConf(const std::string &str);
 
   CFontPtr getFont() const;
   void setFont(CFontPtr font);

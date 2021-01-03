@@ -2487,12 +2487,12 @@ runEdCmd(const std::string &str, bool &quit)
     MarkList::const_iterator p1, p2;
 
     for (p1 = marks_.begin(), p2 = marks_.end(); p1 != p2; ++p1) {
-      const std::string &str = (*p1).first;
-      const CIPoint2D   &pos = (*p1).second;
+      const std::string &str1 = (*p1).first;
+      const CIPoint2D   &pos  = (*p1).second;
 
       std::string msg;
 
-      msg += str + " ";
+      msg += str1 + " ";
       msg += CStrUtil::toString(pos.y) + " ";
       msg += CStrUtil::toString(pos.x);
 

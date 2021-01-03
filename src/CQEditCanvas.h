@@ -16,12 +16,6 @@ class QScrollBar;
 class CQEditArea : public QWidget {
   Q_OBJECT
 
- private:
-  CQEdit       *edit_;
-  CQEditCanvas *canvas_;
-  QScrollBar   *vbar_;
-  QScrollBar   *hbar_;
-
  public:
   CQEditArea(CQEdit *edit);
 
@@ -37,17 +31,18 @@ class CQEditArea : public QWidget {
  private slots:
   void hscrollSlot(int x);
   void vscrollSlot(int y);
+
+ private:
+  CQEdit*       edit_   { nullptr };
+  CQEditCanvas* canvas_ { nullptr };
+  QScrollBar*   vbar_   { nullptr };
+  QScrollBar*   hbar_   { nullptr };
 };
+
+//---
 
 class CQEditCanvas : public QWidget {
   Q_OBJECT
-
- private:
-  CQEditArea   *area_;
-  CQEdit       *edit_;
-  QImage        qimage_;
-  bool          pressed_;
-  CMouseButton  button_;
 
  public:
   CQEditCanvas(CQEditArea *edit);
@@ -71,6 +66,13 @@ class CQEditCanvas : public QWidget {
 
  signals:
   void sizeChanged();
+
+ private:
+  CQEditArea*  area_    { nullptr };
+  CQEdit*      edit_    { nullptr };
+  QImage       qimage_;
+  bool         pressed_ { false };
+  CMouseButton button_  { CBUTTON_NONE };
 };
 
 #endif

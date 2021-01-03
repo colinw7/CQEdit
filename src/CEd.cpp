@@ -371,12 +371,12 @@ execCmd(const std::string &cmd)
       else if (parse.isChar('\'')) {
         parse.skipChar();
 
-        char c;
+        char c1;
 
-        if (parse.readChar(&c)) {
+        if (parse.readChar(&c1)) {
           uint line_num, char_num;
 
-          if (! file_->getMarkPos(std::string(&c, 1), &line_num, &char_num)) {
+          if (! file_->getMarkPos(std::string(&c1, 1), &line_num, &char_num)) {
             error("Mark not set");
             return false;
           }
@@ -393,10 +393,10 @@ execCmd(const std::string &cmd)
           if (parse.isChar('\\'))
             parse.skipChar();
 
-          char c;
+          char c1;
 
-          if (parse.readChar(&c))
-            str += c;
+          if (parse.readChar(&c1))
+            str += c1;
         }
 
         if (parse.eof() && ! getEx()) {
@@ -434,10 +434,10 @@ execCmd(const std::string &cmd)
           if (parse.isChar('\\'))
             parse.skipChar();
 
-          char c;
+          char c1;
 
-          if (parse.readChar(&c))
-            str += c;
+          if (parse.readChar(&c1))
+            str += c1;
         }
 
         if (parse.eof() && ! getEx()) {
@@ -549,13 +549,13 @@ execCmd(const std::string &cmd)
       file_->startGroup();
 
       if (! fileName.empty() && fileName[0] == '!') {
-        CCommand cmd(fileName.substr(1));
+        CCommand cmd1(fileName.substr(1));
 
         std::string dest;
 
-        cmd.addStringDest(dest);
+        cmd1.addStringDest(dest);
 
-        cmd.start();
+        cmd1.start();
 
         std::vector<std::string> lines;
 
@@ -608,11 +608,11 @@ execCmd(const std::string &cmd)
       std::string find;
 
       while (! parse.eof() && ! parse.isChar(sep)) {
-        char c;
+        char c1;
 
-        parse.readChar(&c);
+        parse.readChar(&c1);
 
-        find += c;
+        find += c1;
       }
 
       // use previous find if empty
@@ -623,10 +623,10 @@ execCmd(const std::string &cmd)
         parse.skipChar();
 
       // get command
-      std::string cmd = "p";
+      std::string cmd1 = "p";
 
       while (! parse.eof()) {
-        parse.readString(cmd);
+        parse.readString(cmd1);
 
         parse.skipSpace();
       }
@@ -636,7 +636,7 @@ execCmd(const std::string &cmd)
         return false;
       }
 
-      doGlob(line_num1.getValue(), line_num2.getValue(), find, cmd);
+      doGlob(line_num1.getValue(), line_num2.getValue(), find, cmd1);
 
       break;
     }
@@ -658,12 +658,12 @@ execCmd(const std::string &cmd)
       break;
     }
     case 'k': { // (.)k<c> - mark line with char
-      char c;
+      char c1;
 
-      if (! parse.readChar(&c))
+      if (! parse.readChar(&c1))
         return false;
 
-      doMark(line_num1.getValue(), c);
+      doMark(line_num1.getValue(), c1);
 
       break;
     }
@@ -744,13 +744,13 @@ execCmd(const std::string &cmd)
       file_->startGroup();
 
       if (! fileName.empty() && fileName[0] == '!') {
-        CCommand cmd(fileName.substr(1));
+        CCommand cmd1(fileName.substr(1));
 
         std::string dest;
 
-        cmd.addStringDest(dest);
+        cmd1.addStringDest(dest);
 
-        cmd.start();
+        cmd1.start();
 
         std::vector<std::string> lines;
 
@@ -784,11 +784,11 @@ execCmd(const std::string &cmd)
       std::string find, replace;
 
       while (! parse.eof() && ! parse.isChar(sep)) {
-        char c;
+        char c1;
 
-        parse.readChar(&c);
+        parse.readChar(&c1);
 
-        find += c;
+        find += c1;
       }
 
       // use previous find if empty
@@ -800,11 +800,11 @@ execCmd(const std::string &cmd)
 
       // get replace string
       while (! parse.eof() && ! parse.isChar(sep)) {
-        char c;
+        char c1;
 
-        parse.readChar(&c);
+        parse.readChar(&c1);
 
-        replace += c;
+        replace += c1;
       }
 
       if (parse.isChar(sep))
@@ -946,11 +946,11 @@ execCmd(const std::string &cmd)
       std::string find;
 
       while (! parse.eof() && ! parse.isChar('/')) {
-        char c;
+        char c1;
 
-        parse.readChar(&c);
+        parse.readChar(&c1);
 
-        find += c;
+        find += c1;
       }
 
       doFindNext(line_num1.getValue(), line_num2.getValue(), find);
@@ -962,11 +962,11 @@ execCmd(const std::string &cmd)
       std::string find;
 
       while (! parse.eof() && ! parse.isChar('/')) {
-        char c;
+        char c1;
 
-        parse.readChar(&c);
+        parse.readChar(&c1);
 
-        find += c;
+        find += c1;
       }
 
       doFindPrev(line_num1.getValue(), line_num2.getValue(), find);
@@ -1116,10 +1116,10 @@ doSubstitute(int line_num1, int line_num2, const std::string &find,
 
       if (global) {
         while (file_->findNext(regexp, i - 1, epos + 1, i - 1, -1, &fline_num, &fchar_num, &len)) {
-          int spos = fchar_num;
-          int epos = spos + len - 1;
+          int spos1 = fchar_num;
+          int epos1 = spos + len - 1;
 
-          file_->replace(i - 1, spos, epos, replace);
+          file_->replace(i - 1, spos1, epos1, replace);
         }
       }
     }

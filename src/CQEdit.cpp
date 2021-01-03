@@ -415,7 +415,7 @@ itemClickedSlot(QTreeWidgetItem *item)
 
 CQEditRenderer::
 CQEditRenderer(QWidget *w, QPainter *painter) :
- w_(w), painter_(painter), ascent_(0), descent_(0)
+ w_(w), painter_(painter)
 {
 }
 

@@ -12,7 +12,7 @@ CQEditArea(CQEdit *edit) :
 {
   setObjectName("area");
 
-  QGridLayout *grid = new QGridLayout(this);
+  auto *grid = new QGridLayout(this);
   grid->setMargin(0); grid->setSpacing(0);
 
   canvas_ = new CQEditCanvas(this);

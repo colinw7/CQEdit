@@ -613,9 +613,9 @@ isSentenceEnd(uint pos, uint *n) const
 
   // skip (, ], " and ' after . ! ?
   while (pos + *n < len - 1) {
-    char c = line_->getChar(pos + *n);
+    char c1 = line_->getChar(pos + *n);
 
-    if (strchr(")]\"\'", c) == NULL)
+    if (strchr(")]\"\'", c1) == NULL)
       break;
 
     (*n)++;

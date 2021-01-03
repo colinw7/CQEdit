@@ -23,17 +23,7 @@ class LineEditRenderer : public CVLineEditRenderer {
 
 CVEditVi::
 CVEditVi(CVEditFile *file) :
- file_       (file),
- lastKey_    (CKEY_TYPE_NUL),
- count_      (0),
- insertMode_ (false),
- cmdLineMode_(false),
- cmdLine_    (NULL),
- register_   ('\0'),
- lastCommand_(file),
- findChar_   ('\0'),
- findForward_(true),
- findTill_   (false)
+ file_(file), lastCommand_(file)
 {
 }
 
@@ -66,7 +56,7 @@ void
 CVEditVi::
 processCommandChar(const CKeyEvent &event)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   switch (key) {
     case CKEY_TYPE_Shift_L  : case CKEY_TYPE_Shift_R:

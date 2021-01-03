@@ -12,6 +12,8 @@ class CQEditFactory : public CVEditFactory {
   }
 };
 
+//----
+
 class CQEditRenderer : public CVEditRenderer {
  public:
   CQEditRenderer(QWidget *w, QPainter *painter);
@@ -31,10 +33,10 @@ class CQEditRenderer : public CVEditRenderer {
   void drawString(const CIPoint2D &p, const std::string &str);
 
  private:
-  QWidget  *w_;
-  QPainter *painter_;
-  int       ascent_;
-  int       descent_;
+  QWidget*  w_       { nullptr };
+  QPainter* painter_ { nullptr };
+  int       ascent_  { 10 };
+  int       descent_ { 0 };
 };
 
 #endif

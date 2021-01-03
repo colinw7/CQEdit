@@ -41,29 +41,7 @@ loadConfig(CVEditFile *file, CConfig &config)
   std::string str;
 
   if (config.getValue("font", "", str)) {
-    std::string family = "courier";
-    CFontStyle  style  = CFONT_STYLE_NORMAL;
-    uint        size   = 12;
-
-    if (! CFont::decodeFontName(str, family, style, size)) {
-      uint x_res, y_res;
-
-      if (! CFont::decodeXFontName(str, family, style, size, x_res, y_res)) {
-        family = "courier";
-        style  = CFONT_STYLE_NORMAL;
-        size   = 12;
-      }
-    }
-
-    CFontPtr font = CFontMgrInst->lookupFont(family, style, size);
-
-    if (! font.isValid()) {
-      std::cerr << "Invalid font: " << str << std::endl;
-
-      font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);
-    }
-
-    file->setFont(font);
+    file->setFontConf(str);
   }
 
   if (config.getValue("bg", "", str)) {
@@ -129,9 +107,7 @@ saveConfig(CVEditFile *file, CConfig &config)
 CVEditFile::
 CVEditFile()
 {
-  CFontPtr font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);
-
-  setFont(font);
+  initFont();
 
   setBg(CRGBA(1,1,1));
   setFg(CRGBA(0,0,0));
@@ -143,6 +119,15 @@ CVEditFile()
 CVEditFile::
 ~CVEditFile()
 {
+}
+
+void
+CVEditFile::
+initFont()
+{
+  auto font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);
+
+  setFont(font);
 }
 
 void
@@ -283,6 +268,35 @@ getFont() const
 
 void
 CVEditFile::
+setFontConf(const std::string &str)
+{
+  std::string family = "courier";
+  CFontStyle  style  = CFONT_STYLE_NORMAL;
+  uint        size   = 12;
+
+  if (! CFont::decodeFontName(str, family, style, size)) {
+    uint x_res, y_res;
+
+    if (! CFont::decodeXFontName(str, family, style, size, x_res, y_res)) {
+      family = "courier";
+      style  = CFONT_STYLE_NORMAL;
+      size   = 12;
+    }
+  }
+
+  auto font = CFontMgrInst->lookupFont(family, style, size);
+
+  if (! font.isValid()) {
+    std::cerr << "Invalid font: " << str << std::endl;
+
+    font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);
+  }
+
+  setFont(font);
+}
+
+void
+CVEditFile::
 setFont(CFontPtr font)
 {
   style_.initValue();
@@ -301,7 +315,7 @@ const CRGBA &
 CVEditFile::
 getCursorBg() const
 {
-  CVEditCursor *cursor = dynamic_cast<CVEditCursor *>(getCursor());
+  auto *cursor = dynamic_cast<CVEditCursor *>(getCursor());
 
   return cursor->getBg();
 }
@@ -310,7 +324,7 @@ void
 CVEditFile::
 setCursorBg(const CRGBA &bg)
 {
-  CVEditCursor *cursor = dynamic_cast<CVEditCursor *>(getCursor());
+  auto *cursor = dynamic_cast<CVEditCursor *>(getCursor());
 
   if (cursor)
     cursor->setBg(bg);
@@ -322,7 +336,7 @@ const CRGBA &
 CVEditFile::
 getCursorFg() const
 {
-  CVEditCursor *cursor = dynamic_cast<CVEditCursor *>(getCursor());
+  auto *cursor = dynamic_cast<CVEditCursor *>(getCursor());
 
   return cursor->getFg();
 }
@@ -331,7 +345,7 @@ void
 CVEditFile::
 setCursorFg(const CRGBA &fg)
 {
-  CVEditCursor *cursor = dynamic_cast<CVEditCursor *>(getCursor());
+  auto *cursor = dynamic_cast<CVEditCursor *>(getCursor());
 
   cursor->setFg(fg);
 
@@ -395,10 +409,10 @@ draw(uint width, uint height)
 
   //------
 
-  CFontPtr font = getFont();
+  //CFontPtr font = getFont();
 
-  char_width_  = font->getStringWidth("X");
-  char_height_ = font->getCharHeight();
+  //char_width_  = font->getStringWidth("X");
+  //char_height_ = font->getCharHeight();
 
   num_rows_ = h/char_height_;
   num_cols_ = w/char_width_;
@@ -438,7 +452,7 @@ draw(uint width, uint height)
 
   uint max_x = indent_;
 
-  CVEditCursor *cursor = dynamic_cast<CVEditCursor *>(getCursor());
+  auto *cursor = dynamic_cast<CVEditCursor *>(getCursor());
 
   const CIPoint2D &cpos = cursor->getPos();
 

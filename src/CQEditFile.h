@@ -9,9 +9,6 @@
 class CQEdit;
 
 class CQEditFile : public CVEditFile {
- private:
-  CQEdit *edit_;
-
  public:
   CQEditFile(CQEdit *edit);
 
@@ -42,7 +39,12 @@ class CQEditFile : public CVEditFile {
   void displayRegisters();
 
   CEditCursor *createCursor();
+
+ private:
+  CQEdit *edit_ { nullptr };
 };
+
+//---
 
 class CQEditCursor  : public CVEditCursor {
  public:
@@ -53,7 +55,7 @@ class CQEditCursor  : public CVEditCursor {
   virtual void setPos(const CIPoint2D &pos);
 
  private:
-  CQEditFile *file_;
+  CQEditFile *file_ { nullptr };
 };
 
 #endif
