@@ -39,7 +39,7 @@ main(int argc, char **argv)
   else
     edit->addFile("");
 
-  edit->resize(600, 800);
+  edit->resize(1200, 1600);
 
   edit->show();
 

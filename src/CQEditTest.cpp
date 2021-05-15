@@ -14,27 +14,29 @@
 #include <CQFontChooser.h>
 #include <CQColorChooser.h>
 #include <CQTabWidget.h>
+#include <CQEditBg.h>
 #include <CQUtil.h>
 #include <CSyntaxCPP.h>
-#include <CQEditBg.h>
+#include <CFile.h>
 #include <CRGBName.h>
 
-#include <images/open_16_png.h>
-#include <images/save_16_png.h>
-#include <images/save_as_png.h>
-#include <images/copy_16_png.h>
-#include <images/cut_16_png.h>
-#include <images/paste_16_png.h>
-#include <images/undo_16_png.h>
-#include <images/redo_16_png.h>
+#include <svg/add_file_svg.h>
+#include <svg/open_svg.h>
+#include <svg/save_svg.h>
+#include <svg/save_as_svg.h>
+#include <svg/copy_svg.h>
+#include <svg/cut_svg.h>
+#include <svg/paste_svg.h>
+#include <svg/undo_svg.h>
+#include <svg/redo_svg.h>
 
 CQEditTest::
 CQEditTest() :
- CQMainWindow("CQEdit"), edit_(0), output_(0)
+ CQMainWindow("CQEdit")
 {
-  QWidget *frame = new QWidget;
+  auto *frame = new QWidget;
 
-  QVBoxLayout *vlayout = new QVBoxLayout(frame);
+  auto *vlayout = new QVBoxLayout(frame);
 
   vlayout->setMargin(0); vlayout->setSpacing(0);
 
@@ -71,13 +73,13 @@ void
 CQEditTest::
 addFile(const std::string &fileName)
 {
-  QTabWidget *editTab = new QTabWidget;
+  auto *editTab = new QTabWidget;
 
   editTab->setTabPosition(QTabWidget::West);
 
   //----
 
-  CQEdit *edit = new CQEdit;
+  auto *edit = new CQEdit;
 
   edit->getFile()->loadLines(fileName);
 
@@ -95,7 +97,7 @@ addFile(const std::string &fileName)
 
   //----
 
-  CQEdit *output = new CQEdit;
+  auto *output = new CQEdit;
 
   editTab->addTab(output, "Output");
 
@@ -135,7 +137,7 @@ createMenus()
 
   loadItem->setShortcut("Ctrl+A");
   loadItem->setStatusTip("Add new file");
-  loadItem->setIcon(open_16_data, OPEN_16_DATA_LEN);
+  loadItem->setIcon(CQPixmapCacheInst->getIcon("ADD_FILE"));
 
   connect(loadItem->getAction(), SIGNAL(triggered()), this, SLOT(addFileSlot()));
 
@@ -145,7 +147,7 @@ createMenus()
 
   loadItem->setShortcut("Ctrl+R");
   loadItem->setStatusTip("Replace current file");
-  loadItem->setIcon(open_16_data, OPEN_16_DATA_LEN);
+  loadItem->setIcon(CQPixmapCacheInst->getIcon("OPEN"));
 
   connect(loadItem->getAction(), SIGNAL(triggered()), this, SLOT(replaceFileSlot()));
 
@@ -156,7 +158,7 @@ createMenus()
   saveItem->setShortcut("Ctrl+S");
   saveItem->setStatusTip("Save current file");
 
-  saveItem->setIcon(save_16_data, SAVE_16_DATA_LEN);
+  saveItem->setIcon(CQPixmapCacheInst->getIcon("SAVE"));
 
   connect(saveItem->getAction(), SIGNAL(triggered()), this, SLOT(saveFileSlot()));
 
@@ -167,7 +169,7 @@ createMenus()
   saveAsItem->setShortcut("Ctrl+A");
   saveAsItem->setStatusTip("Save current file with new name");
 
-  saveAsItem->setIcon(save_as_data, SAVE_AS_DATA_LEN);
+  saveAsItem->setIcon(CQPixmapCacheInst->getIcon("SAVE_AS"));
 
   connect(saveAsItem->getAction(), SIGNAL(triggered()), this, SLOT(saveFileAsSlot()));
 
@@ -206,21 +208,21 @@ createMenus()
   cutItem->setShortcut("Ctrl+X");
   cutItem->setStatusTip("Cut selected text");
 
-  cutItem->setIcon(cut_16_data, CUT_16_DATA_LEN);
+  cutItem->setIcon(CQPixmapCacheInst->getIcon("CUT"));
 
   copyItem = new CQMenuItem(editMenu, "&Copy");
 
   copyItem->setShortcut("Ctrl+C");
   copyItem->setStatusTip("Copy selected text");
 
-  copyItem->setIcon(copy_16_data, COPY_16_DATA_LEN);
+  copyItem->setIcon(CQPixmapCacheInst->getIcon("COPY"));
 
   pasteItem = new CQMenuItem(editMenu, "&Paste");
 
   pasteItem->setShortcut("Ctrl+V");
   pasteItem->setStatusTip("Paste selected text");
 
-  pasteItem->setIcon(paste_16_data, PASTE_16_DATA_LEN);
+  pasteItem->setIcon(CQPixmapCacheInst->getIcon("PASTE"));
 
   editMenu->addSeparator();
 
@@ -229,7 +231,7 @@ createMenus()
   undoItem->setShortcut("Ctrl+Z");
   undoItem->setStatusTip("Undo last change");
 
-  undoItem->setIcon(undo_16_data, UNDO_16_DATA_LEN);
+  undoItem->setIcon(CQPixmapCacheInst->getIcon("UNDO"));
 
   connect(undoItem->getAction(), SIGNAL(triggered()), this, SLOT(undo()));
 
@@ -238,7 +240,7 @@ createMenus()
   redoItem->setShortcut("Ctrl+Y");
   redoItem->setStatusTip("Redo last undo");
 
-  redoItem->setIcon(redo_16_data, REDO_16_DATA_LEN);
+  redoItem->setIcon(CQPixmapCacheInst->getIcon("REDO"));
 
   connect(redoItem->getAction(), SIGNAL(triggered()), this, SLOT(redo()));
 
@@ -283,7 +285,7 @@ createToolBars()
 
   editToolBar = new CQToolBar(this, "&Edit");
 
-  editToolBar->setIconSize(QSize(16,16));
+  //editToolBar->setIconSize(QSize(16,16));
 
   editToolBar->addItem(cutItem);
   editToolBar->addItem(copyItem);
@@ -298,7 +300,7 @@ createToolBars()
 
   styleToolBar = new CQToolBar(this, "&Style");
 
-  styleToolBar->setIconSize(QSize(16,16));
+  //styleToolBar->setIconSize(QSize(16,16));
 
   font_ = new CQFontChooser(this);
 
@@ -321,10 +323,11 @@ createToolBars()
 
   modeToolBar = new CQToolBar(this, "&Mode");
 
-  modeToolBar->setIconSize(QSize(16,16));
+  //modeToolBar->setIconSize(QSize(16,16));
 
   mode_ = new QComboBox(this);
 
+  mode_->setFocusPolicy(Qt::NoFocus);
   mode_->addItems(QStringList() << "Vi" << "Text");
 
   connect(mode_, SIGNAL(currentIndexChanged(const QString &)),
@@ -489,8 +492,7 @@ setFont(const QFont &qfont)
 
   CQUtil::decodeFont(qfont, family, style, pixelSize);
 
-  CFontPtr pfont =
-    CQFontMgrInst->lookupFont(family.toStdString(), style, pixelSize);
+  auto pfont = CQFontMgrInst->lookupFont(family.toStdString(), style, pixelSize);
 
   edit_->getFile()->setFont(pfont);
 
@@ -526,10 +528,10 @@ setBg()
 
   dialog->exec();
 
-  if (dialog->accepted()) {
-    CRGBA rgba = CRGBName::toRGBA(dialog->getColorName().toStdString());
+  if (dialog->isAccepted()) {
+    CRGBA c = CRGBName::toRGBA(dialog->getColorName().toStdString());
 
-    edit_->getFile()->setBg(rgba);
+    edit_->getFile()->setBg(c);
   }
 
   delete dialog;

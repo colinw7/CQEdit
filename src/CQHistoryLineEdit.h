@@ -25,7 +25,7 @@ class CQHistoryLineEdit : public QLineEdit {
   void exec(const QString &cmd);
 
  private:
-  void keyPressEvent(QKeyEvent *event);
+  void keyPressEvent(QKeyEvent *event) override;
 
  private:
   using CHistoryP = std::unique_ptr<CHistory>;

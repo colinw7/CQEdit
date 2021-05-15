@@ -3,9 +3,6 @@
 class CQEditBg : public CQDialog {
   Q_OBJECT
 
- private:
-  QString colorName_;
-
  public:
   CQEditBg(QWidget *parent) :
    CQDialog(parent) {
@@ -17,4 +14,7 @@ class CQEditBg : public CQDialog {
 
  public slots:
   void setColorName(const QString &colorName);
+
+ private:
+  QString colorName_;
 };

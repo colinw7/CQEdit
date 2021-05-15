@@ -14,54 +14,6 @@ class QLineEdit;
 class CQEditTest : public CQMainWindow {
   Q_OBJECT
 
- private:
-  QTabWidget     *fileTab_;
-  CQEdit         *edit_;
-  CQEdit         *output_;
-  CQFontChooser  *font_;
-  CQColorChooser *color_;
-  QComboBox      *mode_;
-
-  // File Menu
-  CQMenu *fileMenu;
-
-  CQMenuItem *newItem;
-  CQMenuItem *loadItem;
-  CQMenuItem *saveItem;
-  CQMenuItem *saveAsItem;
-  CQMenuItem *closeItem;
-  CQMenuItem *quitItem;
-
-  // Edit Menu
-  CQMenu *editMenu;
-
-  CQMenuItem *cutItem;
-  CQMenuItem *copyItem;
-  CQMenuItem *pasteItem;
-  CQMenuItem *undoItem;
-  CQMenuItem *redoItem;
-
-  // View Menu
-  CQMenu *viewMenu;
-
-  CQMenuItem *bgItem;
-
-  // Help Menu
-  CQMenu *helpMenu;
-
-  CQMenuItem *aboutItem;
-
-  CQToolBar *fileToolBar;
-  CQToolBar *editToolBar;
-  CQToolBar *styleToolBar;
-  CQToolBar *modeToolBar;
-
-  QLabel      *statusLabel;
-  QLabel      *messageLabel;
-  QToolButton *insButton;
-  QLabel      *sizeLabel;
-  QLabel      *positionLabel;
-
  public:
   CQEditTest();
  ~CQEditTest();
@@ -101,4 +53,52 @@ class CQEditTest : public CQMainWindow {
   void outputMessage(const QString &msg);
   void errorMessage(const QString &msg);
   void updateTitle();
+
+ private:
+  QTabWidget     *fileTab_ { nullptr };
+  CQEdit         *edit_    { nullptr };
+  CQEdit         *output_  { nullptr };
+  CQFontChooser  *font_    { nullptr };
+  CQColorChooser *color_   { nullptr };
+  QComboBox      *mode_    { nullptr };
+
+  // File Menu
+  CQMenu *fileMenu { nullptr };
+
+  CQMenuItem *newItem    { nullptr };
+  CQMenuItem *loadItem   { nullptr };
+  CQMenuItem *saveItem   { nullptr };
+  CQMenuItem *saveAsItem { nullptr };
+  CQMenuItem *closeItem  { nullptr };
+  CQMenuItem *quitItem   { nullptr };
+
+  // Edit Menu
+  CQMenu *editMenu { nullptr };
+
+  CQMenuItem *cutItem   { nullptr };
+  CQMenuItem *copyItem  { nullptr };
+  CQMenuItem *pasteItem { nullptr };
+  CQMenuItem *undoItem  { nullptr };
+  CQMenuItem *redoItem  { nullptr };
+
+  // View Menu
+  CQMenu *viewMenu { nullptr };
+
+  CQMenuItem *bgItem { nullptr };
+
+  // Help Menu
+  CQMenu *helpMenu { nullptr };
+
+  CQMenuItem *aboutItem { nullptr };
+
+  CQToolBar *fileToolBar  { nullptr };
+  CQToolBar *editToolBar  { nullptr };
+  CQToolBar *styleToolBar { nullptr };
+  CQToolBar *modeToolBar  { nullptr };
+
+  QLabel      *statusLabel   { nullptr };
+  QLabel      *messageLabel  { nullptr };
+  QToolButton *insButton     { nullptr };
+  QLabel      *sizeLabel     { nullptr };
+  QLabel      *positionLabel { nullptr };
 };

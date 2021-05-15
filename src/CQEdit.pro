@@ -50,7 +50,6 @@ CSyntaxCPP.cpp \
 CSyntaxC.cpp \
 \
 CQHistoryLineEdit.cpp \
-CQDialog.cpp \
 
 HEADERS += \
 CQEditTest.h \
@@ -91,7 +90,6 @@ CSyntaxCPP.h \
 CSyntaxC.h \
 \
 CQHistoryLineEdit.h \
-CQDialog.h \
 
 DESTDIR     = ../bin
 OBJECTS_DIR = ../obj
