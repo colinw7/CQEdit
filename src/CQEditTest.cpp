@@ -285,7 +285,7 @@ createToolBars()
 
   editToolBar = new CQToolBar(this, "&Edit");
 
-  //editToolBar->setIconSize(QSize(16,16));
+  //editToolBar->setIconSize(QSize(16, 16));
 
   editToolBar->addItem(cutItem);
   editToolBar->addItem(copyItem);
@@ -300,7 +300,7 @@ createToolBars()
 
   styleToolBar = new CQToolBar(this, "&Style");
 
-  //styleToolBar->setIconSize(QSize(16,16));
+  //styleToolBar->setIconSize(QSize(16, 16));
 
   font_ = new CQFontChooser(this);
 
@@ -323,7 +323,7 @@ createToolBars()
 
   modeToolBar = new CQToolBar(this, "&Mode");
 
-  //modeToolBar->setIconSize(QSize(16,16));
+  //modeToolBar->setIconSize(QSize(16, 16));
 
   mode_ = new QComboBox(this);
 

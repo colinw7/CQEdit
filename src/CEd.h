@@ -42,7 +42,7 @@ class CEdRegExpCondition : public CEdPointCondition {
 
 class CEd {
  private:
-  typedef std::vector<std::string> StringList;
+  using StringList = std::vector<std::string>;
 
   // structure to represent an entered command
   class InputData {
@@ -169,7 +169,7 @@ class CEd {
   CEd &operator=(const CEd &rhs);
 
  private:
-  CEditFile *file_           { nullptr };
+  CEditFile* file_           { nullptr };
   Mode       mode_           { COMMAND }; // current mode, command or input
   InputData  input_data_;
   bool       ex_             { false };   // vi/ex mode

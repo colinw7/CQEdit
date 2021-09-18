@@ -17,6 +17,8 @@ class CEditFileUtil;
 #include <CRegExp.h>
 #include <CTextFile.h>
 
+//---
+
 struct CEditBufferLine {
   std::string line;
   bool        newline;
@@ -30,8 +32,10 @@ struct CEditBufferLine {
   bool getNewLine() const { return newline; }
 };
 
+//---
+
 struct CEditGroup {
-  typedef std::vector<CEditBufferLine> LineList;
+  using LineList = std::vector<CEditBufferLine>;
 
   LineList lines;
 
@@ -44,38 +48,34 @@ struct CEditGroup {
   }
 };
 
+//---
+
 struct CEditBuffer {
-  typedef std::vector<CEditBufferLine> LineList;
+  using LineList = std::vector<CEditBufferLine>;
 
   LineList lines;
 
-  CEditBuffer() :
-   lines() {
-  }
+  CEditBuffer() { }
 
-  void clear() {
-    lines.clear();
-  }
+  void clear() { lines.clear(); }
 
-  uint getNumLines() const {
-    return lines.size();
-  }
+  uint getNumLines() const { return lines.size(); }
 
-  const CEditBufferLine &getLine(uint i) const {
-    return lines[i];
-  }
+  const CEditBufferLine &getLine(uint i) const { return lines[i]; }
 
   void addLine(const std::string &line, bool newline) {
     lines.push_back(CEditBufferLine(line, newline));
   }
 };
 
+//---
+
 class CEditFileLines {
  public:
-  typedef std::vector<CEditLine *> LineList;
+  using LineList = std::vector<CEditLine *>;
 
-  typedef LineList::iterator       iterator;
-  typedef LineList::const_iterator const_iterator;
+  using iterator       = LineList::iterator;
+  using const_iterator = LineList::const_iterator;
 
  public:
   CEditFileLines() :
@@ -120,27 +120,29 @@ class CEditFileLines {
   LineList lines_;
 };
 
+//---
+
 class CEditFileCharIterator;
 
 class CEditFile {
  public:
-  typedef CEditFileLines::LineList          LineList;
-  typedef std::vector<CEditCmd *>           CmdList;
-  typedef std::vector<CEditGroup *>         GroupList;
-  typedef std::map<std::string,CIPoint2D>   MarkList;
-  typedef std::map<std::string,std::string> OptionMap;
-  typedef std::map<char,CEditBuffer>        BufferMap;
-  typedef std::vector<std::string>          StringList;
+  using LineList   = CEditFileLines::LineList;
+  using CmdList    = std::vector<CEditCmd *>;
+  using GroupList  = std::vector<CEditGroup *>;
+  using MarkList   = std::map<std::string, CIPoint2D>;
+  using OptionMap  = std::map<std::string, std::string>;
+  using BufferMap  = std::map<char, CEditBuffer>;
+  using StringList = std::vector<std::string>;
 
-  typedef LineList::const_iterator const_line_iterator;
+  using const_line_iterator = LineList::const_iterator;
 
   class CharIterator {
    public:
-    typedef std::forward_iterator_tag iterator_category;
-    typedef CEditChar*                value_type;
-    typedef ptrdiff_t                 difference_type;
-    typedef value_type *              pointer;
-    typedef value_type &              reference;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type        = CEditChar*;
+    using difference_type   = ptrdiff_t;
+    using pointer           = value_type *;
+    using reference         = value_type &;
 
     CharIterator();
     CharIterator(const CEditFile *file);
@@ -165,7 +167,7 @@ class CEditFile {
     CEditFileCharIterator *impl_;
   };
 
-  typedef CharIterator const_char_iterator;
+  using const_char_iterator = CharIterator;
 
  protected:
   struct Options {
@@ -192,16 +194,14 @@ class CEditFile {
   virtual void init();
 
   const std::string &getFileName() const { return fileName_; }
-
   virtual void setFileName(const std::string &fileName);
 
   CEditCursor *getCursor() const { return cursor_; }
 
   CEditEd *getEd() const { return ed_; }
 
-  virtual void setPos(const CIPoint2D &pos);
-
   virtual const CIPoint2D &getPos() const;
+  virtual void setPos(const CIPoint2D &pos);
 
   bool isValidPos(const CIPoint2D &pos) const;
 
@@ -226,7 +226,7 @@ class CEditFile {
   virtual void setChanged(bool changed);
 
   bool getUnsaved() const { return unsaved_; }
-  virtual void setUnsaved(bool unsaved_);
+  virtual void setUnsaved(bool unsaved);
 
   virtual const_line_iterator beginLine() const;
   virtual const_line_iterator endLine  () const;
@@ -252,9 +252,9 @@ class CEditFile {
 
   const MarkList &getMarks() const { return marks_; }
 
-  uint getNumBuffers() const { return buffer_map_.size(); }
+  uint getNumBuffers() const { return bufferMap_.size(); }
 
-  const BufferMap &getBufferMap() const { return buffer_map_; }
+  const BufferMap &getBufferMap() const { return bufferMap_; }
 
   bool loadLines(const std::string &fileName);
   bool saveLines(const std::string &fileName);
@@ -280,7 +280,6 @@ class CEditFile {
   virtual void replaceChar(uint line_num, uint char_num, char c);
 
   void deleteAllLines();
-
   void subDeleteAllLines();
 
   virtual void deleteLine();
@@ -462,15 +461,19 @@ class CEditFile {
 
   virtual void markReturn();
 
+  virtual bool getMarkPos(const std::string &mark, uint *line_num, uint *char_num) const;
   virtual void setMarkPos(const std::string &mark);
   virtual void setMarkPos(const std::string &mark, uint line_num, uint char_num);
-  virtual bool getMarkPos(const std::string &mark, uint *line_num, uint *char_num) const;
   virtual void unsetMarkPos(const std::string &mark);
   virtual void clearLineMarks(uint line_num);
+
+  //---
 
   virtual void startGroup();
   virtual void endGroup();
   virtual bool inGroup() const;
+
+  //---
 
   virtual void addUndo(CEditCmd *cmd);
 
@@ -483,6 +486,8 @@ class CEditFile {
   virtual void undoLine();
 
   virtual void resetUndo();
+
+  //---
 
   virtual bool isWordChar(char c);
 
@@ -497,7 +502,7 @@ class CEditFile {
 
   virtual const Options &getOptions() const { return options_; }
 
-  virtual CEditBuffer &getBuffer(char c = '\0');
+  virtual CEditBuffer &getBuffer(char c='\0');
 
   virtual void replayFile(const std::string &filename);
 
@@ -515,6 +520,7 @@ class CEditFile {
   void subAddLine(uint line_num, CEditLine *line);
   void subAddChars(uint line_num, uint char_num, const std::string &chars);
   void subMoveLine(uint line_num1, int line_num2);
+
   void subDeleteLine(uint line_num);
   void subDeleteChars(uint line_num, uint char_num, uint n);
   void subInsertChar(uint line_num, uint char_num, char c);
@@ -530,25 +536,42 @@ class CEditFile {
   CEditFile &operator=(const CEditFile &rhs);
 
  protected:
-  CEditFileUtil    *util_;
+  using OptRegExp = COptValT<CRegExp>;
 
-  std::string       fileName_;
-  CEditFileLines    lines_;
-  CEditCursor      *cursor_;
-  CEditEd          *ed_;
-  CEditCmdMgr       cmd_mgr_;
-  CUndo             undo_;
-  GroupList         group_list_;
-  MarkList          marks_;
-  OptionMap         option_map_;
-  Options           options_;
-  BufferMap         buffer_map_;
-  COptValT<CRegExp> findPattern_;
-  bool              extraLineChar_;
-  bool              changed_;
-  bool              unsaved_;
-  StringList        msg_lines_;
-  StringList        err_lines_;
+  CEditFileUtil *util_ { nullptr };
+
+  // data
+  std::string    fileName_;
+  CEditFileLines lines_;
+
+  CEditEd*    ed_      { nullptr };
+  CEditCmdMgr cmdMgr_;
+  CUndo       undo_;
+
+  // cursor
+  CEditCursor* cursor_ { nullptr };
+
+  // state
+  bool extraLineChar_ { false };
+  bool changed_       { false };
+  bool unsaved_       { false };
+
+  // groups
+  GroupList groupList_;
+
+  // marks, buffers
+  MarkList  marks_;
+  BufferMap bufferMap_;
+
+  // options
+  OptionMap optionMap_;
+  Options   options_;
+
+  // find
+  OptRegExp findPattern_;
+
+  StringList msgLines_;
+  StringList errLines_;
 };
 
 #endif

@@ -9,11 +9,7 @@
 
 CEd::
 CEd(CEditFile *file) :
- file_          (file),
- mode_          (COMMAND),
- ex_            (false),
- case_sensitive_(true),
- quit_          (false)
+ file_(file)
 {
 }
 

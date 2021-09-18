@@ -10,7 +10,7 @@ class CEditChar {
 
   virtual ~CEditChar();
 
-  const CEditChar &operator=(const CEditChar &c);
+  CEditChar &operator=(const CEditChar &c);
 
   virtual CEditChar *dup() const;
 

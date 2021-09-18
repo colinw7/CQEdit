@@ -12,24 +12,7 @@
 
 CEditFile::
 CEditFile() :
- util_         (NULL),
- fileName_     (),
- lines_        (),
- cursor_       (NULL),
- ed_           (NULL),
- cmd_mgr_      (this),
- undo_         (),
- group_list_   (),
- marks_        (),
- option_map_   (),
- options_      (),
- buffer_map_   (),
- findPattern_  (),
- extraLineChar_(false),
- changed_      (false),
- unsaved_      (false),
- msg_lines_    (),
- err_lines_    ()
+ cmdMgr_(this)
 {
   util_ = new CEditFileUtil(this);
 }
@@ -52,7 +35,11 @@ init()
 {
   cursor_ = CEditMgrInst->createCursor(this);
 
+  //---
+
   addLine("");
+
+  //---
 
   ed_ = CEditMgrInst->createEd(this);
 
@@ -67,12 +54,14 @@ setFileName(const std::string &fileName)
 {
   fileName_ = fileName;
 
-  CEditBuffer &buffer = getBuffer('%');
+  auto &buffer = getBuffer('%');
 
   buffer.clear();
 
   buffer.addLine(fileName_, false);
 }
+
+//---
 
 const CIPoint2D &
 CEditFile::
@@ -133,7 +122,7 @@ fixPos()
 {
   bool changed = false;
 
-  CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   if (pos.y >= (int) getNumLines()) {
     pos.y = getNumLines() - 1;
@@ -198,6 +187,8 @@ setUnsaved(bool unsaved)
   unsaved_ = unsaved;
 }
 
+//---
+
 CEditFile::const_line_iterator
 CEditFile::
 beginLine() const
@@ -238,7 +229,7 @@ CEditFile::
 getEditLine(uint line_num) const
 {
   if (line_num >= getNumLines())
-    return NULL;
+    return nullptr;
 
   return lines_.getLine(line_num);
 }
@@ -255,7 +246,7 @@ CEditFile::
 getEditChar(uint line_num, uint char_num) const
 {
   if (line_num >= getNumLines())
-    return NULL;
+    return nullptr;
 
   return getEditLine(line_num)->getCharP(char_num);
 }
@@ -290,6 +281,8 @@ getChar(uint line_num, uint char_num) const
 
   return getEditLine(line_num)->getChar(char_num);
 }
+
+//---
 
 bool
 CEditFile::
@@ -334,15 +327,15 @@ addFileLines(const std::string &fileName, uint line_num)
 
   startGroup();
 
-  std::string str;
+  std::string line;
 
-  while (file.readLine(str)) {
-    uint len = str.size();
+  while (file.readLine(line)) {
+    uint len = line.size();
 
-    if (len > 0 && str[len - 1] == '\r')
-      str = str.substr(0, len - 1);
+    if (len > 0 && line[len - 1] == '\r')
+      line = line.substr(0, len - 1);
 
-    addLine(line_num, str);
+    addLine(line_num, line);
 
     ++line_num;
   }
@@ -363,8 +356,8 @@ saveLines(const std::string &fileName)
 
   setFileName(fileName);
 
-  LineList::const_iterator p1 = beginLine();
-  LineList::const_iterator p2 = endLine  ();
+  auto p1 = beginLine();
+  auto p2 = endLine  ();
 
   for ( ; p1 != p2; ++p1) {
     file.write((*p1)->getCString());
@@ -376,6 +369,8 @@ saveLines(const std::string &fileName)
 
   return true;
 }
+
+//---
 
 void
 CEditFile::
@@ -390,7 +385,7 @@ addLine(uint line_num, const std::string &str)
 {
   CASSERT(line_num <= getNumLines(), "Invalid Line Num");
 
-  CEditLine *line = CEditMgrInst->createLine(this);
+  auto *line = CEditMgrInst->createLine(this);
 
   line->addChars(0, str);
 
@@ -403,7 +398,7 @@ subAddLine(uint line_num, CEditLine *line)
 {
   lines_.addLine(line_num, line);
 
-  addUndo(new CEditDeleteLineCmd(&cmd_mgr_, line_num));
+  addUndo(new CEditDeleteLineCmd(&cmdMgr_, line_num));
 
   setChanged(true);
   setUnsaved(true);
@@ -424,11 +419,13 @@ subAddChars(uint line_num, uint char_num, const std::string &chars)
 {
   lines_.addLineChars(line_num, char_num, chars);
 
-  addUndo(new CEditDeleteCharsCmd(&cmd_mgr_, line_num, char_num, chars.size()));
+  addUndo(new CEditDeleteCharsCmd(&cmdMgr_, line_num, char_num, chars.size()));
 
   setChanged(true);
   setUnsaved(true);
 }
+
+//---
 
 void
 CEditFile::
@@ -447,7 +444,7 @@ subMoveLine(uint line_num1, int line_num2)
 {
   lines_.moveLine(line_num1, line_num2);
 
-  addUndo(new CEditMoveLineCmd(&cmd_mgr_, line_num2, line_num1 - 1));
+  addUndo(new CEditMoveLineCmd(&cmdMgr_, line_num2, line_num1 - 1));
 
   setChanged(true);
   setUnsaved(true);
@@ -459,10 +456,12 @@ copyLine(uint line_num1, uint line_num2)
 {
   CASSERT(line_num1 < getNumLines(), "Invalid Line Num");
 
-  CEditLine *line = getEditLine(line_num1)->dup();
+  auto *line = getEditLine(line_num1)->dup();
 
   subAddLine(line_num2, line);
 }
+
+//---
 
 void
 CEditFile::
@@ -510,11 +509,11 @@ void
 CEditFile::
 subDeleteLine(uint line_num)
 {
-  const std::string &str = getEditLine(line_num)->getString();
+  auto str = getEditLine(line_num)->getString();
 
   lines_.deleteLine(line_num);
 
-  addUndo(new CEditAddLineCmd(&cmd_mgr_, line_num, str));
+  addUndo(new CEditAddLineCmd(&cmdMgr_, line_num, str));
 
   setChanged(true);
   setUnsaved(true);
@@ -562,7 +561,7 @@ deleteTo(uint line_num1, uint char_num1, uint line_num2, uint char_num2)
   startGroup();
 
   if      (line_num1 < line_num2) {
-    const CEditLine *line = getEditLine(line_num1);
+    const auto *line = getEditLine(line_num1);
 
     int num = line->getLength() - char_num1;
 
@@ -587,7 +586,7 @@ deleteTo(uint line_num1, uint char_num1, uint line_num2, uint char_num2)
 
     line_num2 = line_num1 - 1;
 
-    const CEditLine *line = getEditLine(line_num2);
+    const auto *line = getEditLine(line_num2);
 
     int num = line->getLength() - char_num2;
 
@@ -622,7 +621,7 @@ deleteChar(uint line_num)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
 
-  const CEditLine *line = getEditLine(line_num);
+  auto *line = getEditLine(line_num);
 
   if (line->isEmpty())
     return;
@@ -654,14 +653,14 @@ void
 CEditFile::
 subDeleteChars(uint line_num, uint char_num, uint n)
 {
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   CASSERT(char_num + n <= line->getLength(), "Invalid Number of Chars");
 
   for (uint i = 0; i < n; ++i) {
     char c = line->getChar(char_num + i);
 
-    addUndo(new CEditInsertCharCmd(&cmd_mgr_, line_num, char_num, c));
+    addUndo(new CEditInsertCharCmd(&cmdMgr_, line_num, char_num, c));
   }
 
   lines_.deleteLineChars(line_num, char_num, n);
@@ -671,6 +670,8 @@ subDeleteChars(uint line_num, uint char_num, uint n)
   setChanged(true);
   setUnsaved(true);
 }
+
+//---
 
 void
 CEditFile::
@@ -690,6 +691,8 @@ shiftRight(uint line_num1, uint line_num2)
   util_->shiftRight(line_num1, line_num2);
 }
 
+//---
+
 void
 CEditFile::
 yankLines(char c, uint n)
@@ -708,7 +711,7 @@ yankLines(char id, uint line_num, uint n)
   for (uint i = 0; i < n; ++i) {
     uint line_num1 = line_num + i;
 
-    const CEditLine *line = getEditLine(line_num1);
+    const auto *line = getEditLine(line_num1);
 
     uint len = line->getLength();
 
@@ -777,7 +780,7 @@ CEditFile::
 yankClear(char id)
 {
   if (! inGroup()) {
-    CEditBuffer &buffer = getBuffer(id);
+    auto &buffer = getBuffer(id);
 
     buffer.clear();
   }
@@ -792,47 +795,47 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
   std::vector<CEditBufferLine> lines;
 
   if      (line_num1 < line_num2) {
-    const CEditLine *line1 = getEditLine(line_num1);
+    const auto *line1 = getEditLine(line_num1);
 
-    const std::string &str1 = line1->getString();
+    const auto &str1 = line1->getString();
 
     lines.push_back(CEditBufferLine(str1.substr(char_num1), is_line));
 
     for (uint i = line_num1 + 1; i < line_num2; ++i) {
-      const CEditLine *line = getEditLine(i);
+      const auto *line = getEditLine(i);
 
       lines.push_back(CEditBufferLine(line->getString(), true));
     }
 
-    const CEditLine *line2 = getEditLine(line_num2);
+    const auto *line2 = getEditLine(line_num2);
 
-    const std::string &str2 = line2->getString();
+    const auto &str2 = line2->getString();
 
     lines.push_back(CEditBufferLine(str2.substr(0, char_num2), is_line));
   }
   else if (line_num2 < line_num1) {
-    const CEditLine *line2 = getEditLine(line_num2);
+    const auto *line2 = getEditLine(line_num2);
 
-    const std::string &str2 = line2->getString();
+    const auto &str2 = line2->getString();
 
     lines.push_back(CEditBufferLine(str2.substr(char_num2), is_line));
 
     for (uint i = line_num2 + 1; i < line_num1; ++i) {
-      const CEditLine *line = getEditLine(i);
+      const auto *line = getEditLine(i);
 
       lines.push_back(CEditBufferLine(line->getString(), true));
     }
 
-    const CEditLine *line1 = getEditLine(line_num1);
+    const auto *line1 = getEditLine(line_num1);
 
-    const std::string &str1 = line1->getString();
+    const auto &str1 = line1->getString();
 
     lines.push_back(CEditBufferLine(str1.substr(0, char_num1), is_line));
   }
   else {
-    const CEditLine *line1 = getEditLine(line_num1);
+    const auto *line1 = getEditLine(line_num1);
 
-    const std::string &str1 = line1->getString();
+    const auto &str1 = line1->getString();
 
     std::string str2;
 
@@ -844,17 +847,17 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
     lines.push_back(CEditBufferLine(str2, is_line));
   }
 
-  std::vector<CEditBufferLine>::iterator p1 = lines.begin();
-  std::vector<CEditBufferLine>::iterator p2 = lines.end  ();
+  auto p1 = lines.begin();
+  auto p2 = lines.end  ();
 
   if (inGroup()) {
-    CEditGroup *group = group_list_.back();
+    auto *group = groupList_.back();
 
     for ( ; p1 != p2; ++p1)
       group->addLine((*p1).line, (*p1).newline);
   }
   else {
-    CEditBuffer &buffer = getBuffer(id);
+    auto &buffer = getBuffer(id);
 
     for ( ; p1 != p2; ++p1)
       buffer.addLine((*p1).line, (*p1).newline);
@@ -879,18 +882,18 @@ void
 CEditFile::
 pasteAfter(char id, uint line_num, uint char_num)
 {
-  CEditBuffer &buffer = getBuffer(id);
+  auto &buffer = getBuffer(id);
 
-  uint num_lines = buffer.lines.size();
+  uint numLines = buffer.lines.size();
 
-  if (num_lines == 0)
+  if (numLines == 0)
     return;
 
-  CEditBufferLine *sline = &buffer.lines[0];
-  CEditBufferLine *eline = NULL;
+  auto *sline = &buffer.lines[0];
+  auto *eline = (CEditBufferLine *) nullptr;
 
-  if (num_lines > 1)
-    eline = &buffer.lines[num_lines - 1];
+  if (numLines > 1)
+    eline = &buffer.lines[numLines - 1];
 
   startGroup();
 
@@ -898,7 +901,7 @@ pasteAfter(char id, uint line_num, uint char_num)
     if (eline)
       splitLine(line_num, char_num);
 
-    const CEditLine *line = getEditLine(line_num);
+    const auto *line = getEditLine(line_num);
 
     if (char_num < line->getLength())
       addChars(line_num, char_num + 1, sline->line);
@@ -916,8 +919,8 @@ pasteAfter(char id, uint line_num, uint char_num)
     ++line_num;
   }
 
-  for (uint i = 1; i < num_lines - 1; ++i) {
-    CEditBufferLine *mline = &buffer.lines[i];
+  for (uint i = 1; i < numLines - 1; ++i) {
+    auto *mline = &buffer.lines[i];
 
     addLine(line_num, mline->line);
 
@@ -951,18 +954,18 @@ void
 CEditFile::
 pasteBefore(char id, uint line_num, uint char_num)
 {
-  CEditBuffer &buffer = getBuffer(id);
+  auto &buffer = getBuffer(id);
 
-  uint num_lines = buffer.lines.size();
+  uint numLines = buffer.lines.size();
 
-  if (num_lines == 0)
+  if (numLines == 0)
     return;
 
-  CEditBufferLine *sline = &buffer.lines[0];
-  CEditBufferLine *eline = NULL;
+  auto *sline = &buffer.lines[0];
+  auto *eline = (CEditBufferLine *) nullptr;
 
-  if (num_lines > 1)
-    eline = &buffer.lines[num_lines - 1];
+  if (numLines > 1)
+    eline = &buffer.lines[numLines - 1];
 
   startGroup();
 
@@ -975,21 +978,23 @@ pasteBefore(char id, uint line_num, uint char_num)
   else
     addLine(line_num, sline->line);
 
-  for (uint i = 1; i < num_lines - 1; ++i) {
-    CEditBufferLine *mline = &buffer.lines[i];
+  for (uint i = 1; i < numLines - 1; ++i) {
+    auto *mline = &buffer.lines[i];
 
     addLine(line_num + i, mline->line);
   }
 
   if (eline) {
     if (! eline->newline)
-      addChars(line_num + num_lines - 1, 0, eline->line);
+      addChars(line_num + numLines - 1, 0, eline->line);
     else
-      addLine(line_num + num_lines - 1, eline->line);
+      addLine(line_num + numLines - 1, eline->line);
   }
 
   endGroup();
 }
+
+//---
 
 uint
 CEditFile::
@@ -997,7 +1002,7 @@ lineLength(uint line_num)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
 
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   return line->getLength();
 }
@@ -1020,6 +1025,8 @@ setChar(uint line_num, uint char_num, char c)
 
   lines_.setLineChar(line_num, char_num, c);
 }
+
+//---
 
 void
 CEditFile::
@@ -1048,7 +1055,7 @@ CEditFile::
 subInsertChar(uint line_num, uint char_num, char c)
 {
   if (isLinesEmpty()) {
-    CEditLine *line = CEditMgrInst->createLine(this);
+    auto *line = CEditMgrInst->createLine(this);
 
     subAddLine(0, line);
 
@@ -1057,11 +1064,13 @@ subInsertChar(uint line_num, uint char_num, char c)
 
   lines_.addLineChar(line_num, char_num, c);
 
-  addUndo(new CEditDeleteCharsCmd(&cmd_mgr_, line_num, char_num, 1));
+  addUndo(new CEditDeleteCharsCmd(&cmdMgr_, line_num, char_num, 1));
 
   setChanged(true);
   setUnsaved(true);
 }
+
+//---
 
 void
 CEditFile::
@@ -1090,22 +1099,24 @@ CEditFile::
 subReplaceChar(uint line_num, uint char_num, char c)
 {
   if (isLinesEmpty()) {
-    CEditLine *line = CEditMgrInst->createLine(this);
+    auto *line = CEditMgrInst->createLine(this);
 
     subAddLine(0, line);
   }
 
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   char c1 = line->getChar(char_num);
 
   lines_.replaceLineChar(line_num, char_num, c);
 
-  addUndo(new CEditReplaceCharCmd(&cmd_mgr_, line_num, char_num, c1));
+  addUndo(new CEditReplaceCharCmd(&cmdMgr_, line_num, char_num, c1));
 
   setChanged(true);
   setUnsaved(true);
 }
+
+//---
 
 void
 CEditFile::
@@ -1129,13 +1140,13 @@ void
 CEditFile::
 subSplitLine(uint line_num, uint char_num)
 {
-  CEditLine *line = CEditMgrInst->createLine(this);
+  auto *line = CEditMgrInst->createLine(this);
 
   lines_.addLine(line_num + 1, line);
 
   lines_.splitLine(line_num, char_num);
 
-  addUndo(new CEditJoinLineCmd(&cmd_mgr_, line_num));
+  addUndo(new CEditJoinLineCmd(&cmdMgr_, line_num));
 
   setChanged(true);
   setUnsaved(true);
@@ -1143,6 +1154,8 @@ subSplitLine(uint line_num, uint char_num)
   cursorDown  (1);
   cursorToLeft();
 }
+
+//---
 
 void
 CEditFile::
@@ -1168,16 +1181,18 @@ void
 CEditFile::
 subJoinLine(uint line_num)
 {
-  const CEditLine *line1 = getEditLine(line_num);
+  const auto *line1 = getEditLine(line_num);
 
   uint len1 = line1->getLength();
 
   lines_.joinLine(line_num);
 
-  addUndo(new CEditSplitLineCmd(&cmd_mgr_, line_num, len1));
+  addUndo(new CEditSplitLineCmd(&cmdMgr_, line_num, len1));
 
   subDeleteLine(line_num + 1);
 }
+
+//---
 
 void
 CEditFile::
@@ -1201,11 +1216,13 @@ newLineAbove()
   cursorToLeft();
 }
 
+//---
+
 bool
 CEditFile::
 cursorLeft(uint n)
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1235,7 +1252,7 @@ bool
 CEditFile::
 cursorRight(uint n)
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1265,7 +1282,7 @@ bool
 CEditFile::
 cursorUp(uint n)
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1302,7 +1319,7 @@ bool
 CEditFile::
 cursorDown(uint n)
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1342,7 +1359,7 @@ void
 CEditFile::
 cursorToLeft()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1363,7 +1380,7 @@ void
 CEditFile::
 cursorToRight()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1384,7 +1401,7 @@ void
 CEditFile::
 cursorSkipSpace()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1398,7 +1415,7 @@ void
 CEditFile::
 cursorSkipSpace(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = getEditLine(*line_num);
+  const auto *line = getEditLine(*line_num);
 
   while (*char_num < line->getLength() - 1 && isspace(line->getChar(*char_num)))
     ++(*char_num);
@@ -1408,7 +1425,7 @@ void
 CEditFile::
 cursorFirstNonBlankUp()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1431,7 +1448,7 @@ void
 CEditFile::
 cursorFirstNonBlankDown()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1454,7 +1471,7 @@ void
 CEditFile::
 cursorFirstNonBlank()
 {
-  const CIPoint2D pos = getPos();
+  auto pos = getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -1481,6 +1498,8 @@ cursorTo(uint line_num, uint char_num)
 
   setPos(pos);
 }
+
+//---
 
 void
 CEditFile::
@@ -1641,7 +1660,7 @@ bool
 CEditFile::
 nextLine(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = getEditLine(*line_num);
+  const auto *line = getEditLine(*line_num);
 
   *char_num = line->getLength() - 1;
 
@@ -1666,7 +1685,7 @@ prevLine(uint *line_num, uint *char_num)
 
   --(*line_num);
 
-  const CEditLine *line = getEditLine(*line_num);
+  const auto *line = getEditLine(*line_num);
 
   *char_num = std::max((int) line->getLength() - 1, 0);
 
@@ -1712,7 +1731,7 @@ void
 CEditFile::
 swapChar(uint line_num, uint char_num)
 {
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   char c = line->getChar(char_num);
 
@@ -2044,7 +2063,7 @@ findNextChar(uint line_num, int char_num, char c, bool multiline)
   ++char_num;
 
   while (true) {
-    const CEditLine *line = getEditLine(line_num);
+    const auto *line = getEditLine(line_num);
 
     for (uint i = char_num; i < line->getLength(); ++i) {
       if (line->getChar(i) == c) {
@@ -2076,7 +2095,7 @@ findNextChar(uint line_num, int char_num, const std::string &str, bool multiline
   ++char_num;
 
   while (true) {
-    const CEditLine *line = getEditLine(line_num);
+    const auto *line = getEditLine(line_num);
 
     const char *str1 = str.c_str();
 
@@ -2123,7 +2142,7 @@ findPrevChar(uint line_num, int char_num, char c, bool multiline)
 
   --char_num;
 
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   while (true) {
     for (int i = char_num; i >= 0; --i) {
@@ -2157,7 +2176,7 @@ findPrevChar(uint line_num, int char_num, const std::string &str, bool multiline
 
   --char_num;
 
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   while (true) {
     const char *str1 = str.c_str();
@@ -2185,6 +2204,8 @@ findPrevChar(uint line_num, int char_num, const std::string &str, bool multiline
   return false;
 }
 
+//---
+
 bool
 CEditFile::
 replace(uint line_num, uint char_num, char c)
@@ -2211,15 +2232,15 @@ bool
 CEditFile::
 subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &replaceStr)
 {
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
-  std::string old = line->getSubString(char_num1, char_num2);
+  auto old = line->getSubString(char_num1, char_num2);
 
   lines_.replaceLineChars(line_num, char_num1, char_num2, replaceStr);
 
   char_num2 = char_num1 + replaceStr.size() - 1;
 
-  addUndo(new CEditReplaceCmd(&cmd_mgr_, line_num, char_num1, char_num2, old));
+  addUndo(new CEditReplaceCmd(&cmdMgr_, line_num, char_num1, char_num2, old));
 
   setChanged(true);
   setUnsaved(true);
@@ -2227,11 +2248,24 @@ subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &rep
   return true;
 }
 
-void
+//---
+
+bool
 CEditFile::
-markReturn()
+getMarkPos(const std::string &mark, uint *line_num, uint *char_num) const
 {
-  setMarkPos("'");
+  auto p = marks_.find(mark);
+  if (p == marks_.end()) return false;
+
+  auto pos = (*p).second;
+
+  if (pos.x < 0 && pos.y < 0)
+    return false;
+
+  *line_num = pos.y;
+  *char_num = pos.x;
+
+  return true;
 }
 
 void
@@ -2250,26 +2284,6 @@ setMarkPos(const std::string &mark, uint line_num, uint char_num)
   marks_[mark] = CIPoint2D(char_num, line_num);
 }
 
-bool
-CEditFile::
-getMarkPos(const std::string &mark, uint *line_num, uint *char_num) const
-{
-  MarkList::const_iterator p = marks_.find(mark);
-
-  if (p == marks_.end())
-    return false;
-
-  CIPoint2D pos = (*p).second;
-
-  if (pos.x < 0 && pos.y < 0)
-    return false;
-
-  *line_num = pos.y;
-  *char_num = pos.x;
-
-  return true;
-}
-
 void
 CEditFile::
 unsetMarkPos(const std::string &mark)
@@ -2279,10 +2293,17 @@ unsetMarkPos(const std::string &mark)
 
 void
 CEditFile::
+markReturn()
+{
+  setMarkPos("'");
+}
+
+void
+CEditFile::
 clearLineMarks(uint line_num)
 {
-  MarkList::iterator p1 = marks_.begin();
-  MarkList::iterator p2 = marks_.end  ();
+  auto p1 = marks_.begin();
+  auto p2 = marks_.end  ();
 
   for ( ; p1 != p2; ++p1) {
     if ((*p1).second.y == (int) line_num)
@@ -2290,17 +2311,19 @@ clearLineMarks(uint line_num)
   }
 }
 
+//---
+
 void
 CEditFile::
 startGroup()
 {
-  CEditGroup *group = new CEditGroup;
+  auto *group = new CEditGroup;
 
-  group_list_.push_back(group);
+  groupList_.push_back(group);
 
   undo_.startGroup();
 
-  addUndo(new CEditMoveToCmd(&cmd_mgr_, getRow(), getCol()));
+  addUndo(new CEditMoveToCmd(&cmdMgr_, getRow(), getCol()));
 }
 
 void
@@ -2312,14 +2335,14 @@ endGroup()
   if (! inGroup())
     return;
 
-  CEditGroup *group = group_list_.back();
+  auto *group = groupList_.back();
 
-  group_list_.pop_back();
+  groupList_.pop_back();
 
-  CEditGroup::LineList::iterator p1 = group->lines.begin();
-  CEditGroup::LineList::iterator p2 = group->lines.end  ();
+  auto p1 = group->lines.begin();
+  auto p2 = group->lines.end  ();
 
-  CEditBuffer &buffer = getBuffer('\0');
+  auto &buffer = getBuffer('\0');
 
   for ( ; p1 != p2; ++p1)
     buffer.lines.push_back(*p1);
@@ -2331,7 +2354,7 @@ bool
 CEditFile::
 inGroup() const
 {
-  return ! group_list_.empty();
+  return ! groupList_.empty();
 }
 
 void
@@ -2380,10 +2403,10 @@ void
 CEditFile::
 undoLine()
 {
-  const CEditCursor::LastLine &last_line = cursor_->getLastLine();
+  const auto &last_line = cursor_->getLastLine();
 
   if (last_line.set) {
-    std::string text = last_line.text;
+    auto text = last_line.text;
 
     cursor_->updateLastLine();
 
@@ -2397,6 +2420,17 @@ resetUndo()
 {
   undo_.clear();
 }
+
+//---
+
+CEditBuffer &
+CEditFile::
+getBuffer(char c)
+{
+  return bufferMap_[c];
+}
+
+//---
 
 bool
 CEditFile::
@@ -2412,7 +2446,7 @@ getLineEnd(uint line_num) const
   if (line_num >= getNumLines())
     return 0;
 
-  const CEditLine *line = getEditLine(line_num);
+  const auto *line = getEditLine(line_num);
 
   uint len = line->getLength();
 
@@ -2422,14 +2456,16 @@ getLineEnd(uint line_num) const
   return len;
 }
 
+//---
+
 bool
 CEditFile::
-runEdCmd(const std::string &str, bool &quit)
+runEdCmd(const std::string &str, bool &quitted)
 {
-  msg_lines_.clear();
-  err_lines_.clear();
+  msgLines_.clear();
+  errLines_.clear();
 
-  quit = false;
+  quitted = false;
 
   bool rc = true;
 
@@ -2439,13 +2475,13 @@ runEdCmd(const std::string &str, bool &quit)
 
   uint num_words = words.size();
 
-  std::string cmd = (num_words > 0 ? words[0] : "");
+  auto cmd = (num_words > 0 ? words[0] : std::string());
 
   if      (cmd == "set") {
     std::string name, arg;
 
     for (uint i = 1; i < num_words; ++i) {
-      std::string::size_type pos = words[i].find('=');
+      auto pos = words[i].find('=');
 
       if (pos != std::string::npos) {
         name = words[i].substr(0, pos);
@@ -2462,11 +2498,12 @@ runEdCmd(const std::string &str, bool &quit)
   else if (cmd == "registers") {
     addMsgLine("-- Registers --");
 
-    BufferMap::const_iterator p1, p2;
+    auto p1 = bufferMap_.begin();
+    auto p2 = bufferMap_.end();
 
-    for (p1 = buffer_map_.begin(), p2 = buffer_map_.end(); p1 != p2; ++p1) {
-      char               c      = (*p1).first;
-      const CEditBuffer &buffer = (*p1).second;
+    for ( ; p1 != p2; ++p1) {
+      char        c      = (*p1).first;
+      const auto &buffer = (*p1).second;
 
       uint numLines = buffer.getNumLines();
 
@@ -2484,11 +2521,12 @@ runEdCmd(const std::string &str, bool &quit)
   else if (cmd == "marks") {
     addMsgLine("-- Marks --");
 
-    MarkList::const_iterator p1, p2;
+    auto p1 = marks_.begin();
+    auto p2 = marks_.end();
 
-    for (p1 = marks_.begin(), p2 = marks_.end(); p1 != p2; ++p1) {
-      const std::string &str1 = (*p1).first;
-      const CIPoint2D   &pos  = (*p1).second;
+    for ( ; p1 != p2; ++p1) {
+      const auto &str1 = (*p1).first;
+      const auto &pos  = (*p1).second;
 
       std::string msg;
 
@@ -2500,12 +2538,12 @@ runEdCmd(const std::string &str, bool &quit)
     }
   }
   else if (cmd == "exit" || cmd == "quit") {
-    quit = true;
+    quitted = true;
   }
   else if (cmd == "position") {
-    const CIPoint2D pos = getPos();
+    auto pos = getPos();
 
-    std::string msg = CStrUtil::toString(pos.x) + " " + CStrUtil::toString(pos.y);
+    auto msg = CStrUtil::toString(pos.x) + " " + CStrUtil::toString(pos.y);
 
     addMsgLine(msg);
   }
@@ -2517,14 +2555,14 @@ runEdCmd(const std::string &str, bool &quit)
     rc = ed_->execCmd(str);
 
     if (rc)
-      quit = ed_->isQuit();
+      quitted = ed_->isQuit();
   }
 
-  if (! msg_lines_.empty())
-    displayMessage(msg_lines_);
+  if (! msgLines_.empty())
+    displayMessage(msgLines_);
 
-  if (! err_lines_.empty())
-    displayError(err_lines_);
+  if (! errLines_.empty())
+    displayError(errLines_);
 
   return rc;
 }
@@ -2533,8 +2571,8 @@ void
 CEditFile::
 setOptionString(const std::string &name, const std::string &arg)
 {
-  std::string name1 = name;
-  std::string arg1  = arg;
+  auto name1 = name;
+  auto arg1  = arg;
 
   if (name1.size() > 2 && name1.substr(0, 2) == "no")  {
     if (arg1 == "")
@@ -2547,7 +2585,7 @@ setOptionString(const std::string &name, const std::string &arg)
       arg1 = "1";
   }
 
-  option_map_[name1] = arg1;
+  optionMap_[name1] = arg1;
 
   if      (name1 == "ignorecase") {
     options_.ignorecase = CStrUtil::toBool(arg1);
@@ -2570,9 +2608,9 @@ bool
 CEditFile::
 getOptionString(const std::string &name, std::string &value) const
 {
-  OptionMap::const_iterator p = option_map_.find(name);
+  auto p = optionMap_.find(name);
 
-  if (p == option_map_.end())
+  if (p == optionMap_.end())
     return false;
 
   value = (*p).second;
@@ -2586,13 +2624,6 @@ optionChanged(const std::string &)
 {
 }
 
-CEditBuffer &
-CEditFile::
-getBuffer(char c)
-{
-  return buffer_map_[c];
-}
-
 void
 CEditFile::
 replayFile(const std::string &)
@@ -2604,23 +2635,23 @@ void
 CEditFile::
 addMsgLine(const std::string &msg)
 {
-  msg_lines_.push_back(msg);
+  msgLines_.push_back(msg);
 }
 
 void
 CEditFile::
 addErrLine(const std::string &msg)
 {
-  err_lines_.push_back(msg);
+  errLines_.push_back(msg);
 }
 
 void
 CEditFile::
 displayMessage(const StringList &lines)
 {
-  uint num_lines = lines.size();
+  uint numLines = lines.size();
 
-  for (uint i = 0; i < num_lines; ++i) {
+  for (uint i = 0; i < numLines; ++i) {
     std::cerr << lines[i] << std::endl;
   }
 }
@@ -2629,9 +2660,9 @@ void
 CEditFile::
 displayError(const StringList &lines)
 {
-  uint num_lines = lines.size();
+  uint numLines = lines.size();
 
-  for (uint i = 0; i < num_lines; ++i) {
+  for (uint i = 0; i < numLines; ++i) {
     std::cerr << lines[i] << std::endl;
   }
 }
@@ -2640,8 +2671,8 @@ void
 CEditFile::
 print(std::ostream &os) const
 {
-  LineList::const_iterator pline1 = beginLine();
-  LineList::const_iterator pline2 = endLine  ();
+  auto pline1 = beginLine();
+  auto pline2 = endLine  ();
 
   for ( ; pline1 != pline2; ++pline1)
     os << **pline1 << std::endl;
@@ -2667,8 +2698,8 @@ void
 CEditFileLines::
 clear()
 {
-  LineList::const_iterator p1 = begin();
-  LineList::const_iterator p2 = end  ();
+  auto p1 = begin();
+  auto p2 = end  ();
 
   for ( ; p1 != p2; ++p1)
     delete *p1;
@@ -2709,7 +2740,7 @@ void
 CEditFileLines::
 addLineChar(uint line_num, uint char_num, char c)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->insertChar(char_num, c);
 
@@ -2720,7 +2751,7 @@ void
 CEditFileLines::
 addLineChars(uint line_num, uint char_num, const std::string &chars)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->addChars(char_num, chars);
 
@@ -2731,7 +2762,7 @@ void
 CEditFileLines::
 setLineChar(uint line_num, uint char_num, char c)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->setChar(char_num, c);
 
@@ -2742,7 +2773,7 @@ void
 CEditFileLines::
 replaceLineChar(uint line_num, uint char_num, char c)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->replaceChar(char_num, c);
 
@@ -2753,7 +2784,7 @@ void
 CEditFileLines::
 replaceLineChars(uint line_num, const std::string &str)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->replace(str);
 
@@ -2764,7 +2795,7 @@ void
 CEditFileLines::
 replaceLineChars(uint line_num, uint char_num1, uint char_num2, const std::string &str)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   line->replace(char_num1, char_num2, str);
 
@@ -2775,7 +2806,7 @@ void
 CEditFileLines::
 moveLine(uint line_num1, int line_num2)
 {
-  CEditLine *line = lines_[line_num1];
+  auto *line = lines_[line_num1];
 
   if      (line_num2 > (int) line_num1) {
     for (int i = line_num1 + 1; i <= line_num2; ++i)
@@ -2801,8 +2832,8 @@ void
 CEditFileLines::
 splitLine(uint line_num, uint char_num)
 {
-  CEditLine *line1 = lines_[line_num    ];
-  CEditLine *line2 = lines_[line_num + 1];
+  auto *line1 = lines_[line_num    ];
+  auto *line2 = lines_[line_num + 1];
 
   line1->split(line2, char_num);
 }
@@ -2811,8 +2842,8 @@ void
 CEditFileLines::
 joinLine(uint line_num)
 {
-  CEditLine *line1 = lines_[line_num    ];
-  CEditLine *line2 = lines_[line_num + 1];
+  auto *line1 = lines_[line_num    ];
+  auto *line2 = lines_[line_num + 1];
 
   line1->join(line2);
 }
@@ -2821,20 +2852,20 @@ void
 CEditFileLines::
 deleteLine(uint line_num)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
-  uint num_lines = lines_.size();
+  uint numLines = lines_.size();
 
-  for (uint i = line_num + 1; i < num_lines; ++i)
+  for (uint i = line_num + 1; i < numLines; ++i)
     lines_[i - 1] = lines_[i];
 
   lines_.pop_back();
 
   delete line;
 
-  num_lines = lines_.size();
+  numLines = lines_.size();
 
-  for (uint i = line_num; i < num_lines; ++i)
+  for (uint i = line_num; i < numLines; ++i)
     lines_[i]->setChanged(true);
 }
 
@@ -2842,7 +2873,7 @@ void
 CEditFileLines::
 deleteLineChars(uint line_num, uint char_num, uint n)
 {
-  CEditLine *line = lines_[line_num];
+  auto *line = lines_[line_num];
 
   for (uint i = 0; i < n; ++i)
     line->deleteChar(char_num);

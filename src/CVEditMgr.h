@@ -12,26 +12,28 @@ class CVEditFactory : public CEditDefFactory {
  public:
   virtual ~CVEditFactory() { }
 
-  virtual CEditFile *createFile() {
+  CEditFile *createFile() override {
     return new CVEditFile();
   }
 
-  virtual CEditCursor *createCursor(CEditFile *file) {
+  CEditCursor *createCursor(CEditFile *file) override {
     return new CVEditCursor(dynamic_cast<CVEditFile *>(file));
   }
 
-  virtual CEditLine *createLine(CEditFile *file) {
+  CEditLine *createLine(CEditFile *file) override {
     return new CVEditLine(dynamic_cast<CVEditFile *>(file));
   }
 
-  virtual CEditChar *createChar(CEditLine *) {
+  CEditChar *createChar(CEditLine *) override {
     return new CVEditChar();
   }
 
-  virtual CLineEdit *createLineEdit(CEditFile *) {
+  CLineEdit *createLineEdit(CEditFile *) override {
     return new CVLineEdit();
   }
 };
+
+//---
 
 class CVEditRenderer {
  public:
@@ -51,6 +53,8 @@ class CVEditRenderer {
 
   virtual void drawString(const CIPoint2D &p, const std::string &str) = 0;
 };
+
+//---
 
 #define CVEditMgrInst CVEditMgr::getInstance()
 
@@ -80,7 +84,7 @@ class CVEditMgr {
   CVEditMgr();
 
  private:
-  CVEditRenderer *renderer_;
+  CVEditRenderer *renderer_ { nullptr };
 };
 
 #endif

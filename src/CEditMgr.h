@@ -32,12 +32,11 @@ class CEditDefFactory : public CEditFactory {
   virtual CLineEdit   *createLineEdit(CEditFile *file);
 };
 
+//---
+
 #define CEditMgrInst CEditMgr::getInstance()
 
 class CEditMgr {
- private:
-  CEditFactory *factory_;
-
  public:
   static CEditMgr *getInstance();
 
@@ -59,6 +58,9 @@ class CEditMgr {
  private:
   CEditMgr(const CEditMgr &rhs);
   CEditMgr &operator=(const CEditMgr &rhs);
+
+ private:
+  CEditFactory *factory_ { nullptr };
 };
 
 #endif

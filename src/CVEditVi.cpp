@@ -33,13 +33,6 @@ CVEditVi::
   delete cmdLine_;
 }
 
-std::string
-CVEditVi::
-getCmdLineString() const
-{
-  return cmdLine_->getLine();
-}
-
 void
 CVEditVi::
 processChar(const CKeyEvent &event)
@@ -88,9 +81,7 @@ processCommandChar(const CKeyEvent &event)
         goto done;
       }
       case CKEY_TYPE_QuoteDbl: { // set register
-        if      (key == CKEY_TYPE_TAB ||
-                 key == CKEY_TYPE_Tab ||
-                 key == CKEY_TYPE_KP_Tab) {
+        if      (key == CKEY_TYPE_TAB || key == CKEY_TYPE_Tab || key == CKEY_TYPE_KP_Tab) {
           file_->displayRegisters();
         }
         else if (isalnum(c) || strchr("#/", c))
@@ -101,9 +92,7 @@ processCommandChar(const CKeyEvent &event)
         goto done;
       }
       case CKEY_TYPE_Apostrophe: { // goto mark line
-        if (key == CKEY_TYPE_TAB ||
-            key == CKEY_TYPE_Tab ||
-            key == CKEY_TYPE_KP_Tab)
+        if (key == CKEY_TYPE_TAB || key == CKEY_TYPE_Tab || key == CKEY_TYPE_KP_Tab)
           file_->displayMarks();
         else {
           file_->markReturn();
@@ -135,8 +124,8 @@ processCommandChar(const CKeyEvent &event)
             file_->deleteChar();
         }
         else {
-          CIPoint2D start = file_->getPos();
-          CIPoint2D end   = start;
+          auto start = file_->getPos();
+          auto end   = start;
 
           bool rc = processMoveChar(event, end);
 
@@ -162,8 +151,8 @@ processCommandChar(const CKeyEvent &event)
         else if (key == CKEY_TYPE_l)
           file_->deleteChar();
         else {
-          CIPoint2D start = file_->getPos();
-          CIPoint2D end   = start;
+          auto start = file_->getPos();
+          auto end   = start;
 
           bool rc = processMoveChar(event, end);
 
@@ -190,7 +179,7 @@ processCommandChar(const CKeyEvent &event)
       case CKEY_TYPE_g: { // test code !!!
         file_->setSelectRange(file_->getPos(), file_->getPos());
 
-        CIPoint2D select_end = file_->getSelectEnd();
+        auto select_end = file_->getSelectEnd();
 
         bool rc = processMoveChar(event, select_end);
 
@@ -233,8 +222,8 @@ processCommandChar(const CKeyEvent &event)
         else if (key == CKEY_TYPE_w)
           file_->yankWords(register_, std::max(count_, 1U));
         else {
-          CIPoint2D start = file_->getPos();
-          CIPoint2D end   = start;
+          auto start = file_->getPos();
+          auto end   = start;
 
           bool rc = processMoveChar(event, end);
 
@@ -245,14 +234,11 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_z: { // scroll to
-        if      (key == CKEY_TYPE_Return ||
-                 key == CKEY_TYPE_Plus)
+        if      (key == CKEY_TYPE_Return || key == CKEY_TYPE_Plus)
           file_->scrollTop();
-        else if (key == CKEY_TYPE_Period ||
-                 key == CKEY_TYPE_z)
+        else if (key == CKEY_TYPE_Period || key == CKEY_TYPE_z)
           file_->scrollMiddle();
-        else if (key == CKEY_TYPE_b ||
-                 key == CKEY_TYPE_Minus)
+        else if (key == CKEY_TYPE_b || key == CKEY_TYPE_Minus)
           file_->scrollBottom();
         else if (key == CKEY_TYPE_t)
           file_->scrollTop();
@@ -276,7 +262,7 @@ processCommandChar(const CKeyEvent &event)
         if      (key == CKEY_TYPE_Exclam)
           str = ":.!";
         else {
-          CIPoint2D pos = file_->getPos();
+          auto pos = file_->getPos();
 
           file_->setSelectRange(pos, pos);
 
@@ -300,8 +286,8 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_Less: {
-        CIPoint2D start = file_->getPos();
-        CIPoint2D end   = start;
+        auto start = file_->getPos();
+        auto end   = start;
 
         if      (key == CKEY_TYPE_Less)
           file_->shiftLeft(start.y, end.y);
@@ -315,8 +301,8 @@ processCommandChar(const CKeyEvent &event)
         break;
       }
       case CKEY_TYPE_Greater: {
-        CIPoint2D start = file_->getPos();
-        CIPoint2D end   = start;
+        auto start = file_->getPos();
+        auto end   = start;
 
         if      (key == CKEY_TYPE_Greater)
           file_->shiftRight(start.y, end.y);
@@ -390,7 +376,7 @@ void
 CVEditVi::
 processNormalChar(const CKeyEvent &event)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   switch (key) {
     // cursor movement
@@ -424,7 +410,7 @@ processNormalChar(const CKeyEvent &event)
         file_->scrollTop();
       }
       else
-       file_->cursorDown(std::max(count_, 1U));
+        file_->cursorDown(std::max(count_, 1U));
 
       break;
     }
@@ -988,21 +974,36 @@ processNormalChar(const CKeyEvent &event)
       break;
 
     case CKEY_TYPE_x:
-    case CKEY_TYPE_DEL:
-      file_->deleteChar();
+    case CKEY_TYPE_DEL: {
+      file_->startGroup();
+
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        file_->deleteChar();
+
+      file_->endGroup();
 
       lastCommand_.clear();
+      lastCommand_.addCount(count_);
       lastCommand_.addKey(key);
 
       break;
-    case CKEY_TYPE_X:
-      file_->cursorLeft(1);
-      file_->deleteChar();
+    }
+    case CKEY_TYPE_X: {
+      file_->startGroup();
+
+      for (uint i = 0; i < std::max(count_, 1U); ++i) {
+        file_->cursorLeft(1);
+        file_->deleteChar();
+      }
+
+      file_->endGroup();
 
       lastCommand_.clear();
+      lastCommand_.addCount(count_);
       lastCommand_.addKey(key);
 
       break;
+    }
 
     case CKEY_TYPE_v: // char visual
     case CKEY_TYPE_V: // line visual
@@ -1021,9 +1022,7 @@ processNormalChar(const CKeyEvent &event)
       break;
     }
 
-    case CKEY_TYPE_TAB:
-    case CKEY_TYPE_Tab:
-    case CKEY_TYPE_KP_Tab: {
+    case CKEY_TYPE_TAB: case CKEY_TYPE_Tab: case CKEY_TYPE_KP_Tab: {
       file_->cursorRight(file_->getTabStop());
 
       break;
@@ -1047,7 +1046,7 @@ void
 CVEditVi::
 processControlChar(const CKeyEvent &event)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   switch (key) {
     case CKEY_TYPE_b:
@@ -1171,12 +1170,11 @@ void
 CVEditVi::
 processInsertChar(const CKeyEvent &event)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   lastCommand_.addKey(key);
 
-  if (CEvent::keyTypeIsAlpha(key) ||
-      CEvent::keyTypeIsDigit(key)) {
+  if (CEvent::keyTypeIsAlpha(key) || CEvent::keyTypeIsDigit(key)) {
     normalInsertChar(event);
 
     return;
@@ -1330,26 +1328,28 @@ void
 CVEditVi::
 processCmdLineChar(const CKeyEvent &event)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   if (key == CKEY_TYPE_Escape) {
     setCmdLineMode(false, "");
     return;
   }
 
+  assert(cmdLine_);
+
   cmdLine_->keyPress(event);
 
-  std::string line = getCmdLineString();
+  auto line = getCmdLineString();
 
   if (key == CKEY_TYPE_Return) {
-    bool quit;
+    bool quitted;
 
     if (line[0] == ':')
-      file_->runEdCmd(line.substr(1), quit);
+      file_->runEdCmd(line.substr(1), quitted);
     else
-      file_->runEdCmd(line, quit);
+      file_->runEdCmd(line, quitted);
 
-    if (quit)
+    if (quitted)
       file_->quit();
 
     setCmdLineMode(false, "");
@@ -1377,7 +1377,7 @@ bool
 CVEditVi::
 processMoveChar(const CKeyEvent &event, CIPoint2D &new_pos)
 {
-  CKeyType key = event.getType();
+  auto key = event.getType();
 
   uint x = new_pos.x;
   uint y = new_pos.y;
@@ -1455,6 +1455,8 @@ processMoveChar(const CKeyEvent &event, CIPoint2D &new_pos)
   return rc;
 }
 
+//---
+
 bool
 CVEditVi::
 doFindChar(char c, uint count, bool forward, bool till)
@@ -1529,16 +1531,29 @@ setCmdLineMode(bool cmdLineMode, const std::string &str)
   cmdLine_->cursorEnd();
 }
 
+std::string
+CVEditVi::
+getCmdLineString() const
+{
+  assert(cmdLine_);
+
+  return cmdLine_->getLine();
+}
+
 void
 CVEditVi::
 drawCmdLine(const CIBBox2D &bbox)
 {
+  assert(cmdLine_);
+
   LineEditRenderer r;
 
   cmdLine_->setFont(file_->getFont());
 
   cmdLine_->drawInside(&r, bbox);
 }
+
+//---
 
 void
 CVEditVi::
@@ -1568,12 +1583,12 @@ addCount(uint n)
 {
   if (n == 0) return;
 
-  std::string str = CStrUtil::toString(n);
+  auto str = CStrUtil::toString(n);
 
   uint len = str.size();
 
   for (uint i = 0; i < len; ++i) {
-    CKeyType key = CEvent::charKeyType(str[i]);
+    auto key = CEvent::charKeyType(str[i]);
 
     addKey(key);
   }

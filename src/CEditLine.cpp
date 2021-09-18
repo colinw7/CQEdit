@@ -10,13 +10,13 @@
 
 CEditLine::
 CEditLine(CEditFile *file) :
- file_(file), util_(this), chars_(), changed_(false)
+ file_(file), util_(this), chars_()
 {
 }
 
 CEditLine::
 CEditLine(const CEditLine &line) :
- file_(line.file_), util_(this), chars_(line.chars_), changed_(false)
+ file_(line.file_), util_(this), chars_(line.chars_)
 {
 }
 
@@ -25,7 +25,7 @@ CEditLine::
 {
 }
 
-const CEditLine &
+CEditLine &
 CEditLine::
 operator=(const CEditLine &line)
 {
@@ -50,14 +50,12 @@ addChars(uint pos, const std::string &line)
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
 
   uint num = line.size();
-
-  if (num == 0)
-    return;
+  if (num == 0) return;
 
   std::vector<CEditChar *> chars;
 
   for (uint i = 0; i < num; ++i) {
-    CEditChar *c1 = CEditMgrInst->createChar(this);
+    auto *c1 = CEditMgrInst->createChar(this);
 
     c1->setChar(line[i]);
 
@@ -151,12 +149,12 @@ const CEditChar *
 CEditLine::
 getCharP(uint pos) const
 {
-  if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return NULL;
+  if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return nullptr;
 
   if (pos == getLength())
-    return NULL;
-  else
-    return chars_.getChar(pos);
+    return nullptr;
+
+  return chars_.getChar(pos);
 }
 
 char
@@ -167,8 +165,8 @@ getChar(uint pos) const
 
   if (pos == getLength())
     return '\0';
-  else
-    return getCharP(pos)->getChar();
+
+  return getCharP(pos)->getChar();
 }
 
 void
@@ -177,7 +175,7 @@ setChar(uint pos, char c)
 {
   if (! CASSERT(pos < getLength(), "Invalid Char Num")) return;
 
-  CEditChar *c1 = CEditMgrInst->createChar(this);
+  auto *c1 = CEditMgrInst->createChar(this);
 
   c1->setChar(c);
 
@@ -192,7 +190,7 @@ insertChar(uint pos, char c)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
 
-  CEditChar *c1 = CEditMgrInst->createChar(this);
+  auto *c1 = CEditMgrInst->createChar(this);
 
   c1->setChar(c);
 
@@ -362,7 +360,7 @@ CEditLine::
 getSubCString(int spos, int epos) const
 {
   if (! CASSERT(spos >= 0 && epos < (int) getLength() && spos <= epos,
-                "Invalid Char Pos")) return NULL;
+                "Invalid Char Pos")) return nullptr;
 
   static char *buffer;
   static uint  buffer_size;
@@ -420,21 +418,21 @@ CEditLineChars::
 CEditLineChars(const CEditLineChars &chars) :
  chars_()
 {
-  CharList::const_iterator pchar1 = chars.chars_.begin();
-  CharList::const_iterator pchar2 = chars.chars_.end  ();
+  auto pchar1 = chars.chars_.begin();
+  auto pchar2 = chars.chars_.end  ();
 
   for ( ; pchar1 != pchar2; ++pchar1)
     chars_.push_back((*pchar1)->dup());
 }
 
-const CEditLineChars &
+CEditLineChars &
 CEditLineChars::
 operator=(const CEditLineChars &chars)
 {
   clear();
 
-  CharList::const_iterator pchar1 = chars.chars_.begin();
-  CharList::const_iterator pchar2 = chars.chars_.end  ();
+  auto pchar1 = chars.chars_.begin();
+  auto pchar2 = chars.chars_.end  ();
 
   for ( ; pchar1 != pchar2; ++pchar1)
     chars_.push_back((*pchar1)->dup());
@@ -455,7 +453,7 @@ void
 CEditLineChars::
 setChar(uint pos, CEditChar *c)
 {
-  CEditChar **p = &chars_[pos];
+  auto **p = &chars_[pos];
 
   delete *p;
 
@@ -473,7 +471,7 @@ CEditLineChars::iterator
 CEditLineChars::
 getCharI(uint pos)
 {
-  iterator p = begin();
+  auto p = begin();
 
   advance(p, pos);
 
@@ -499,7 +497,7 @@ addChars(uint pos, const std::vector<CEditChar *> &chars)
   uint old_len = chars_.size();
 
   for (uint i = 0; i < num; ++i)
-    chars_.push_back(NULL);
+    chars_.push_back(nullptr);
 
   uint new_len = old_len + num;
 
@@ -543,7 +541,7 @@ void
 CEditLineChars::
 deleteChar(uint pos)
 {
-  CEditChar *c1 = chars_[pos];
+  auto *c1 = chars_[pos];
 
   uint num_chars = chars_.size();
 
@@ -559,8 +557,8 @@ void
 CEditLineChars::
 print(std::ostream &os) const
 {
-  CharList::const_iterator pchar1 = chars_.begin();
-  CharList::const_iterator pchar2 = chars_.end  ();
+  auto pchar1 = chars_.begin();
+  auto pchar2 = chars_.end  ();
 
   for ( ; pchar1 != pchar2; ++pchar1)
     os << **pchar1;
@@ -606,7 +604,7 @@ isSentenceEnd(uint pos, uint *n) const
   char c = line_->getChar(pos + *n);
 
   // check for . ! ?
-  if (strchr(".?!", c) == NULL)
+  if (strchr(".?!", c) == nullptr)
     return false;
 
   (*n)++;
@@ -615,7 +613,7 @@ isSentenceEnd(uint pos, uint *n) const
   while (pos + *n < len - 1) {
     char c1 = line_->getChar(pos + *n);
 
-    if (strchr(")]\"\'", c1) == NULL)
+    if (strchr(")]\"\'", c1) == nullptr)
       break;
 
     (*n)++;
@@ -668,9 +666,7 @@ findNext(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
   const char *pattern1 = pattern.c_str();
 
   char *p = CStrUtil::strstr(&line[char_num1], &line[char_num2], pattern1);
-
-  if (p == NULL)
-    return false;
+  if (! p) return false;
 
   if (char_num)
     *char_num = p - line;
@@ -693,7 +689,7 @@ findNext(const CRegExp &pattern, int char_num1, int char_num2, uint *spos, uint 
   if (char_num2 < 0)
     char_num2 = num_chars - 1;
 
-  std::string line = line_->getString().substr(char_num1, char_num2 - char_num1 + 1);
+  auto line = line_->getString().substr(char_num1, char_num2 - char_num1 + 1);
 
   if (! pattern.find(line))
     return false;
@@ -729,9 +725,7 @@ findPrev(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
   const char *pattern1 = pattern.c_str();
 
   char *p = CStrUtil::strrstr(&line[char_num1], &line[char_num2], pattern1);
-
-  if (p == NULL)
-    return false;
+  if (! p) return false;
 
   if (char_num)
     *char_num = p - line;
@@ -754,7 +748,7 @@ findPrev(const CRegExp &pattern, int char_num1, int char_num2, uint *spos, uint 
   if (char_num2 >= (int) num_chars)
     return false;
 
-  std::string line = line_->getString().substr(char_num2, char_num1 - char_num2 + 1);
+  auto line = line_->getString().substr(char_num2, char_num1 - char_num2 + 1);
 
   if (! pattern.find(line))
     return false;

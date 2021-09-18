@@ -17,7 +17,7 @@ CEditChar::
 {
 }
 
-const CEditChar &
+CEditChar &
 CEditChar::
 operator=(const CEditChar &c)
 {

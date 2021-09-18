@@ -14,7 +14,7 @@ class CEditEd : public CEd {
 
  protected:
   CEditEd(const CEditEd &ed);
-  const CEditEd &operator=(const CEditEd &ed);
+  CEditEd &operator=(const CEditEd &ed);
 
  protected:
   CEditFile *file_;

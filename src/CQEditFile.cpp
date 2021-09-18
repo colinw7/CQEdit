@@ -15,9 +15,9 @@ const QFont &
 CQEditFile::
 getQFont() const
 {
-  CFontPtr font = getFont();
+  auto font = getFont();
 
-  CQFont *qfont = font.cast<CQFont>();
+  auto *qfont = font.cast<CQFont>();
 
   return qfont->getQFont();
 }
@@ -26,7 +26,7 @@ void
 CQEditFile::
 setQFont(const QFont &qfont)
 {
-  CFontPtr font = CQFontMgrInst->lookupFont(qfont);
+  auto font = CQFontMgrInst->lookupFont(qfont);
 
   setFont(font);
 }
@@ -58,7 +58,7 @@ void
 CQEditFile::
 selectionChanged(const std::string &str)
 {
-  QClipboard *clipboard = QApplication::clipboard();
+  auto *clipboard = QApplication::clipboard();
 
   clipboard->setText(str.c_str(), QClipboard::Selection);
 }

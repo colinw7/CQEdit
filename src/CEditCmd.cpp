@@ -34,10 +34,10 @@ CEditCmd *
 CEditCmdMgr::
 getCmd(const std::string &cmd) const
 {
-  CmdMap::const_iterator p = cmds_.find(cmd);
+  auto p = cmds_.find(cmd);
 
   if (p == cmds_.end())
-    return NULL;
+    return nullptr;
 
   return (*p).second;
 }
@@ -50,15 +50,14 @@ execCmd(const char *cmdName, ...)
 
   va_start(args, cmdName);
 
-  CEditCmd *cmd = getCmd(cmdName);
+  auto *cmd = getCmd(cmdName);
+  assert(cmd);
 
-  assert(cmd != NULL);
-
-  char *arg = va_arg(args, char *);
+  auto *arg = va_arg(args, char *);
 
   std::vector<std::string> argList;
 
-  while (arg != NULL) {
+  while (arg) {
     argList.push_back(arg);
 
     arg = va_arg(args, char *);
@@ -73,7 +72,7 @@ execCmd(const char *cmdName, ...)
 
 CEditAddLineCmd::
 CEditAddLineCmd(CEditCmdMgr *mgr) :
- CEditCmd(mgr), line_num_(0)
+ CEditCmd(mgr)
 {
 }
 
@@ -82,7 +81,7 @@ CEditAddLineCmd(CEditCmdMgr *mgr, int line_num, const std::string &line) :
  CEditCmd(mgr), line_num_(line_num), line_(line)
 {
   if (mgr_->getDebug())
-    std::cerr << "Add: Add Line " << line_num << " " << line << std::endl;
+    std::cerr << "Add: Add Line " << line_num << " " << line << "\n";
 }
 
 bool
@@ -91,8 +90,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int                pos  = CStrUtil::toInteger(argList[0]);
-  const std::string &line = argList[1];
+  int         pos  = CStrUtil::toInteger(argList[0]);
+  const auto &line = argList[1];
 
   mgr_->getFile()->addLine(pos, line);
 
@@ -105,13 +104,13 @@ exec()
 {
   if (getState() == UNDO_STATE) {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Add Line " << line_num_ << " " << line_ << std::endl;
+      std::cerr << "Exec: Add Line " << line_num_ << " " << line_ << "\n";
 
     mgr_->getFile()->addLine(line_num_, line_);
   }
   else {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Delete Line " << line_num_ << std::endl;
+      std::cerr << "Exec: Delete Line " << line_num_ << "\n";
 
     mgr_->getFile()->deleteLine(line_num_);
   }
@@ -132,7 +131,7 @@ CEditDeleteLineCmd(CEditCmdMgr *mgr, int line_num) :
  CEditCmd(mgr), line_num_(line_num)
 {
   if (mgr_->getDebug())
-    std::cerr << "Add: Delete Line " << line_num_ << std::endl;
+    std::cerr << "Add: Delete Line " << line_num_ << "\n";
 
   chars_ = mgr_->getFile()->getEditLine(line_num_)->getString();
 }
@@ -156,13 +155,13 @@ exec()
 {
   if (getState() == UNDO_STATE) {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Delete Line " << line_num_ << std::endl;
+      std::cerr << "Exec: Delete Line " << line_num_ << "\n";
 
     mgr_->getFile()->deleteLine(line_num_);
   }
   else {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Add Line " << line_num_ << " " << chars_ << std::endl;
+      std::cerr << "Exec: Add Line " << line_num_ << " " << chars_ << "\n";
 
     mgr_->getFile()->addLine(line_num_, chars_);
   }
@@ -232,10 +231,10 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 4);
 
-  int         line_num  = CStrUtil::toInteger(argList[0]);
-  int         char_num1 = CStrUtil::toInteger(argList[1]);
-  int         char_num2 = CStrUtil::toInteger(argList[2]);
-  std::string str       = argList[3];
+  int  line_num  = CStrUtil::toInteger(argList[0]);
+  int  char_num1 = CStrUtil::toInteger(argList[1]);
+  int  char_num2 = CStrUtil::toInteger(argList[2]);
+  auto str       = argList[3];
 
   mgr_->getFile()->replace(line_num, char_num1, char_num2, str);
 
@@ -246,8 +245,7 @@ bool
 CEditReplaceCmd::
 exec()
 {
-  std::string str = mgr_->getFile()->getEditLine(line_num_)->
-                      getSubString(char_num1_, char_num2_);
+  auto str = mgr_->getFile()->getEditLine(line_num_)->getSubString(char_num1_, char_num2_);
 
   mgr_->getFile()->replace(line_num_, char_num1_, char_num2_, str_);
 
@@ -269,8 +267,7 @@ CEditInsertCharCmd(CEditCmdMgr *mgr, int line_num, int char_num, char c) :
  CEditCmd(mgr), line_num_(line_num), char_num_(char_num), c_(c)
 {
   if (mgr_->getDebug())
-    std::cerr << "Add: Insert Char " << line_num_ << " " <<
-            char_num_ << " " << c_ << std::endl;
+    std::cerr << "Add: Insert Char " << line_num_ << " " << char_num_ << " " << c_ << "\n";
 }
 
 bool
@@ -279,9 +276,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int         line_num = CStrUtil::toInteger(argList[0]);
-  int         char_num = CStrUtil::toInteger(argList[1]);
-  std::string str      = argList[2];
+  int  line_num = CStrUtil::toInteger(argList[0]);
+  int  char_num = CStrUtil::toInteger(argList[1]);
+  auto str      = argList[2];
 
   mgr_->getFile()->insertChar(line_num, char_num, str[0]);
 
@@ -294,15 +291,13 @@ exec()
 {
   if (getState() == UNDO_STATE) {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Insert Char " << line_num_ << " " <<
-                   char_num_ << " " << c_ << std::endl;
+      std::cerr << "Exec: Insert Char " << line_num_ << " " << char_num_ << " " << c_ << "\n";
 
     mgr_->getFile()->insertChar(line_num_, char_num_, c_);
   }
   else {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Delete Char " << line_num_ << " " <<
-                   char_num_ << " " << std::endl;
+      std::cerr << "Exec: Delete Char " << line_num_ << " " << char_num_ << " " << "\n";
 
     mgr_->getFile()->deleteChars(line_num_, char_num_, 1);
   }
@@ -330,9 +325,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int         line_num = CStrUtil::toInteger(argList[0]);
-  int         char_num = CStrUtil::toInteger(argList[1]);
-  std::string str      = argList[2];
+  int  line_num = CStrUtil::toInteger(argList[0]);
+  int  char_num = CStrUtil::toInteger(argList[1]);
+  auto str      = argList[2];
 
   mgr_->getFile()->replaceChar(line_num, char_num, str[0]);
 
@@ -343,8 +338,7 @@ bool
 CEditReplaceCharCmd::
 exec()
 {
-  std::string str = mgr_->getFile()->getEditLine(line_num_)->
-                      getSubString(char_num_, char_num_);
+  auto str = mgr_->getFile()->getEditLine(line_num_)->getSubString(char_num_, char_num_);
 
   mgr_->getFile()->replaceChar(line_num_, char_num_, c_);
 
@@ -370,8 +364,7 @@ CEditDeleteCharsCmd(CEditCmdMgr *mgr, int line_num,
              getSubString(char_num_, char_num_ + num_chars - 1);
 
   if (mgr_->getDebug())
-      std::cerr << "Add: Delete Chars " << line_num_ << " " <<
-                  char_num_ << " " << chars_ << std::endl;
+      std::cerr << "Add: Delete Chars " << line_num_ << " " << char_num_ << " " << chars_ << "\n";
 }
 
 bool
@@ -395,15 +388,13 @@ exec()
 {
   if (getState() == UNDO_STATE) {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Delete Chars " << line_num_ << " " <<
-                   char_num_ << " " << chars_ << std::endl;
+      std::cerr << "Exec: Delete Chars " << line_num_ << " " << char_num_ << " " << chars_ << "\n";
 
     mgr_->getFile()->deleteChars(line_num_, char_num_, chars_.size());
   }
   else {
     if (mgr_->getDebug())
-      std::cerr << "Exec: Add Chars " << line_num_ << " " <<
-                   char_num_ << " " << chars_ << std::endl;
+      std::cerr << "Exec: Add Chars " << line_num_ << " " << char_num_ << " " << chars_ << "\n";
 
     mgr_->getFile()->addChars(line_num_, char_num_, chars_);
   }
@@ -495,7 +486,7 @@ exec()
 
 CEditMoveToCmd::
 CEditMoveToCmd(CEditCmdMgr *mgr) :
- CEditCmd(mgr), line_num_(0), char_num_(0)
+ CEditCmd(mgr)
 {
 }
 
@@ -504,7 +495,7 @@ CEditMoveToCmd(CEditCmdMgr *mgr, int line_num, int char_num) :
  CEditCmd(mgr), line_num_(line_num), char_num_(char_num)
 {
   if (mgr_->getDebug())
-    std::cerr << "Add: Move To " << line_num << " " << char_num << std::endl;
+    std::cerr << "Add: Move To " << line_num << " " << char_num << "\n";
 }
 
 bool
@@ -529,7 +520,7 @@ exec()
   uint char_num = mgr_->getFile()->getCol();
 
   if (mgr_->getDebug())
-    std::cerr << "Exec: Move To " << line_num_ << " " << char_num_ << std::endl;
+    std::cerr << "Exec: Move To " << line_num_ << " " << char_num_ << "\n";
 
   mgr_->getFile()->cursorTo(line_num_, char_num_);
 

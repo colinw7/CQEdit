@@ -37,7 +37,7 @@ updateScrollbars()
   int xsize = canvas_->width ();
   int ysize = canvas_->height();
 
-  const CISize2D &size = edit_->getFile()->getVSize();
+  const auto &size = edit_->getFile()->getVSize();
 
   int dx = std::max(0, size.getWidth () - xsize);
   int dy = std::max(0, size.getHeight() - ysize);
@@ -124,7 +124,7 @@ void
 CQEditCanvas::
 keyPressEvent(QKeyEvent *e)
 {
-  CKeyEvent *event = CQUtil::convertEvent(e);
+  auto *event = CQUtil::convertEvent(e);
 
   edit_->getFile()->keyPress(*event);
 }
@@ -133,7 +133,7 @@ void
 CQEditCanvas::
 keyReleaseEvent(QKeyEvent *e)
 {
-  CKeyEvent *event = CQUtil::convertEvent(e);
+  auto *event = CQUtil::convertEvent(e);
 
   edit_->getFile()->keyRelease(*event);
 }
@@ -142,7 +142,7 @@ void
 CQEditCanvas::
 mousePressEvent(QMouseEvent *e)
 {
-  CMouseEvent *event = CQUtil::convertEvent(e);
+  auto *event = CQUtil::convertEvent(e);
 
   edit_->getFile()->mousePress(*event);
 
@@ -154,7 +154,7 @@ void
 CQEditCanvas::
 mouseMoveEvent(QMouseEvent *e)
 {
-  CMouseEvent *event = CQUtil::convertEvent(e);
+  auto *event = CQUtil::convertEvent(e);
 
   if (pressed_) {
     event->setButton(button_);
@@ -167,7 +167,7 @@ void
 CQEditCanvas::
 mouseReleaseEvent(QMouseEvent *e)
 {
-  CMouseEvent *event = CQUtil::convertEvent(e);
+  auto *event = CQUtil::convertEvent(e);
 
   edit_->getFile()->mouseRelease(*event);
 

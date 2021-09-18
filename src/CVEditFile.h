@@ -164,10 +164,10 @@ class CVEditFile : public CEditFile {
   virtual bool posToPoint(int row, int col, CIPoint2D &point) const;
   virtual bool posToRect (int row, int col, CIBBox2D  &rect ) const;
 
-  virtual void undo();
-  virtual void redo();
+  void undo() override;
+  void redo() override;
 
-  virtual void replayFile(const std::string &fileName);
+  void replayFile(const std::string &fileName) override;
 
   virtual void keyPress  (const CKeyEvent &event);
   virtual void keyRelease(const CKeyEvent &event);
@@ -190,7 +190,7 @@ class CVEditFile : public CEditFile {
   virtual int getPageBottom() const;
 
   // file changed
-  virtual void setChanged(bool changed);
+  void setChanged(bool changed) override;
 
   // cursor changed
   virtual void positionChanged();
@@ -220,7 +220,7 @@ class CVEditFile : public CEditFile {
 
   virtual void updateSyntax();
 
-  virtual void optionChanged(const std::string &name);
+  void optionChanged(const std::string &name) override;
 
   // draw char
   virtual void drawFilledChar(const CIBBox2D &bbox, char c, const CRGBA &bg,

@@ -19,7 +19,7 @@ void
 CEditFileUtil::
 deleteWord(uint line_num, uint char_num)
 {
-  const CEditLine *line = file_->getEditLine(line_num);
+  const auto *line = file_->getEditLine(line_num);
 
   if (line->isEmpty() || char_num >= line->getLength() - 1)
     return;
@@ -52,7 +52,7 @@ void
 CEditFileUtil::
 deleteEOL(uint line_num, uint char_num)
 {
-  const CEditLine *line = file_->getEditLine(line_num);
+  const auto *line = file_->getEditLine(line_num);
 
   uint num = std::max(int(line->getLength()) - int(char_num), 0);
 
@@ -72,7 +72,7 @@ shiftLeft(uint line_num1, uint line_num2)
   file_->startGroup();
 
   for (uint line_num = line_num1; line_num <= line_num2; ++line_num) {
-    const CEditLine *line = file_->getEditLine(line_num);
+    const auto *line = file_->getEditLine(line_num);
 
     uint len = line->getLength();
 
@@ -109,7 +109,7 @@ shiftRight(uint line_num1, uint line_num2)
   file_->startGroup();
 
   for (uint line_num = line_num1; line_num <= line_num2; ++line_num) {
-    const CEditLine *line = file_->getEditLine(line_num);
+    const auto *line = file_->getEditLine(line_num);
 
     if (line->isEmpty()) continue;
 
@@ -123,7 +123,7 @@ void
 CEditFileUtil::
 nextWord()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -139,7 +139,7 @@ void
 CEditFileUtil::
 nextWord(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // skip current word
   bool found = false;
@@ -201,7 +201,7 @@ void
 CEditFileUtil::
 nextWORD()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -216,7 +216,7 @@ void
 CEditFileUtil::
 nextWORD(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // skip current word
   bool found = false;
@@ -270,7 +270,7 @@ void
 CEditFileUtil::
 prevWord()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -284,7 +284,7 @@ void
 CEditFileUtil::
 prevWord(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // skip previous character
   if (*char_num > 0)
@@ -332,7 +332,7 @@ void
 CEditFileUtil::
 prevWORD()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -346,7 +346,7 @@ void
 CEditFileUtil::
 prevWORD(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // skip previous character
   if (*char_num > 0)
@@ -387,7 +387,7 @@ void
 CEditFileUtil::
 endWord()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -401,7 +401,7 @@ void
 CEditFileUtil::
 endWord(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // if already at word end, increment to next char
   if      (*char_num < line->getLength() - 1) {
@@ -487,7 +487,7 @@ void
 CEditFileUtil::
 endWORD()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -501,7 +501,7 @@ void
 CEditFileUtil::
 endWORD(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   // if already at word end, increment to next char
   if      (*char_num < line->getLength() - 1) {
@@ -569,7 +569,7 @@ bool
 CEditFileUtil::
 getWord(std::string &word)
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   return getWord(pos.y, pos.x, word);
 }
@@ -578,7 +578,7 @@ bool
 CEditFileUtil::
 getWord(uint line_num, uint char_num, std::string &word)
 {
-  const CEditLine *line = file_->getEditLine(line_num);
+  const auto *line = file_->getEditLine(line_num);
 
   if (! file_->isWordChar(line->getChar(char_num)))
     return false;
@@ -609,7 +609,7 @@ void
 CEditFileUtil::
 nextSentence()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -625,7 +625,7 @@ void
 CEditFileUtil::
 nextSentence(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   uint num = 0;
 
@@ -701,7 +701,7 @@ void
 CEditFileUtil::
 prevSentence()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -717,7 +717,7 @@ prevSentence(uint *line_num, uint *char_num)
 {
   uint num = 0;
 
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   bool sentence = false;
 
@@ -796,7 +796,7 @@ void
 CEditFileUtil::
 nextParagraph()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -810,7 +810,7 @@ void
 CEditFileUtil::
 nextParagraph(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   while (line->isEmpty()) {
     if (! file_->nextLine(line_num, char_num))
@@ -831,7 +831,7 @@ void
 CEditFileUtil::
 prevParagraph()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -845,7 +845,7 @@ void
 CEditFileUtil::
 prevParagraph(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   while (line->isEmpty()) {
     if (! file_->prevLine(line_num, char_num))
@@ -866,7 +866,7 @@ void
 CEditFileUtil::
 nextSection()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -880,7 +880,7 @@ void
 CEditFileUtil::
 nextSection(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   uint pos;
 
@@ -901,7 +901,7 @@ void
 CEditFileUtil::
 prevSection()
 {
-  const CIPoint2D &pos = file_->getPos();
+  const auto &pos = file_->getPos();
 
   uint x = pos.x;
   uint y = pos.y;
@@ -915,7 +915,7 @@ void
 CEditFileUtil::
 prevSection(uint *line_num, uint *char_num)
 {
-  const CEditLine *line = file_->getEditLine(*line_num);
+  const auto *line = file_->getEditLine(*line_num);
 
   uint pos;
 

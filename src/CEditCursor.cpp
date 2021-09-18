@@ -19,7 +19,7 @@ CEditCursor::
 {
 }
 
-const CEditCursor &
+CEditCursor &
 CEditCursor::
 operator=(const CEditCursor &c)
 {
@@ -53,7 +53,7 @@ setLastRow(uint row)
   last_line_.set = true;
   last_line_.row = row;
 
-  const CEditLine *line = file_->getEditLine(last_line_.row);
+  const auto *line = file_->getEditLine(last_line_.row);
 
   last_line_.text = (line ? line->getString() : "");
 }
@@ -62,7 +62,7 @@ void
 CEditCursor::
 updateLastLine()
 {
-  const CEditLine *line = file_->getEditLine(last_line_.row);
+  const auto *line = file_->getEditLine(last_line_.row);
 
   last_line_.text = line->getString();
 }

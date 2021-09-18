@@ -24,16 +24,13 @@ class CVEditChar : public CEditChar {
 
   // Style
   const CRGBA &getBg(const CVEditLine *vline) const;
-
   virtual void setBg(const CVEditLine *vline, const CRGBA &bg);
 
   const CRGBA &getFg(const CVEditLine *vline) const;
-
   virtual void setFg(const CVEditLine *vline, const CRGBA &fg);
 
   // Selected
   bool getSelected() const { return selected_; }
-
   virtual void setSelected(bool selected);
 
   // Draw
@@ -41,7 +38,7 @@ class CVEditChar : public CEditChar {
 
  private:
   CVEditCharStyle style_;
-  bool            selected_;
+  bool            selected_ { false };
 };
 
 #endif

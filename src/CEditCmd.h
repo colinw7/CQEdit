@@ -29,12 +29,14 @@ class CEditCmdMgr {
   CEditCmdMgr &operator=(const CEditCmdMgr &rhs);
 
  private:
-  typedef std::map<std::string, CEditCmd *> CmdMap;
+  using CmdMap = std::map<std::string, CEditCmd *>;
 
-  CEditFile *file_;
+  CEditFile *file_ { nullptr };
   CmdMap     cmds_;
-  bool       debug_;
+  bool       debug_ { false };
 };
+
+//---
 
 class CEditCmd : public CUndoData {
  public:
@@ -53,8 +55,10 @@ class CEditCmd : public CUndoData {
   using CUndoData::exec;
 
  protected:
-  CEditCmdMgr *mgr_;
+  CEditCmdMgr *mgr_ { nullptr };
 };
+
+//---
 
 class CEditAddLineCmd : public CEditCmd {
  public:
@@ -68,9 +72,11 @@ class CEditAddLineCmd : public CEditCmd {
   bool exec();
 
  private:
-  int         line_num_;
+  int         line_num_ { 0 };
   std::string line_;
 };
+
+//---
 
 class CEditDeleteLineCmd : public CEditCmd {
  public:
@@ -84,9 +90,11 @@ class CEditDeleteLineCmd : public CEditCmd {
   bool exec();
 
  private:
-  int         line_num_;
+  int         line_num_ { 0 };
   std::string chars_;
 };
+
+//---
 
 class CEditMoveLineCmd : public CEditCmd {
  public:
@@ -100,9 +108,11 @@ class CEditMoveLineCmd : public CEditCmd {
   bool exec();
 
  private:
-  int line_num1_;
-  int line_num2_;
+  int line_num1_ { 0 };
+  int line_num2_ { 0 };
 };
+
+//---
 
 class CEditReplaceCmd : public CEditCmd {
  public:
@@ -117,11 +127,13 @@ class CEditReplaceCmd : public CEditCmd {
   bool exec();
 
  private:
-  int         line_num_;
-  int         char_num1_;
-  int         char_num2_;
+  int         line_num_ { 0 };
+  int         char_num1_ { 0 };
+  int         char_num2_ { 0 };
   std::string str_;
 };
+
+//---
 
 class CEditInsertCharCmd : public CEditCmd {
  public:
@@ -135,10 +147,12 @@ class CEditInsertCharCmd : public CEditCmd {
   bool exec();
 
  private:
-  int  line_num_;
-  int  char_num_;
-  char c_;
+  int  line_num_ { 0 };
+  int  char_num_ { 0 };
+  char c_        { '\0' };
 };
+
+//---
 
 class CEditReplaceCharCmd : public CEditCmd {
  public:
@@ -152,10 +166,12 @@ class CEditReplaceCharCmd : public CEditCmd {
   bool exec();
 
  private:
-  int  line_num_;
-  int  char_num_;
-  char c_;
+  int  line_num_ { 0 };
+  int  char_num_ { 0 };
+  char c_        { '\0' };
 };
+
+//---
 
 class CEditDeleteCharsCmd : public CEditCmd {
  public:
@@ -169,10 +185,12 @@ class CEditDeleteCharsCmd : public CEditCmd {
   bool exec();
 
  private:
-  int         line_num_;
-  int         char_num_;
+  int         line_num_ { 0 };
+  int         char_num_ { 0 };
   std::string chars_;
 };
+
+//---
 
 class CEditSplitLineCmd : public CEditCmd {
  public:
@@ -186,9 +204,11 @@ class CEditSplitLineCmd : public CEditCmd {
   bool exec();
 
  private:
-  int line_num_;
-  int char_num_;
+  int line_num_ { 0 };
+  int char_num_ { 0 };
 };
+
+//---
 
 class CEditJoinLineCmd : public CEditCmd {
  public:
@@ -202,9 +222,11 @@ class CEditJoinLineCmd : public CEditCmd {
   bool exec();
 
  private:
-  int line_num_;
-  int char_num_;
+  int line_num_ { 0 };
+  int char_num_ { 0 };
 };
+
+//---
 
 class CEditMoveToCmd : public CEditCmd {
  public:
@@ -218,9 +240,11 @@ class CEditMoveToCmd : public CEditCmd {
   bool exec();
 
  private:
-  int line_num_;
-  int char_num_;
+  int line_num_ { 0 };
+  int char_num_ { 0 };
 };
+
+//---
 
 class CEditUndoCmd : public CEditCmd {
  public:
@@ -231,6 +255,8 @@ class CEditUndoCmd : public CEditCmd {
   bool exec(const std::vector<std::string> &argList);
   bool exec();
 };
+
+//---
 
 class CEditRedoCmd : public CEditCmd {
  public:

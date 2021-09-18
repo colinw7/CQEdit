@@ -26,7 +26,7 @@ class CEditCursor {
 
   virtual ~CEditCursor();
 
-  const CEditCursor &operator=(const CEditCursor &c);
+  CEditCursor &operator=(const CEditCursor &c);
 
   virtual CEditCursor *dup() const;
 

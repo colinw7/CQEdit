@@ -1223,6 +1223,8 @@ updateSyntax()
   }
 
   syntax_->term();
+
+  syntax_->setNotifier(nullptr);
 }
 
 void

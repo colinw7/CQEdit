@@ -12,10 +12,10 @@ class CEditLine;
 
 class CEditLineChars {
  public:
-  typedef std::vector<CEditChar *> CharList;
+  using CharList = std::vector<CEditChar *>;
 
-  typedef CharList::iterator       iterator;
-  typedef CharList::const_iterator const_iterator;
+  using iterator       = CharList::iterator;
+  using const_iterator = CharList::const_iterator;
 
  public:
   CEditLineChars() :
@@ -26,7 +26,7 @@ class CEditLineChars {
 
  ~CEditLineChars();
 
-  const CEditLineChars &operator=(const CEditLineChars &chars);
+  CEditLineChars &operator=(const CEditLineChars &chars);
 
   void clear();
 
@@ -90,7 +90,7 @@ class CEditLineUtil {
 
 class CEditLine {
  public:
-  typedef CEditLineChars::const_iterator const_char_iterator;
+  using const_char_iterator = CEditLineChars::const_iterator;
 
  public:
   CEditLine(CEditFile *file);
@@ -99,7 +99,7 @@ class CEditLine {
 
   virtual ~CEditLine();
 
-  const CEditLine &operator=(const CEditLine &line);
+  CEditLine &operator=(const CEditLine &line);
 
   virtual CEditLine *dup() const;
 
@@ -126,7 +126,6 @@ class CEditLine {
   virtual const CEditChar *getCharP(uint pos) const;
 
   virtual char getChar(uint pos) const;
-
   virtual void setChar(uint pos, char c);
 
   virtual void insertChar(uint pos, char c);
@@ -171,10 +170,10 @@ class CEditLine {
   friend std::ostream &operator<<(std::ostream &os, const CEditLine &line);
 
  protected:
-  CEditFile      *file_;
+  CEditFile      *file_    { nullptr };
   CEditLineUtil   util_;
   CEditLineChars  chars_;
-  bool            changed_;
+  bool            changed_ { false };
 };
 
 #endif

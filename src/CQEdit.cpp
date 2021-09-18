@@ -87,7 +87,7 @@ draw(QPainter *painter)
 
   file_->draw(area_->getCanvas()->width(), area_->getCanvas()->height());
 
-  CVEditMgrInst->setRenderer(NULL);
+  CVEditMgrInst->setRenderer(nullptr);
 }
 
 void
@@ -291,10 +291,9 @@ populate(CQEditFile *file)
 
   CEditFile::MarkList::const_iterator p1, p2;
 
-  for (p1 = file->getMarks().begin(),
-         p2 = file->getMarks().end(); p1 != p2; ++p1) {
-    const std::string &str = (*p1).first;
-    const CIPoint2D   &pos = (*p1).second;
+  for (p1 = file->getMarks().begin(), p2 = file->getMarks().end(); p1 != p2; ++p1) {
+    const auto &str = (*p1).first;
+    const auto &pos = (*p1).second;
 
     QStringList strs;
 
@@ -328,7 +327,7 @@ void
 CQEditMarks::
 itemClickedSlot(QTreeWidgetItem *item)
 {
-  std::string str = item->text(0).toStdString();
+  auto str = item->text(0).toStdString();
 
   edit_->gotoMark(str);
 }
@@ -359,10 +358,9 @@ populate(CQEditFile *file)
 
   CEditFile::BufferMap::const_iterator p1, p2;
 
-  for (p1 = file->getBufferMap().begin(),
-         p2 = file->getBufferMap().end(); p1 != p2; ++p1) {
-    char               c      = (*p1).first;
-    const CEditBuffer &buffer = (*p1).second;
+  for (p1 = file->getBufferMap().begin(), p2 = file->getBufferMap().end(); p1 != p2; ++p1) {
+    char        c      = (*p1).first;
+    const auto &buffer = (*p1).second;
 
     std::string str1(&c, 1);
 
@@ -430,7 +428,7 @@ void
 CQEditRenderer::
 setFont(CFontPtr font)
 {
-  QFont qfont = CQFontUtil::toQFont(font);
+  auto qfont = CQFontUtil::toQFont(font);
 
   painter_->setFont(qfont);
 

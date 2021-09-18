@@ -9,7 +9,9 @@ main(int argc, char **argv)
 
   std::string filename;
 
-  auto *edit = new CQVi;
+  auto *edit = new CQViApp;
+
+  edit->init();
 
   if (argc > 1)
     edit->loadFile(argv[1]);

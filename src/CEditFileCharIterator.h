@@ -5,11 +5,11 @@
 
 class CEditFileCharIterator {
  public:
-  typedef std::forward_iterator_tag iterator_category;
-  typedef CEditChar*                value_type;
-  typedef ptrdiff_t                 difference_type;
-  typedef value_type *              pointer;
-  typedef value_type &              reference;
+  using iterator_category = std::forward_iterator_tag;
+  using value_type        = CEditChar*;
+  using difference_type   = ptrdiff_t;
+  using pointer           = value_type *;
+  using reference         = value_type &;
 
   CEditFileCharIterator() :
    pline_    (),
