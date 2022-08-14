@@ -136,10 +136,10 @@ CSyntaxC()
   continued_  = false;
   last_token_ = CSyntaxToken::NONE;
 
-  uint num_keywords = sizeof(keywords)/sizeof(char *);
+  auto num_keywords = sizeof(keywords)/sizeof(char *);
 
   for (uint i = 0; i < num_keywords; ++i) {
-    uint len = strlen(keywords[i]);
+    auto len = strlen(keywords[i]);
 
     token_hash[len][keywords[i]] = CSyntaxToken::KEYWORD;
   }
@@ -158,7 +158,7 @@ processLine(const std::string &line)
 
   continued_ = false;
 
-  uint len = line.size();
+  auto len = line.size();
 
   if (continued && last_token_ == CSyntaxToken::PREPRO) {
     addToken(line_num_, 0, line, CSyntaxToken::PREPRO);
@@ -275,7 +275,7 @@ CSyntaxToken
 CSyntaxC::
 findWord(const std::string &word)
 {
-  uint len = word.size();
+  auto len = word.size();
 
   if (len >= MAX_TOKEN_LEN)
     return CSyntaxToken::NONE;

@@ -362,7 +362,7 @@ class CViLines {
 
  ~CViLines();
 
-  uint size() const { return lines_.size(); }
+  uint size() const { return uint(lines_.size()); }
 
   bool empty() const { return lines_.empty(); }
 
@@ -427,7 +427,7 @@ class CViBuffer {
 
   void clear() { lines_.clear(); }
 
-  uint getNumLines() const { return lines_.size(); }
+  uint getNumLines() const { return uint(lines_.size()); }
 
   CViBufferLine *getLine(uint i) { return lines_[i]; }
 
@@ -473,7 +473,7 @@ class CViOptions {
   virtual uint getShiftWidth() const { return shift_width_; }
 
  private:
-  int shift_width_ { 2 };
+  uint shift_width_ { 2 };
 };
 
 //---

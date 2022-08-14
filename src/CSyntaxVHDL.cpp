@@ -107,10 +107,10 @@ keywords[] = {
 CSyntaxVHDL::
 CSyntaxVHDL()
 {
-  uint num_keywords = sizeof(keywords)/sizeof(char *);
+  auto num_keywords = sizeof(keywords)/sizeof(char *);
 
   for (uint i = 0; i < num_keywords; ++i) {
-    uint len = strlen(keywords[i]);
+    auto len = strlen(keywords[i]);
 
     tokenHash_[len][keywords[i]] = CSyntaxToken::KEYWORD;
   }
@@ -166,7 +166,7 @@ void
 CSyntaxVHDL::
 processLine(const std::string &line)
 {
-  uint len = line.size();
+  auto len = line.size();
 
   //------
 
@@ -212,7 +212,7 @@ processLine(const std::string &line)
 
     blockData_.blockType = blockType;
     blockData_.blockName = "";
-    blockData_.startLine = line_num_;
+    blockData_.startLine = int(line_num_);
 
     auto pn = blockTypeName_.find(blockData_.blockType);
 
@@ -236,7 +236,7 @@ processLine(const std::string &line)
     if (blockType != BlockType::NONE) {
       while (blockData_.blockType != BlockType::NONE &&
              blockData_.blockType != blockType) {
-        blockData_.endLine = line_num_;
+        blockData_.endLine = int(line_num_);
 
         if (blockData_.blockType != BlockType::NONE) {
           std::cerr << "End: "; printBlock(blockData_);
@@ -256,7 +256,7 @@ processLine(const std::string &line)
 
     //---
 
-    blockData_.endLine = line_num_;
+    blockData_.endLine = int(line_num_);
 
     if (blockData_.blockType != BlockType::NONE) {
       std::cerr << "End: "; printBlock(blockData_);
@@ -325,7 +325,7 @@ processLine(const std::string &line)
 
     // -- comment to end of line
     if      (i < len - 1 && c == '-' && cstr[i + 1] == '-') {
-      int wordStart = i;
+      uint wordStart = i;
 
       std::string word = line.substr(i);
 
@@ -445,7 +445,7 @@ CSyntaxToken
 CSyntaxVHDL::
 findWord(const std::string &word)
 {
-  uint len = word.size();
+  auto len = word.size();
 
   if (len >= MAX_TOKEN_LEN)
     return CSyntaxToken::NONE;
