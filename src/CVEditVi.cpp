@@ -1585,7 +1585,7 @@ addCount(uint n)
 
   auto str = CStrUtil::toString(n);
 
-  uint len = str.size();
+  uint len = uint(str.size());
 
   for (uint i = 0; i < len; ++i) {
     auto key = CEvent::charKeyType(str[i]);
@@ -1609,7 +1609,7 @@ exec()
 
   CKeyEvent event;
 
-  uint len = keys_.size();
+  uint len = uint(keys_.size());
 
   for (uint i = 0; i < len; ++i) {
     char c = CEvent::keyTypeChar(keys_[i]);

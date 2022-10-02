@@ -69,7 +69,7 @@ initFont(const QFont &font)
   QFontMetrics fm(this->font());
 
   char_rect_   = fm.boundingRect("X");
-  char_width_  = fm.width("X");
+  char_width_  = fm.horizontalAdvance("X");
   char_ascent_ = fm.ascent();
   char_height_ = fm.ascent() + fm.descent();
 }
@@ -305,49 +305,49 @@ keyPressEvent(QKeyEvent *e)
       keyData.key = 'a' + (keyData.key - Qt::Key_A);
   }
 
-  if      (keyData.key == Qt::Key_Escape   ) keyData.key = (int) CViKeyData::KeyCode::ESCAPE;
-  else if (keyData.key == Qt::Key_Tab      ) keyData.key = (int) CViKeyData::KeyCode::TAB;
-  else if (keyData.key == Qt::Key_Backtab  ) keyData.key = (int) CViKeyData::KeyCode::BACKTAB;
-  else if (keyData.key == Qt::Key_Backspace) keyData.key = (int) CViKeyData::KeyCode::BACKSPACE;
-  else if (keyData.key == Qt::Key_Return   ) keyData.key = (int) CViKeyData::KeyCode::RETURN;
-  else if (keyData.key == Qt::Key_Enter    ) keyData.key = (int) CViKeyData::KeyCode::ENTER;
-  else if (keyData.key == Qt::Key_Insert   ) keyData.key = (int) CViKeyData::KeyCode::INSERT;
-  else if (keyData.key == Qt::Key_Delete   ) keyData.key = (int) CViKeyData::KeyCode::DELETE;
-  else if (keyData.key == Qt::Key_Pause    ) keyData.key = (int) CViKeyData::KeyCode::PAUSE;
-  else if (keyData.key == Qt::Key_Print    ) keyData.key = (int) CViKeyData::KeyCode::PRINT;
-  else if (keyData.key == Qt::Key_SysReq   ) keyData.key = (int) CViKeyData::KeyCode::SYS_REQ;
-  else if (keyData.key == Qt::Key_Clear    ) keyData.key = (int) CViKeyData::KeyCode::CLEAR;
-  else if (keyData.key == Qt::Key_Home     ) keyData.key = (int) CViKeyData::KeyCode::HOME;
-  else if (keyData.key == Qt::Key_End      ) keyData.key = (int) CViKeyData::KeyCode::END;
-  else if (keyData.key == Qt::Key_Left     ) keyData.key = (int) CViKeyData::KeyCode::LEFT;
-  else if (keyData.key == Qt::Key_Up       ) keyData.key = (int) CViKeyData::KeyCode::UP;
-  else if (keyData.key == Qt::Key_Right    ) keyData.key = (int) CViKeyData::KeyCode::RIGHT;
-  else if (keyData.key == Qt::Key_Down     ) keyData.key = (int) CViKeyData::KeyCode::DOWN;
-  else if (keyData.key == Qt::Key_PageUp   ) keyData.key = (int) CViKeyData::KeyCode::PAGE_UP;
-  else if (keyData.key == Qt::Key_PageDown ) keyData.key = (int) CViKeyData::KeyCode::PAGE_DOWN;
+  if      (keyData.key == Qt::Key_Escape   ) keyData.key = int(CViKeyData::KeyCode::ESCAPE);
+  else if (keyData.key == Qt::Key_Tab      ) keyData.key = int(CViKeyData::KeyCode::TAB);
+  else if (keyData.key == Qt::Key_Backtab  ) keyData.key = int(CViKeyData::KeyCode::BACKTAB);
+  else if (keyData.key == Qt::Key_Backspace) keyData.key = int(CViKeyData::KeyCode::BACKSPACE);
+  else if (keyData.key == Qt::Key_Return   ) keyData.key = int(CViKeyData::KeyCode::RETURN);
+  else if (keyData.key == Qt::Key_Enter    ) keyData.key = int(CViKeyData::KeyCode::ENTER);
+  else if (keyData.key == Qt::Key_Insert   ) keyData.key = int(CViKeyData::KeyCode::INSERT);
+  else if (keyData.key == Qt::Key_Delete   ) keyData.key = int(CViKeyData::KeyCode::DELETE);
+  else if (keyData.key == Qt::Key_Pause    ) keyData.key = int(CViKeyData::KeyCode::PAUSE);
+  else if (keyData.key == Qt::Key_Print    ) keyData.key = int(CViKeyData::KeyCode::PRINT);
+  else if (keyData.key == Qt::Key_SysReq   ) keyData.key = int(CViKeyData::KeyCode::SYS_REQ);
+  else if (keyData.key == Qt::Key_Clear    ) keyData.key = int(CViKeyData::KeyCode::CLEAR);
+  else if (keyData.key == Qt::Key_Home     ) keyData.key = int(CViKeyData::KeyCode::HOME);
+  else if (keyData.key == Qt::Key_End      ) keyData.key = int(CViKeyData::KeyCode::END);
+  else if (keyData.key == Qt::Key_Left     ) keyData.key = int(CViKeyData::KeyCode::LEFT);
+  else if (keyData.key == Qt::Key_Up       ) keyData.key = int(CViKeyData::KeyCode::UP);
+  else if (keyData.key == Qt::Key_Right    ) keyData.key = int(CViKeyData::KeyCode::RIGHT);
+  else if (keyData.key == Qt::Key_Down     ) keyData.key = int(CViKeyData::KeyCode::DOWN);
+  else if (keyData.key == Qt::Key_PageUp   ) keyData.key = int(CViKeyData::KeyCode::PAGE_UP);
+  else if (keyData.key == Qt::Key_PageDown ) keyData.key = int(CViKeyData::KeyCode::PAGE_DOWN);
 
-  else if (keyData.key == Qt::Key_Shift  ) keyData.key = (int) CViKeyData::KeyCode::SHIFT;
-  else if (keyData.key == Qt::Key_Control) keyData.key = (int) CViKeyData::KeyCode::CONTROL;
-  else if (keyData.key == Qt::Key_Meta   ) keyData.key = (int) CViKeyData::KeyCode::META;
-  else if (keyData.key == Qt::Key_Alt    ) keyData.key = (int) CViKeyData::KeyCode::ALT;
-//else if (keyData.key == Qt::Key_Super  ) keyData.key = (int) CViKeyData::KeyCode::SUPER;
-//else if (keyData.key == Qt::Key_Hyper  ) keyData.key = (int) CViKeyData::KeyCode::HYPER;
+  else if (keyData.key == Qt::Key_Shift  ) keyData.key = int(CViKeyData::KeyCode::SHIFT);
+  else if (keyData.key == Qt::Key_Control) keyData.key = int(CViKeyData::KeyCode::CONTROL);
+  else if (keyData.key == Qt::Key_Meta   ) keyData.key = int(CViKeyData::KeyCode::META);
+  else if (keyData.key == Qt::Key_Alt    ) keyData.key = int(CViKeyData::KeyCode::ALT);
+//else if (keyData.key == Qt::Key_Super  ) keyData.key = int(CViKeyData::KeyCode::SUPER);
+//else if (keyData.key == Qt::Key_Hyper  ) keyData.key = int(CViKeyData::KeyCode::HYPER);
 
-  else if (keyData.key == Qt::Key_CapsLock) keyData.key = (int) CViKeyData::KeyCode::CAPS_LOCK;
-  else if (keyData.key == Qt::Key_NumLock ) keyData.key = (int) CViKeyData::KeyCode::NUM_LOCK;
+  else if (keyData.key == Qt::Key_CapsLock) keyData.key = int(CViKeyData::KeyCode::CAPS_LOCK);
+  else if (keyData.key == Qt::Key_NumLock ) keyData.key = int(CViKeyData::KeyCode::NUM_LOCK);
 
-  else if (keyData.key == Qt::Key_F1 ) keyData.key = (int) CViKeyData::KeyCode::F1;
-  else if (keyData.key == Qt::Key_F2 ) keyData.key = (int) CViKeyData::KeyCode::F2;
-  else if (keyData.key == Qt::Key_F3 ) keyData.key = (int) CViKeyData::KeyCode::F3;
-  else if (keyData.key == Qt::Key_F4 ) keyData.key = (int) CViKeyData::KeyCode::F4;
-  else if (keyData.key == Qt::Key_F5 ) keyData.key = (int) CViKeyData::KeyCode::F5;
-  else if (keyData.key == Qt::Key_F6 ) keyData.key = (int) CViKeyData::KeyCode::F6;
-  else if (keyData.key == Qt::Key_F7 ) keyData.key = (int) CViKeyData::KeyCode::F7;
-  else if (keyData.key == Qt::Key_F8 ) keyData.key = (int) CViKeyData::KeyCode::F8;
-  else if (keyData.key == Qt::Key_F9 ) keyData.key = (int) CViKeyData::KeyCode::F9;
-  else if (keyData.key == Qt::Key_F10) keyData.key = (int) CViKeyData::KeyCode::F10;
-  else if (keyData.key == Qt::Key_F11) keyData.key = (int) CViKeyData::KeyCode::F11;
-  else if (keyData.key == Qt::Key_F12) keyData.key = (int) CViKeyData::KeyCode::F11;
+  else if (keyData.key == Qt::Key_F1 ) keyData.key = int(CViKeyData::KeyCode::F1);
+  else if (keyData.key == Qt::Key_F2 ) keyData.key = int(CViKeyData::KeyCode::F2);
+  else if (keyData.key == Qt::Key_F3 ) keyData.key = int(CViKeyData::KeyCode::F3);
+  else if (keyData.key == Qt::Key_F4 ) keyData.key = int(CViKeyData::KeyCode::F4);
+  else if (keyData.key == Qt::Key_F5 ) keyData.key = int(CViKeyData::KeyCode::F5);
+  else if (keyData.key == Qt::Key_F6 ) keyData.key = int(CViKeyData::KeyCode::F6);
+  else if (keyData.key == Qt::Key_F7 ) keyData.key = int(CViKeyData::KeyCode::F7);
+  else if (keyData.key == Qt::Key_F8 ) keyData.key = int(CViKeyData::KeyCode::F8);
+  else if (keyData.key == Qt::Key_F9 ) keyData.key = int(CViKeyData::KeyCode::F9);
+  else if (keyData.key == Qt::Key_F10) keyData.key = int(CViKeyData::KeyCode::F10);
+  else if (keyData.key == Qt::Key_F11) keyData.key = int(CViKeyData::KeyCode::F11);
+  else if (keyData.key == Qt::Key_F12) keyData.key = int(CViKeyData::KeyCode::F11);
 
   keyData.is_shift   = (e->modifiers() & Qt::ShiftModifier  );
   keyData.is_control = (e->modifiers() & Qt::ControlModifier);

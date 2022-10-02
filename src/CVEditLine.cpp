@@ -133,7 +133,7 @@ draw(const CIBBox2D &bbox, CVEditCursor *cursor, bool filled)
     if (x1 > xmax)
       continue;
 
-    bool is_cursor = (cursor && cx == (int) col);
+    bool is_cursor = (cursor && cx == int(col));
 
     if (changed || vchar->getChanged() || is_cursor) {
       CIBBox2D cbbox(x1, bbox.getYMin(), x2, bbox.getYMax());
@@ -151,7 +151,7 @@ draw(const CIBBox2D &bbox, CVEditCursor *cursor, bool filled)
     x1 = x2;
   }
 
-  bool is_cursor = (cursor && cx == (int) n);
+  bool is_cursor = (cursor && cx == int(n));
 
   if (changed || extraCharChanged_ || is_cursor) {
     x2 = x1 + cw;
@@ -222,7 +222,7 @@ selectInside(const CIBBox2D &bbox)
     n  += num;
     x2  = x1 + num*cw;
 
-    if ((int) x1 > bbox.getXMax() || (int) x2 < bbox.getXMin())
+    if (int(x1) > bbox.getXMax() || int(x2) < bbox.getXMin())
       continue;
 
     vchar->setSelected(true);
@@ -249,9 +249,9 @@ void
 CVEditLine::
 selectChar(int row)
 {
-  CASSERT(row >= 0 && row <= (int) getLength(), "Invalid Char Num");
+  CASSERT(row >= 0 && row <= int(getLength()), "Invalid Char Num");
 
-  if (row < (int) getLength()) {
+  if (row < int(getLength())) {
     CVEditChar *vchar = const_cast<CVEditChar *>(
       dynamic_cast<const CVEditChar *>(getCharP(row)));
 
@@ -320,7 +320,7 @@ pointToCol(const CIPoint2D &point, int *col) const
     n  += num;
     x2  = x1 + num*cw;
 
-    if (point.x >= (int) x1 && point.x <= (int) x2) {
+    if (point.x >= int(x1) && point.x <= int(x2)) {
       *col = col1;
       return true;
     }
@@ -352,7 +352,7 @@ bool
 CVEditLine::
 colToRect(int col, CIBBox2D &rect) const
 {
-  if (col < 0 || col >= (int) getLength())
+  if (col < 0 || col >= int(getLength()))
     return false;
 
   int cw = vfile_->getCharWidth();
@@ -375,7 +375,7 @@ colToRect(int col, CIBBox2D &rect) const
     n  += num;
     x2  = x1 + num*cw;
 
-    if (col == (int) col1) {
+    if (col == int(col1)) {
       rect = CIBBox2D(x1, getBBox().getYMin(), x2, getBBox().getYMax());
       return true;
     }

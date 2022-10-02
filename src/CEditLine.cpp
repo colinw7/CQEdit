@@ -49,7 +49,7 @@ addChars(uint pos, const std::string &line)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
 
-  uint num = line.size();
+  uint num = uint(line.size());
   if (num == 0) return;
 
   std::vector<CEditChar *> chars;
@@ -91,7 +91,7 @@ uint
 CEditLine::
 getLength() const
 {
-  return chars_.size();
+  return uint(chars_.size());
 }
 
 bool
@@ -272,17 +272,17 @@ replace(int spos, int epos, const std::string &str)
   if (epos < 0)
     epos = getLength() - 1;
 
-  if (! CASSERT(spos >= 0 && spos < (int) getLength(), "Invalid Char Num"))
+  if (! CASSERT(spos >= 0 && spos < int(getLength()), "Invalid Char Num"))
     return;
 
-  if (! CASSERT(epos >= 0 && epos < (int) getLength(), "Invalid Char Num"))
+  if (! CASSERT(epos >= 0 && epos < int(getLength()), "Invalid Char Num"))
     return;
 
   if (! CASSERT(spos <= epos, "Invalid Range"))
     return;
 
   int len1 = epos - spos + 1;
-  int len2 = str.size();
+  int len2 = int(str.size());
 
   if      (len1 > len2)
     deleteChars(spos, len1 - len2);
@@ -303,10 +303,10 @@ split(CEditLine *line, uint pos)
 
   uint num_chars = getLength();
 
-  for (int i = pos; i < (int) num_chars; ++i)
+  for (int i = pos; i < int(num_chars); ++i)
     line->chars_.addChar(chars_.getChar(i)->dup());
 
-  for (int i = pos; i < (int) num_chars; ++i)
+  for (int i = pos; i < int(num_chars); ++i)
     chars_.deleteChar(getLength() - 1);
 
   setChanged(true);
@@ -359,7 +359,7 @@ const char *
 CEditLine::
 getSubCString(int spos, int epos) const
 {
-  if (! CASSERT(spos >= 0 && epos < (int) getLength() && spos <= epos,
+  if (! CASSERT(spos >= 0 && epos < int(getLength()) && spos <= epos,
                 "Invalid Char Pos")) return nullptr;
 
   static char *buffer;
@@ -489,19 +489,19 @@ void
 CEditLineChars::
 addChars(uint pos, const std::vector<CEditChar *> &chars)
 {
-  uint num = chars.size();
+  uint num = uint(chars.size());
 
   if (num == 0)
     return;
 
-  uint old_len = chars_.size();
+  uint old_len = uint(chars_.size());
 
   for (uint i = 0; i < num; ++i)
     chars_.push_back(nullptr);
 
   uint new_len = old_len + num;
 
-  for (int i = (int) old_len - 1, j = (int) new_len - 1; i >= (int) pos; --i, --j)
+  for (int i = int(old_len) - 1, j = int(new_len) - 1; i >= int(pos); --i, --j)
     std::swap(chars_[j], chars_[i]);
 
   for (uint i = 0; i < num; ++i)
@@ -515,12 +515,12 @@ void
 CEditLineChars::
 insertChar(uint pos, CEditChar *c)
 {
-  if (pos == chars_.size())
+  if (pos == uint(chars_.size()))
     chars_.push_back(c);
   else {
     chars_.push_back(chars_[chars_.size() - 1]);
 
-    for (int i = (int) chars_.size() - 2; i >= (int) pos; --i)
+    for (int i = int(chars_.size()) - 2; i >= int(pos); --i)
       chars_[i + 1] = chars_[i];
 
     chars_[pos] = c;
@@ -543,7 +543,7 @@ deleteChar(uint pos)
 {
   auto *c1 = chars_[pos];
 
-  uint num_chars = chars_.size();
+  uint num_chars = uint(chars_.size());
 
   for (uint i = pos + 1; i < num_chars; ++i)
     chars_[i - 1] = chars_[i];
@@ -655,7 +655,7 @@ findNext(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
 
   uint num_chars = line_->getLength();
 
-  if (char_num1 >= (int) num_chars)
+  if (char_num1 >= int(num_chars))
     return false;
 
   if (char_num2 < 0)
@@ -669,7 +669,7 @@ findNext(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
   if (! p) return false;
 
   if (char_num)
-    *char_num = p - line;
+    *char_num = uint(p - line);
 
   return true;
 }
@@ -683,7 +683,7 @@ findNext(const CRegExp &pattern, int char_num1, int char_num2, uint *spos, uint 
 
   uint num_chars = line_->getLength();
 
-  if (char_num1 >= (int) num_chars)
+  if (char_num1 >= int(num_chars))
     return false;
 
   if (char_num2 < 0)
@@ -717,7 +717,7 @@ findPrev(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
   if (char_num1 < 0)
     char_num1 = num_chars - 1;
 
-  if (char_num2 >= (int) num_chars)
+  if (char_num2 >= int(num_chars))
     return false;
 
   const char *line = line_->getCString();
@@ -728,7 +728,7 @@ findPrev(const std::string &pattern, int char_num1, int char_num2, uint *char_nu
   if (! p) return false;
 
   if (char_num)
-    *char_num = p - line;
+    *char_num = uint(p - line);
 
   return true;
 }
@@ -745,7 +745,7 @@ findPrev(const CRegExp &pattern, int char_num1, int char_num2, uint *spos, uint 
   if (char_num1 < 0)
     char_num1 = num_chars - 1;
 
-  if (char_num2 >= (int) num_chars)
+  if (char_num2 >= int(num_chars))
     return false;
 
   auto line = line_->getString().substr(char_num2, char_num1 - char_num2 + 1);

@@ -313,7 +313,7 @@ populate(CQEditFile *file)
 
   int h = header()->height();
 
-  for (int i = 0; i < 5 && i < (int) numMarks; ++i)
+  for (int i = 0; i < 5 && i < int(numMarks); ++i)
     h += 20;
 
   h += 8;
@@ -390,7 +390,7 @@ populate(CQEditFile *file)
 
   int h = header()->height();
 
-  for (int i = 0; i < 5 && i < (int) numBuffers; ++i)
+  for (int i = 0; i < 5 && i < int(numBuffers); ++i)
     h += 20;
 
   h += 8;

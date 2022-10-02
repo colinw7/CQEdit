@@ -23,7 +23,7 @@ CEd::
 init()
 {
   // move to first character on last line
-  setPos(0, std::max(0, (int) file_->getNumLines() - 1));
+  setPos(0, std::max(0, int(file_->getNumLines()) - 1));
 }
 
 bool
@@ -498,8 +498,8 @@ execCmd(const std::string &cmd)
   }
 
   // ensure valid range
-  if (line_num1.getValue() < 1 || line_num1.getValue() > (int) file_->getNumLines() + 1 ||
-      line_num2.getValue() < 1 || line_num2.getValue() > (int) file_->getNumLines() + 1) {
+  if (line_num1.getValue() < 1 || line_num1.getValue() > int(file_->getNumLines()) + 1 ||
+      line_num2.getValue() < 1 || line_num2.getValue() > int(file_->getNumLines()) + 1) {
     error("Invalid range");
     return false;
   }
@@ -559,7 +559,7 @@ execCmd(const std::string &cmd)
 
         CStrUtil::addLines(dest, lines);
 
-        int numLines = lines.size();
+        int numLines = int(lines.size());
 
         for (int l = 0; l < numLines; ++l)
           addLine(l, lines[l]);
@@ -752,7 +752,7 @@ execCmd(const std::string &cmd)
 
         CStrUtil::addLines(dest, lines);
 
-        int numLines = lines.size();
+        int numLines = int(lines.size());
 
         for (int l = 0; l < numLines; ++l)
           addLine(line_num1.getValue() + l, lines[l]);
@@ -1292,7 +1292,7 @@ doExecute(int line_num1, int line_num2, const std::string &cmdStr)
 
   CStrUtil::addLines(dest, lines);
 
-  int numLines = lines.size();
+  int numLines = int(lines.size());
 
   for (int l = 0; l < numLines; ++l)
     addLine(line_num1 + l - 1, lines[l]);

@@ -90,7 +90,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int         pos  = CStrUtil::toInteger(argList[0]);
+  int         pos  = int(CStrUtil::toInteger(argList[0]));
   const auto &line = argList[1];
 
   mgr_->getFile()->addLine(pos, line);
@@ -142,7 +142,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
 
-  int pos = CStrUtil::toInteger(argList[0]);
+  int pos = int(CStrUtil::toInteger(argList[0]));
 
   mgr_->getFile()->deleteLine(pos);
 
@@ -189,8 +189,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int pos1 = CStrUtil::toInteger(argList[0]);
-  int pos2 = CStrUtil::toInteger(argList[1]);
+  int pos1 = int(CStrUtil::toInteger(argList[0]));
+  int pos2 = int(CStrUtil::toInteger(argList[1]));
 
   mgr_->getFile()->moveLine(pos1, pos2);
 
@@ -231,9 +231,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 4);
 
-  int  line_num  = CStrUtil::toInteger(argList[0]);
-  int  char_num1 = CStrUtil::toInteger(argList[1]);
-  int  char_num2 = CStrUtil::toInteger(argList[2]);
+  int  line_num  = int(CStrUtil::toInteger(argList[0]));
+  int  char_num1 = int(CStrUtil::toInteger(argList[1]));
+  int  char_num2 = int(CStrUtil::toInteger(argList[2]));
   auto str       = argList[3];
 
   mgr_->getFile()->replace(line_num, char_num1, char_num2, str);
@@ -276,8 +276,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int  line_num = CStrUtil::toInteger(argList[0]);
-  int  char_num = CStrUtil::toInteger(argList[1]);
+  int  line_num = int(CStrUtil::toInteger(argList[0]));
+  int  char_num = int(CStrUtil::toInteger(argList[1]));
   auto str      = argList[2];
 
   mgr_->getFile()->insertChar(line_num, char_num, str[0]);
@@ -325,8 +325,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int  line_num = CStrUtil::toInteger(argList[0]);
-  int  char_num = CStrUtil::toInteger(argList[1]);
+  int  line_num = int(CStrUtil::toInteger(argList[0]));
+  int  char_num = int(CStrUtil::toInteger(argList[1]));
   auto str      = argList[2];
 
   mgr_->getFile()->replaceChar(line_num, char_num, str[0]);
@@ -373,9 +373,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int line_num  = CStrUtil::toInteger(argList[0]);
-  int char_num  = CStrUtil::toInteger(argList[1]);
-  int num_chars = CStrUtil::toInteger(argList[2]);
+  int line_num  = int(CStrUtil::toInteger(argList[0]));
+  int char_num  = int(CStrUtil::toInteger(argList[1]));
+  int num_chars = int(CStrUtil::toInteger(argList[2]));
 
   mgr_->getFile()->deleteChars(line_num, char_num, num_chars);
 
@@ -390,7 +390,7 @@ exec()
     if (mgr_->getDebug())
       std::cerr << "Exec: Delete Chars " << line_num_ << " " << char_num_ << " " << chars_ << "\n";
 
-    mgr_->getFile()->deleteChars(line_num_, char_num_, chars_.size());
+    mgr_->getFile()->deleteChars(line_num_, char_num_, uint(chars_.size()));
   }
   else {
     if (mgr_->getDebug())
@@ -422,8 +422,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
-  int char_num = CStrUtil::toInteger(argList[1]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
+  int char_num = int(CStrUtil::toInteger(argList[1]));
 
   mgr_->getFile()->splitLine(line_num, char_num);
 
@@ -463,7 +463,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
 
   mgr_->getFile()->joinLine(line_num);
 
@@ -504,8 +504,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
-  int char_num = CStrUtil::toInteger(argList[1]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
+  int char_num = int(CStrUtil::toInteger(argList[1]));
 
   mgr_->getFile()->cursorTo(line_num, char_num);
 

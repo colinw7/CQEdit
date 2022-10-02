@@ -305,8 +305,8 @@ setFont(CFontPtr font)
 
   style.font.setValue(font);
 
-  char_width_  = font->getStringWidth("X");
-  char_height_ = font->getCharHeight();
+  char_width_  = uint(font->getStringWidth("X"));
+  char_height_ = uint(font->getCharHeight());
 
   update();
 }
@@ -434,7 +434,7 @@ draw(uint width, uint height)
   indent_ = 0;
 
   if (number)
-    indent_ = char_width_*((int) log10(num_lines) + 2);
+    indent_ = char_width_*(int(log10(num_lines)) + 2);
 
   CIPoint2D p(indent_ - x_offset_, -y_offset_);
 
@@ -493,7 +493,7 @@ draw(uint width, uint height)
         CVEditMgrInst->drawString(p1, CStrUtil::toString(line_num));
       }
 
-      if (cpos.y == (int) line_num) {
+      if (cpos.y == int(line_num)) {
         if (! cmd_line)
           line->draw(lbbox, cursor, line_filled);
         else
@@ -618,7 +618,7 @@ rangeSelect(const CIPoint2D &start, const CIPoint2D &end, bool clear)
     clearSelection();
 
   if      (end.y > start.y) {
-    for (int col = start.x; col < (int) lineLength(start.y); ++col)
+    for (int col = start.x; col < int(lineLength(start.y)); ++col)
       selectChar(start.y, col);
 
     for (int row = start.y + 1; row < end.y; ++row)
@@ -634,7 +634,7 @@ rangeSelect(const CIPoint2D &start, const CIPoint2D &end, bool clear)
     for (int row = start.y - 1; row > end.y; --row)
       selectLine(row);
 
-    for (int col = (int) lineLength(end.y) - 1; col >= end.x; --col)
+    for (int col = int(lineLength(end.y)) - 1; col >= end.x; --col)
       selectChar(end.y, col);
   }
   else if (end.y == start.y) {
@@ -656,7 +656,7 @@ void
 CVEditFile::
 selectChar(int row, int col)
 {
-  CASSERT(row >= 0 && row <= (int) getNumLines(), "Invalid Line Num");
+  CASSERT(row >= 0 && row <= int(getNumLines()), "Invalid Line Num");
 
   CVEditLine *line = const_cast<CVEditLine *>(
     dynamic_cast<const CVEditLine *>(getEditLine(row)));
@@ -668,7 +668,7 @@ void
 CVEditFile::
 selectLine(int row)
 {
-  CASSERT(row >= 0 && row <= (int) getNumLines(), "Invalid Line Num");
+  CASSERT(row >= 0 && row <= int(getNumLines()), "Invalid Line Num");
 
   CVEditLine *line = const_cast<CVEditLine *>(
     dynamic_cast<const CVEditLine *>(getEditLine(row)));
@@ -979,7 +979,7 @@ getPageBottom() const
     col = 0;
   }
 
-  if (row >= (int) getNumLines())
+  if (row >= int(getNumLines()))
     row = getNumLines() - 1;
 
   return row;
@@ -1100,7 +1100,7 @@ replayFile(const std::string &fileName)
   std::string str;
 
   while (file.readLine(str)) {
-    uint len = str.size();
+    uint len = uint(str.size());
 
     if (len <= 0) continue;
 
@@ -1186,12 +1186,12 @@ updateSyntax()
      file_(file) {
       assert(file_);
 
-      bg_ = CRGBA(0,0,0);
+      bg_ = CRGBA(0, 0, 0);
 
-      fg_[(int) CSyntaxToken::PREPRO ] = CRGBA(1.0,0.5,1.0);
-      fg_[(int) CSyntaxToken::KEYWORD] = CRGBA(1.0,1.0,0.5);
-      fg_[(int) CSyntaxToken::STRING ] = CRGBA(1.0,0.5,0.0);
-      fg_[(int) CSyntaxToken::COMMENT] = CRGBA(0.5,0.5,1.0);
+      fg_[int(CSyntaxToken::PREPRO )] = CRGBA(1.0, 0.5, 1.0);
+      fg_[int(CSyntaxToken::KEYWORD)] = CRGBA(1.0, 1.0, 0.5);
+      fg_[int(CSyntaxToken::STRING )] = CRGBA(1.0, 0.5, 0.0);
+      fg_[int(CSyntaxToken::COMMENT)] = CRGBA(0.5, 0.5, 1.0);
     }
 
     void setLine(CVEditLine *line) {
@@ -1199,7 +1199,7 @@ updateSyntax()
     }
 
     void addToken(uint, uint word_start, const std::string &word, CSyntaxToken token) {
-      line_->addAnnotation(word_start, word_start + word.size() - 1, bg_, fg_[(int) token]);
+      line_->addAnnotation(word_start, word_start + uint(word.size()) - 1, bg_, fg_[int(token)]);
     }
   };
 

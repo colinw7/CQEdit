@@ -114,7 +114,7 @@ addFileLines(const std::string &filename, uint line_num)
   std::string line;
 
   while (file.readLine(line)) {
-    uint len = line.size();
+    uint len = uint(line.size());
 
     if (len > 0 && line[len - 1] == '\r')
       line = line.substr(0, len - 1);
@@ -183,7 +183,7 @@ void
 CVi::
 processCommandChar(const CViKeyData &keyData)
 {
-  char key = keyData.key;
+  char key = char(keyData.key);
 
   switch (keyData.key) {
     case int(CViKeyData::KeyCode::SHIFT):
@@ -430,7 +430,7 @@ processCommandChar(const CViKeyData &keyData)
 
             getSelectStart(&sel_x, &sel_y);
 
-            int d = std::abs(sel_y - (int) pos_y);
+            int d = std::abs(sel_y - int(pos_y));
 
             if (d != 0) {
               getSelectEnd(&sel_x, &sel_y);
@@ -547,7 +547,7 @@ void
 CVi::
 processNormalChar(const CViKeyData &keyData)
 {
-  char key = keyData.key;
+  char key = char(keyData.key);
 
   switch (keyData.key) {
     // cursor movement
@@ -1225,7 +1225,7 @@ void
 CVi::
 processControlChar(const CViKeyData &keyData)
 {
-  //char key = keyData.key;
+  //char key = char(keyData.key);
 
   switch (keyData.key) {
     case 'b':
@@ -1349,7 +1349,7 @@ void
 CVi::
 processInsertChar(const CViKeyData &keyData)
 {
-  char key = keyData.key;
+  char key = char(keyData.key);
 
   lastCommand_.addKey(key);
 
@@ -1505,7 +1505,7 @@ void
 CVi::
 processCmdLineChar(const CViKeyData &keyData)
 {
-  char key = keyData.key;
+  char key = char(keyData.key);
 
   if (keyData.key == int(CViKeyData::KeyCode::ESCAPE) || key == '\033') {
     setCmdLineMode(false, "");
@@ -1774,25 +1774,15 @@ fixPos()
   getPos(&x, &y);
 
   if (y >= getNumLines()) {
-    y = getNumLines() - 1;
+    int y1 = getNumLines() - 1;
 
-    changed = true;
-  }
-
-  if (y < 0) {
-    y = 0;
+    y = uint(y1 >= 0 ? y1 : 0);
 
     changed = true;
   }
 
   if (x > getLineEnd(y)) {
     x = getLineEnd(y);
-
-    changed = true;
-  }
-
-  if (x < 0) {
-    x = 0;
 
     changed = true;
   }
@@ -1805,7 +1795,7 @@ uint
 CVi::
 getNumLines() const
 {
-  return lines_.size();
+  return uint(lines_.size());
 }
 
 bool
@@ -1908,7 +1898,7 @@ subAddChars(uint line_num, uint char_num, const std::string &chars)
 {
   lines_.addLineChars(line_num, char_num, chars);
 
-  addUndo(new CViDeleteCharsUndoCmd(this, line_num, char_num, chars.size()));
+  addUndo(new CViDeleteCharsUndoCmd(this, line_num, char_num, int(chars.size())));
 
   setChanged(true);
   setUnsaved(true);
@@ -1922,7 +1912,7 @@ moveLine(uint line_num1, int line_num2)
 {
   CASSERT(line_num1 < getNumLines(), "Invalid Line Num");
 
-  CASSERT(line_num2 >= -1 && line_num2 < (int) getNumLines(), "Invalid Line Num");
+  CASSERT(line_num2 >= -1 && line_num2 < int(getNumLines()), "Invalid Line Num");
 
   subMoveLine(line_num1, line_num2);
 }
@@ -2025,12 +2015,12 @@ deleteWord(uint line_num, uint char_num)
   uint num = 0;
 
   if (isWordChar(line->getChar(char_num))) {
-    while (int(char_num + num) < (int) line->getLength() - 1 &&
+    while (int(char_num + num) < int(line->getLength()) - 1 &&
            isWordChar(line->getChar(char_num + num)))
       ++num;
   }
   else {
-    while (int(char_num + num) < (int) line->getLength() - 1 &&
+    while (int(char_num + num) < int(line->getLength()) - 1 &&
            ! isWordChar(line->getChar(char_num + num)))
       ++num;
   }
@@ -2443,7 +2433,7 @@ pasteAfter(char id, uint line_num, uint char_num)
     return;
 
   auto *sline = buffer.getLine(0);
-  auto *eline = (CViBufferLine *) nullptr;
+  auto *eline = static_cast<CViBufferLine *>(nullptr);
 
   if (num_lines > 1)
     eline = buffer.getLine(num_lines - 1);
@@ -2515,7 +2505,7 @@ pasteBefore(char id, uint line_num, uint char_num)
     return;
 
   auto *sline = buffer.getLine(0);
-  auto *eline = (CViBufferLine *) nullptr;
+  auto *eline = static_cast<CViBufferLine *>(nullptr);
 
   if (num_lines > 1)
     eline = buffer.getLine(num_lines - 1);
@@ -3509,7 +3499,7 @@ getWord(uint line_num, uint char_num, std::string &word)
   int char_num2 = char_num1;
 
   // find end of word
-  while (char_num2 < (int) line->getLength() - 1 &&
+  while (char_num2 < int(line->getLength()) - 1 &&
          isWordChar(line->getChar(char_num2)) &&
          isWordChar(line->getChar(char_num2 + 1)))
     ++char_num2;
@@ -3872,7 +3862,7 @@ prevLine(uint *line_num, uint *char_num)
 
   auto *line = getLine(*line_num);
 
-  *char_num = std::max((int) line->getLength() - 1, 0);
+  *char_num = std::max(int(line->getLength()) - 1, 0);
 
   return true;
 }
@@ -3892,8 +3882,8 @@ swapChar(uint line_num, uint char_num)
 
   char c = line->getChar(char_num);
 
-  if      (islower(c)) c = toupper(c);
-  else if (isupper(c)) c = tolower(c);
+  if      (islower(c)) c = char(toupper(c));
+  else if (isupper(c)) c = char(tolower(c));
 
   replace(line_num, char_num, c);
 }
@@ -4027,7 +4017,7 @@ findNext(const CRegExp &pattern, uint line_num1, int char_num1,
     return true;
   }
 
-  for (int i = (int) line_num1 + 1; i <= line_num2 - 1; ++i) {
+  for (int i = int(line_num1) + 1; i <= line_num2 - 1; ++i) {
     if (findNext(getLine(i), pattern, 0, -1, &spos, &epos)) {
       *fline_num = i;
       *fchar_num = spos;
@@ -4392,7 +4382,7 @@ subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &rep
 
   lines_.replaceLineChars(line_num, char_num1, char_num2, replaceStr);
 
-  char_num2 = char_num1 + replaceStr.size() - 1;
+  char_num2 = char_num1 + uint(replaceStr.size()) - 1;
 
   addUndo(new CViReplaceUndoCmd(this, line_num, char_num1, char_num2, old));
 
@@ -4607,7 +4597,7 @@ isSentenceEnd(const CViLine *line, uint pos, uint *n) const
   char c = line->getChar(pos + *n);
 
   // check for . ! ?
-  if (strchr(".?!", c) == NULL)
+  if (strchr(".?!", c) == nullptr)
     return false;
 
   (*n)++;
@@ -4616,7 +4606,7 @@ isSentenceEnd(const CViLine *line, uint pos, uint *n) const
   while (pos + *n < len - 1) {
     char ec = line->getChar(pos + *n);
 
-    if (strchr(")]\"\'", ec) == NULL)
+    if (strchr(")]\"\'", ec) == nullptr)
       break;
 
     (*n)++;
@@ -4675,7 +4665,7 @@ findNext(const CViLine *line, const std::string &pattern, int char_num1, int cha
 
   uint num_chars = line->getLength();
 
-  if (char_num1 >= (int) num_chars)
+  if (char_num1 >= int(num_chars))
     return false;
 
   if (char_num2 < 0)
@@ -4687,11 +4677,11 @@ findNext(const CViLine *line, const std::string &pattern, int char_num1, int cha
 
   char *p = CStrUtil::strstr(&cline[char_num1], &cline[char_num2], pattern1);
 
-  if (p == NULL)
+  if (p == nullptr)
     return false;
 
   if (char_num)
-    *char_num = p - cline;
+    *char_num = uint(p - cline);
 
   return true;
 }
@@ -4706,7 +4696,7 @@ findNext(const CViLine *line, const CRegExp &pattern, int char_num1, int char_nu
 
   uint num_chars = line->getLength();
 
-  if (char_num1 >= (int) num_chars)
+  if (char_num1 >= int(num_chars))
     return false;
 
   if (char_num2 < 0)
@@ -4741,7 +4731,7 @@ findPrev(const CViLine *line, const std::string &pattern, int char_num1, int cha
   if (char_num1 < 0)
     char_num1 = num_chars - 1;
 
-  if (char_num2 >= (int) num_chars)
+  if (char_num2 >= int(num_chars))
     return false;
 
   const char *cline = line->getCString();
@@ -4750,11 +4740,11 @@ findPrev(const CViLine *line, const std::string &pattern, int char_num1, int cha
 
   char *p = CStrUtil::strrstr(&cline[char_num1], &cline[char_num2], pattern1);
 
-  if (p == NULL)
+  if (p == nullptr)
     return false;
 
   if (char_num)
-    *char_num = p - cline;
+    *char_num = uint(p - cline);
 
   return true;
 }
@@ -4772,7 +4762,7 @@ findPrev(const CViLine *line, const CRegExp &pattern, int char_num1, int char_nu
   if (char_num1 < 0)
     char_num1 = num_chars - 1;
 
-  if (char_num2 >= (int) num_chars)
+  if (char_num2 >= int(num_chars))
     return false;
 
   std::string cline = line->getString().substr(char_num2, char_num1 - char_num2 + 1);
@@ -4854,7 +4844,7 @@ runEdCmd(const std::string &str, bool &quitted)
 
   CStrUtil::toWords(str, words);
 
-  uint num_words = words.size();
+  uint num_words = uint(words.size());
 
   auto cmd = (num_words > 0 ? words[0] : std::string());
 
@@ -4918,7 +4908,7 @@ addLine(uint line_num, CViLine *line)
   else {
     lines_.push_back(lines_[lines_.size() - 1]);
 
-    for (int i = (int) lines_.size() - 2; i >= (int) line_num; --i)
+    for (int i = int(lines_.size()) - 2; i >= int(line_num); --i)
       lines_[i + 1] = lines_[i];
 
     lines_[line_num] = line;
@@ -5000,7 +4990,7 @@ moveLine(uint line_num1, int line_num2)
 {
   auto *line = lines_[line_num1];
 
-  if      (line_num2 > (int) line_num1) {
+  if      (line_num2 > int(line_num1)) {
     for (int i = line_num1 + 1; i <= line_num2; ++i)
       lines_[i - 1] = lines_[i];
 
@@ -5009,13 +4999,13 @@ moveLine(uint line_num1, int line_num2)
     for (int i = line_num1; i <= line_num2; ++i)
       lines_[i]->setChanged(true);
   }
-  else if (line_num2 < (int) line_num1) {
+  else if (line_num2 < int(line_num1)) {
     for (int i = line_num1 - 1; i > line_num2; --i)
       lines_[i + 1] = lines_[i];
 
     lines_[line_num2 + 1] = line;
 
-    for (int i = line_num2; i <= (int) line_num1; ++i)
+    for (int i = line_num2; i <= int(line_num1); ++i)
       lines_[i]->setChanged(true);
   }
 }
@@ -5046,7 +5036,7 @@ deleteLine(uint line_num)
 {
   auto *line = lines_[line_num];
 
-  uint num_lines = lines_.size();
+  uint num_lines = uint(lines_.size());
 
   for (uint i = line_num + 1; i < num_lines; ++i)
     lines_[i - 1] = lines_[i];
@@ -5055,7 +5045,7 @@ deleteLine(uint line_num)
 
   delete line;
 
-  num_lines = lines_.size();
+  num_lines = uint(lines_.size());
 
   for (uint i = line_num; i < num_lines; ++i)
     lines_[i]->setChanged(true);
@@ -5115,17 +5105,17 @@ addChars(uint pos, const std::string &chars)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
 
-  uint num = chars.size();
+  uint num = uint(chars.size());
   if (num == 0) return;
 
-  uint old_len = chars_.size();
+  uint old_len = uint(chars_.size());
 
   for (uint i = 0; i < num; ++i)
     chars_.push_back('\0');
 
   uint new_len = old_len + num;
 
-  for (int i = (int) old_len - 1, j = (int) new_len - 1; i >= (int) pos; --i, --j)
+  for (int i = int(old_len) - 1, j = int(new_len) - 1; i >= int(pos); --i, --j)
     std::swap(chars_[j], chars_[i]);
 
   for (uint i = 0; i < num; ++i)
@@ -5161,7 +5151,7 @@ uint
 CViLine::
 getLength() const
 {
-  return chars_.size();
+  return uint(chars_.size());
 }
 
 bool
@@ -5228,7 +5218,7 @@ insertChar(uint pos, char c)
   else {
     chars_.push_back(chars_[chars_.size() - 1]);
 
-    for (int i = (int) chars_.size() - 2; i >= (int) pos; --i)
+    for (int i = int(chars_.size()) - 2; i >= int(pos); --i)
       chars_[i + 1] = chars_[i];
 
     chars_[pos] = c;
@@ -5323,17 +5313,17 @@ replace(int spos, int epos, const std::string &str)
   if (epos < 0)
     epos = getLength() - 1;
 
-  if (! CASSERT(spos >= 0 && spos < (int) getLength(), "Invalid Char Num"))
+  if (! CASSERT(spos >= 0 && spos < int(getLength()), "Invalid Char Num"))
     return;
 
-  if (! CASSERT(epos >= 0 && epos < (int) getLength(), "Invalid Char Num"))
+  if (! CASSERT(epos >= 0 && epos < int(getLength()), "Invalid Char Num"))
     return;
 
   if (! CASSERT(spos <= epos, "Invalid Range"))
     return;
 
   int len1 = epos - spos + 1;
-  int len2 = str.size();
+  int len2 = int(str.size());
 
   if      (len1 > len2)
     deleteChars(spos, len1 - len2);
@@ -5461,7 +5451,7 @@ addCount(uint n)
 
   auto str = CStrUtil::toString(n);
 
-  uint len = str.size();
+  uint len = uint(str.size());
 
   for (uint i = 0; i < len; ++i) {
     char key = str[i];
@@ -5481,7 +5471,7 @@ void
 CViLastCommand::
 exec(CVi *vi)
 {
-  uint len = keys_.size();
+  uint len = uint(keys_.size());
 
   for (uint i = 0; i < len; ++i)
     vi->processChar(keys_[i]);
@@ -5518,7 +5508,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int         pos  = CStrUtil::toInteger(argList[0]);
+  int         pos  = int(CStrUtil::toInteger(argList[0]));
   const auto &line = argList[1];
 
   vi_->addLine(pos, line);
@@ -5570,7 +5560,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
 
-  int pos = CStrUtil::toInteger(argList[0]);
+  int pos = int(CStrUtil::toInteger(argList[0]));
 
   vi_->deleteLine(pos);
 
@@ -5617,8 +5607,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int pos1 = CStrUtil::toInteger(argList[0]);
-  int pos2 = CStrUtil::toInteger(argList[1]);
+  int pos1 = int(CStrUtil::toInteger(argList[0]));
+  int pos2 = int(CStrUtil::toInteger(argList[1]));
 
   vi_->moveLine(pos1, pos2);
 
@@ -5657,9 +5647,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 4);
 
-  int  line_num  = CStrUtil::toInteger(argList[0]);
-  int  char_num1 = CStrUtil::toInteger(argList[1]);
-  int  char_num2 = CStrUtil::toInteger(argList[2]);
+  int  line_num  = int(CStrUtil::toInteger(argList[0]));
+  int  char_num1 = int(CStrUtil::toInteger(argList[1]));
+  int  char_num2 = int(CStrUtil::toInteger(argList[2]));
   auto str       = argList[3];
 
   vi_->replace(line_num, char_num1, char_num2, str);
@@ -5702,8 +5692,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int  line_num = CStrUtil::toInteger(argList[0]);
-  int  char_num = CStrUtil::toInteger(argList[1]);
+  int  line_num = int(CStrUtil::toInteger(argList[0]));
+  int  char_num = int(CStrUtil::toInteger(argList[1]));
   auto str      = argList[2];
 
   vi_->insertChar(line_num, char_num, str[0]);
@@ -5751,8 +5741,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int  line_num = CStrUtil::toInteger(argList[0]);
-  int  char_num = CStrUtil::toInteger(argList[1]);
+  int  line_num = int(CStrUtil::toInteger(argList[0]));
+  int  char_num = int(CStrUtil::toInteger(argList[1]));
   auto str      = argList[2];
 
   vi_->replaceChar(line_num, char_num, str[0]);
@@ -5798,9 +5788,9 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
 
-  int line_num  = CStrUtil::toInteger(argList[0]);
-  int char_num  = CStrUtil::toInteger(argList[1]);
-  int num_chars = CStrUtil::toInteger(argList[2]);
+  int line_num  = int(CStrUtil::toInteger(argList[0]));
+  int char_num  = int(CStrUtil::toInteger(argList[1]));
+  int num_chars = int(CStrUtil::toInteger(argList[2]));
 
   vi_->deleteChars(line_num, char_num, num_chars);
 
@@ -5816,7 +5806,7 @@ exec()
       std::cerr << "Exec: Delete Chars " << line_num_ << " " << char_num_ <<
                    " '" << chars_ << "'\n";
 
-    vi_->deleteChars(line_num_, char_num_, chars_.size());
+    vi_->deleteChars(line_num_, char_num_, int(chars_.size()));
   }
   else {
     if (vi_->getDebug())
@@ -5848,8 +5838,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
-  int char_num = CStrUtil::toInteger(argList[1]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
+  int char_num = int(CStrUtil::toInteger(argList[1]));
 
   vi_->splitLine(line_num, char_num);
 
@@ -5889,7 +5879,7 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
 
   vi_->joinLine(line_num);
 
@@ -5930,8 +5920,8 @@ exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
 
-  int line_num = CStrUtil::toInteger(argList[0]);
-  int char_num = CStrUtil::toInteger(argList[1]);
+  int line_num = int(CStrUtil::toInteger(argList[0]));
+  int char_num = int(CStrUtil::toInteger(argList[1]));
 
   vi_->cursorTo(line_num, char_num);
 

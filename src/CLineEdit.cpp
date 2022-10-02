@@ -86,5 +86,5 @@ void
 CLineEdit::
 cursorEnd()
 {
-  pos_ = line_.size();
+  pos_ = int(line_.size());
 }

@@ -30,7 +30,7 @@ class CEditLineChars {
 
   void clear();
 
-  uint size() const { return chars_.size(); }
+  uint size() const { return uint(chars_.size()); }
 
   bool empty() const { return chars_.empty(); }
 

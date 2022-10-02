@@ -59,7 +59,7 @@ struct CEditBuffer {
 
   void clear() { lines.clear(); }
 
-  uint getNumLines() const { return lines.size(); }
+  uint getNumLines() const { return uint(lines.size()); }
 
   const CEditBufferLine &getLine(uint i) const { return lines[i]; }
 
@@ -84,7 +84,7 @@ class CEditFileLines {
 
  ~CEditFileLines();
 
-  uint size() const { return lines_.size(); }
+  uint size() const { return uint(lines_.size()); }
 
   bool empty() const { return lines_.empty(); }
 
@@ -248,11 +248,11 @@ class CEditFile {
 
   uint lineLength(uint line_num);
 
-  uint getNumMarks() const { return marks_.size(); }
+  uint getNumMarks() const { return uint(marks_.size()); }
 
   const MarkList &getMarks() const { return marks_; }
 
-  uint getNumBuffers() const { return bufferMap_.size(); }
+  uint getNumBuffers() const { return uint(bufferMap_.size()); }
 
   const BufferMap &getBufferMap() const { return bufferMap_; }
 

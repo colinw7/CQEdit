@@ -27,12 +27,12 @@ deleteWord(uint line_num, uint char_num)
   uint num = 0;
 
   if (file_->isWordChar(line->getChar(char_num))) {
-    while (int(char_num + num) < (int) line->getLength() - 1 &&
+    while (int(char_num + num) < int(line->getLength()) - 1 &&
            file_->isWordChar(line->getChar(char_num + num)))
       ++num;
   }
   else {
-    while (int(char_num + num) < (int) line->getLength() - 1 &&
+    while (int(char_num + num) < int(line->getLength()) - 1 &&
            ! file_->isWordChar(line->getChar(char_num + num)))
       ++num;
   }
@@ -594,7 +594,7 @@ getWord(uint line_num, uint char_num, std::string &word)
   int char_num2 = char_num1;
 
   // find end of word
-  while (char_num2 < (int) line->getLength() - 1 &&
+  while (char_num2 < int(line->getLength()) - 1 &&
          file_->isWordChar(line->getChar(char_num2)) &&
          file_->isWordChar(line->getChar(char_num2 + 1)))
     ++char_num2;

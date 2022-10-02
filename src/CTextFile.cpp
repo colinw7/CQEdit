@@ -50,7 +50,7 @@ read(const char *filename)
 
   file.toLines(lines);
 
-  uint numLines = lines.size();
+  uint numLines = uint(lines.size());
 
   for (uint i = 0; i < numLines; ++i) {
     addLineAfter(lines[i]);
@@ -256,7 +256,7 @@ uint
 CTextFile::
 getNumLines() const
 {
-  return lines_.size();
+  return uint(lines_.size());
 }
 
 void
@@ -640,7 +640,7 @@ void
 CTextLine::
 addCharAfter(uint x, char c)
 {
-  uint len = line_.size();
+  uint len = uint(line_.size());
 
   if (x >= len)
     line_ += c;
@@ -652,7 +652,7 @@ void
 CTextLine::
 addCharBefore(uint x, char c)
 {
-  uint len = line_.size();
+  uint len = uint(line_.size());
 
   if (x >= len)
     line_ += c;
@@ -664,7 +664,7 @@ void
 CTextLine::
 deleteCharAt(uint x)
 {
-  uint len = line_.size();
+  uint len = uint(line_.size());
 
   assert(x < len);
 
@@ -675,7 +675,7 @@ void
 CTextLine::
 deleteCharBefore(uint x)
 {
-  uint len = line_.size();
+  uint len = uint(line_.size());
 
   assert(x < len);
 
@@ -686,7 +686,7 @@ void
 CTextLine::
 replaceChar(uint x, char c)
 {
-  uint len = line_.size();
+  uint len = uint(line_.size());
 
   assert(x < len);
 

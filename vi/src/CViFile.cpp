@@ -135,7 +135,7 @@ addLineAfter(uint line_num, CViLine *line)
   else {
     lines_.push_back(lines_[lines_.size() - 1]);
 
-    for (int i = (int) lines_.size() - 2; i >= (int) line_num; --i)
+    for (int i = int(lines_.size()) - 2; i >= int(line_num); --i)
       lines_[i + 1] = lines_[i];
 
     lines_[line_num] = line;
@@ -151,7 +151,7 @@ addLineBefore(uint line_num, CViLine *line)
 {
   lines_.push_back(lines_[lines_.size() - 1]);
 
-  for (int i = (int) lines_.size() - 2; i >= (int) line_num - 1; --i)
+  for (int i = int(lines_.size()) - 2; i >= int(line_num) - 1; --i)
     lines_[i + 1] = lines_[i];
 
   lines_[line_num - 1] = line;

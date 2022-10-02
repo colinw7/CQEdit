@@ -74,7 +74,7 @@ void
 CEditFile::
 setPos(const CIPoint2D &pos)
 {
-  if (! CASSERT(pos.y < (int) getNumLines() && pos.x <= (int) getLineEnd(pos.y) + 1,
+  if (! CASSERT(pos.y < int(getNumLines()) && pos.x <= int(getLineEnd(pos.y)) + 1,
                 "Invalid Position")) return;
 
   if (pos != getPos())
@@ -85,7 +85,7 @@ bool
 CEditFile::
 isValidPos(const CIPoint2D &pos) const
 {
-  return (pos.y < (int) getNumLines() && pos.x <= (int) getLineEnd(pos.y));
+  return (pos.y < int(getNumLines()) && pos.x <= int(getLineEnd(pos.y)));
 }
 
 uint
@@ -124,7 +124,7 @@ fixPos()
 
   auto pos = getPos();
 
-  if (pos.y >= (int) getNumLines()) {
+  if (pos.y >= int(getNumLines())) {
     pos.y = getNumLines() - 1;
 
     changed = true;
@@ -136,7 +136,7 @@ fixPos()
     changed = true;
   }
 
-  if (pos.x > (int) getLineEnd(pos.y)) {
+  if (pos.x > int(getLineEnd(pos.y))) {
     pos.x = getLineEnd(pos.y);
 
     changed = true;
@@ -156,7 +156,7 @@ uint
 CEditFile::
 getNumLines() const
 {
-  return lines_.size();
+  return uint(lines_.size());
 }
 
 bool
@@ -330,7 +330,7 @@ addFileLines(const std::string &fileName, uint line_num)
   std::string line;
 
   while (file.readLine(line)) {
-    uint len = line.size();
+    uint len = uint(line.size());
 
     if (len > 0 && line[len - 1] == '\r')
       line = line.substr(0, len - 1);
@@ -419,7 +419,7 @@ subAddChars(uint line_num, uint char_num, const std::string &chars)
 {
   lines_.addLineChars(line_num, char_num, chars);
 
-  addUndo(new CEditDeleteCharsCmd(&cmdMgr_, line_num, char_num, chars.size()));
+  addUndo(new CEditDeleteCharsCmd(&cmdMgr_, line_num, char_num, uint(chars.size())));
 
   setChanged(true);
   setUnsaved(true);
@@ -433,7 +433,7 @@ moveLine(uint line_num1, int line_num2)
 {
   CASSERT(line_num1 < getNumLines(), "Invalid Line Num");
 
-  CASSERT(line_num2 >= -1 && line_num2 < (int) getNumLines(), "Invalid Line Num");
+  CASSERT(line_num2 >= -1 && line_num2 < int(getNumLines()), "Invalid Line Num");
 
   subMoveLine(line_num1, line_num2);
 }
@@ -884,13 +884,13 @@ pasteAfter(char id, uint line_num, uint char_num)
 {
   auto &buffer = getBuffer(id);
 
-  uint numLines = buffer.lines.size();
+  uint numLines = uint(buffer.lines.size());
 
   if (numLines == 0)
     return;
 
   auto *sline = &buffer.lines[0];
-  auto *eline = (CEditBufferLine *) nullptr;
+  auto *eline = static_cast<CEditBufferLine *>(nullptr);
 
   if (numLines > 1)
     eline = &buffer.lines[numLines - 1];
@@ -956,13 +956,13 @@ pasteBefore(char id, uint line_num, uint char_num)
 {
   auto &buffer = getBuffer(id);
 
-  uint numLines = buffer.lines.size();
+  uint numLines = uint(buffer.lines.size());
 
   if (numLines == 0)
     return;
 
   auto *sline = &buffer.lines[0];
-  auto *eline = (CEditBufferLine *) nullptr;
+  auto *eline = static_cast<CEditBufferLine *>(nullptr);
 
   if (numLines > 1)
     eline = &buffer.lines[numLines - 1];
@@ -1687,7 +1687,7 @@ prevLine(uint *line_num, uint *char_num)
 
   const auto *line = getEditLine(*line_num);
 
-  *char_num = std::max((int) line->getLength() - 1, 0);
+  *char_num = std::max(int(line->getLength()) - 1, 0);
 
   return true;
 }
@@ -1735,8 +1735,8 @@ swapChar(uint line_num, uint char_num)
 
   char c = line->getChar(char_num);
 
-  if      (islower(c)) c = toupper(c);
-  else if (isupper(c)) c = tolower(c);
+  if      (islower(c)) c = char(toupper(c));
+  else if (isupper(c)) c = char(tolower(c));
 
   replace(line_num, char_num, c);
 }
@@ -1872,7 +1872,7 @@ findNext(const CRegExp &pattern, uint line_num1, int char_num1,
     return true;
   }
 
-  for (int i = (int) line_num1 + 1; i <= line_num2 - 1; ++i) {
+  for (int i = int(line_num1) + 1; i <= line_num2 - 1; ++i) {
     if (getEditLine(i)->findNext(pattern, 0, -1, &spos, &epos)) {
       *fline_num = i;
       *fchar_num = spos;
@@ -2238,7 +2238,7 @@ subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &rep
 
   lines_.replaceLineChars(line_num, char_num1, char_num2, replaceStr);
 
-  char_num2 = char_num1 + replaceStr.size() - 1;
+  char_num2 = char_num1 + uint(replaceStr.size()) - 1;
 
   addUndo(new CEditReplaceCmd(&cmdMgr_, line_num, char_num1, char_num2, old));
 
@@ -2306,7 +2306,7 @@ clearLineMarks(uint line_num)
   auto p2 = marks_.end  ();
 
   for ( ; p1 != p2; ++p1) {
-    if ((*p1).second.y == (int) line_num)
+    if ((*p1).second.y == int(line_num))
       (*p1).second = CIPoint2D(-1, -1);
   }
 }
@@ -2473,7 +2473,7 @@ runEdCmd(const std::string &str, bool &quitted)
 
   CStrUtil::toWords(str, words);
 
-  uint num_words = words.size();
+  uint num_words = uint(words.size());
 
   auto cmd = (num_words > 0 ? words[0] : std::string());
 
@@ -2597,7 +2597,7 @@ setOptionString(const std::string &name, const std::string &arg)
   else if (name1 == "number")
     options_.number = CStrUtil::toBool(arg1);
   else if (name1 == "shiftwidth")
-    options_.shiftwidth = CStrUtil::toInteger(arg1);
+    options_.shiftwidth = int(CStrUtil::toInteger(arg1));
   else if (name1 == "showmatch")
     options_.showmatch = CStrUtil::toBool(arg1);
 
@@ -2649,7 +2649,7 @@ void
 CEditFile::
 displayMessage(const StringList &lines)
 {
-  uint numLines = lines.size();
+  uint numLines = uint(lines.size());
 
   for (uint i = 0; i < numLines; ++i) {
     std::cerr << lines[i] << std::endl;
@@ -2660,7 +2660,7 @@ void
 CEditFile::
 displayError(const StringList &lines)
 {
-  uint numLines = lines.size();
+  uint numLines = uint(lines.size());
 
   for (uint i = 0; i < numLines; ++i) {
     std::cerr << lines[i] << std::endl;
@@ -2726,7 +2726,7 @@ addLine(uint line_num, CEditLine *line)
   else {
     lines_.push_back(lines_[lines_.size() - 1]);
 
-    for (int i = (int) lines_.size() - 2; i >= (int) line_num; --i)
+    for (int i = int(lines_.size()) - 2; i >= int(line_num); --i)
       lines_[i + 1] = lines_[i];
 
     lines_[line_num] = line;
@@ -2808,7 +2808,7 @@ moveLine(uint line_num1, int line_num2)
 {
   auto *line = lines_[line_num1];
 
-  if      (line_num2 > (int) line_num1) {
+  if      (line_num2 > int(line_num1)) {
     for (int i = line_num1 + 1; i <= line_num2; ++i)
       lines_[i - 1] = lines_[i];
 
@@ -2817,13 +2817,13 @@ moveLine(uint line_num1, int line_num2)
     for (int i = line_num1; i <= line_num2; ++i)
       lines_[i]->setChanged(true);
   }
-  else if (line_num2 < (int) line_num1) {
+  else if (line_num2 < int(line_num1)) {
     for (int i = line_num1 - 1; i > line_num2; --i)
       lines_[i + 1] = lines_[i];
 
     lines_[line_num2 + 1] = line;
 
-    for (int i = line_num2; i <= (int) line_num1; ++i)
+    for (int i = line_num2; i <= int(line_num1); ++i)
       lines_[i]->setChanged(true);
   }
 }
@@ -2854,7 +2854,7 @@ deleteLine(uint line_num)
 {
   auto *line = lines_[line_num];
 
-  uint numLines = lines_.size();
+  uint numLines = uint(lines_.size());
 
   for (uint i = line_num + 1; i < numLines; ++i)
     lines_[i - 1] = lines_[i];
@@ -2863,7 +2863,7 @@ deleteLine(uint line_num)
 
   delete line;
 
-  numLines = lines_.size();
+  numLines = uint(lines_.size());
 
   for (uint i = line_num; i < numLines; ++i)
     lines_[i]->setChanged(true);
