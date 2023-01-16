@@ -17,7 +17,7 @@ getQFont() const
 {
   auto font = getFont();
 
-  auto *qfont = font.cast<CQFont>();
+  auto *qfont = dynamic_cast<CQFont *>(font.get());
 
   return qfont->getQFont();
 }

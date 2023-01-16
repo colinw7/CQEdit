@@ -66,10 +66,10 @@ class CEditAddLineCmd : public CEditCmd {
 
   CEditAddLineCmd(CEditCmdMgr *mgr, int line_num, const std::string &line);
 
-  const char *getName() const { return "add_line"; }
+  const char *getName() const override { return "add_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -84,10 +84,10 @@ class CEditDeleteLineCmd : public CEditCmd {
 
   CEditDeleteLineCmd(CEditCmdMgr *mgr, int line_num);
 
-  const char *getName() const { return "delete_line"; }
+  const char *getName() const override { return "delete_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -102,10 +102,10 @@ class CEditMoveLineCmd : public CEditCmd {
 
   CEditMoveLineCmd(CEditCmdMgr *mgr, int line_num1, int line_num2);
 
-  const char *getName() const { return "move_line"; }
+  const char *getName() const override { return "move_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num1_ { 0 };
@@ -121,10 +121,10 @@ class CEditReplaceCmd : public CEditCmd {
   CEditReplaceCmd(CEditCmdMgr *mgr, int line_num,
                   int char_num1, int char_num2, const std::string &str);
 
-  const char *getName() const { return "replace"; }
+  const char *getName() const override { return "replace"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -141,10 +141,10 @@ class CEditInsertCharCmd : public CEditCmd {
 
   CEditInsertCharCmd(CEditCmdMgr *mgr, int line_num, int char_num, char c);
 
-  const char *getName() const { return "insert_char"; }
+  const char *getName() const override { return "insert_char"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int  line_num_ { 0 };
@@ -160,10 +160,10 @@ class CEditReplaceCharCmd : public CEditCmd {
 
   CEditReplaceCharCmd(CEditCmdMgr *mgr, int line_num, int char_num, char c);
 
-  const char *getName() const { return "replace_char"; }
+  const char *getName() const override { return "replace_char"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int  line_num_ { 0 };
@@ -179,10 +179,10 @@ class CEditDeleteCharsCmd : public CEditCmd {
 
   CEditDeleteCharsCmd(CEditCmdMgr *mgr, int line_num, int char_num, int num_chars);
 
-  const char *getName() const { return "delete_chars"; }
+  const char *getName() const override { return "delete_chars"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -198,10 +198,10 @@ class CEditSplitLineCmd : public CEditCmd {
 
   CEditSplitLineCmd(CEditCmdMgr *mgr, int line_num, int char_num);
 
-  const char *getName() const { return "split_line"; }
+  const char *getName() const override { return "split_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };
@@ -216,10 +216,10 @@ class CEditJoinLineCmd : public CEditCmd {
 
   CEditJoinLineCmd(CEditCmdMgr *mgr, int line_num);
 
-  const char *getName() const { return "join_line"; }
+  const char *getName() const override { return "join_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };
@@ -234,10 +234,10 @@ class CEditMoveToCmd : public CEditCmd {
 
   CEditMoveToCmd(CEditCmdMgr *mgr, int line_num, int char_num);
 
-  const char *getName() const { return "move_to"; }
+  const char *getName() const override { return "move_to"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };
@@ -250,10 +250,10 @@ class CEditUndoCmd : public CEditCmd {
  public:
   CEditUndoCmd(CEditCmdMgr *mgr);
 
-  const char *getName() const { return "undo"; }
+  const char *getName() const override { return "undo"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 };
 
 //---
@@ -262,10 +262,10 @@ class CEditRedoCmd : public CEditCmd {
  public:
   CEditRedoCmd(CEditCmdMgr *mgr);
 
-  const char *getName() const { return "redo"; }
+  const char *getName() const override { return "redo"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 };
 
 #endif

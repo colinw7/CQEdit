@@ -59,10 +59,10 @@ class CViAddLineUndoCmd : public CViUndoCmd {
 
   CViAddLineUndoCmd(CVi *vi, int line_num, const std::string &line);
 
-  const char *getName() const { return "add_line"; }
+  const char *getName() const override { return "add_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -77,10 +77,10 @@ class CViDeleteLineUndoCmd : public CViUndoCmd {
 
   CViDeleteLineUndoCmd(CVi *vi, int line_num);
 
-  const char *getName() const { return "delete_line"; }
+  const char *getName() const override { return "delete_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -95,10 +95,10 @@ class CViMoveLineUndoCmd : public CViUndoCmd {
 
   CViMoveLineUndoCmd(CVi *vi, int line_num1, int line_num2);
 
-  const char *getName() const { return "move_line"; }
+  const char *getName() const override { return "move_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num1_ { 0 };
@@ -113,10 +113,10 @@ class CViReplaceUndoCmd : public CViUndoCmd {
 
   CViReplaceUndoCmd(CVi *vi, int line_num, int char_num1, int char_num2, const std::string &str);
 
-  const char *getName() const { return "replace"; }
+  const char *getName() const override { return "replace"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -133,10 +133,10 @@ class CViInsertCharUndoCmd : public CViUndoCmd {
 
   CViInsertCharUndoCmd(CVi *vi, int line_num, int char_num, char c);
 
-  const char *getName() const { return "insert_char"; }
+  const char *getName() const override { return "insert_char"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int  line_num_ { 0 };
@@ -152,10 +152,10 @@ class CViReplaceCharUndoCmd : public CViUndoCmd {
 
   CViReplaceCharUndoCmd(CVi *vi, int line_num, int char_num, char c);
 
-  const char *getName() const { return "replace_char"; }
+  const char *getName() const override { return "replace_char"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int  line_num_ { 0 };
@@ -171,10 +171,10 @@ class CViDeleteCharsUndoCmd : public CViUndoCmd {
 
   CViDeleteCharsUndoCmd(CVi *vi, int line_num, int char_num, int num_chars);
 
-  const char *getName() const { return "delete_chars"; }
+  const char *getName() const override { return "delete_chars"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int         line_num_ { 0 };
@@ -190,10 +190,10 @@ class CViSplitLineUndoCmd : public CViUndoCmd {
 
   CViSplitLineUndoCmd(CVi *vi, int line_num, int char_num);
 
-  const char *getName() const { return "split_line"; }
+  const char *getName() const override { return "split_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };
@@ -208,10 +208,10 @@ class CViJoinLineUndoCmd : public CViUndoCmd {
 
   CViJoinLineUndoCmd(CVi *vi, int line_num);
 
-  const char *getName() const { return "join_line"; }
+  const char *getName() const override { return "join_line"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };
@@ -226,10 +226,10 @@ class CViMoveToUndoCmd : public CViUndoCmd {
 
   CViMoveToUndoCmd(CVi *vi, int line_num, int char_num);
 
-  const char *getName() const { return "move_to"; }
+  const char *getName() const override { return "move_to"; }
 
-  bool exec(const std::vector<std::string> &argList);
-  bool exec();
+  bool exec(const std::vector<std::string> &argList) override;
+  bool exec() override;
 
  private:
   int line_num_ { 0 };

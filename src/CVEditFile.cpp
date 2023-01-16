@@ -286,7 +286,7 @@ setFontConf(const std::string &str)
 
   auto font = CFontMgrInst->lookupFont(family, style, size);
 
-  if (! font.isValid()) {
+  if (! font) {
     std::cerr << "Invalid font: " << str << std::endl;
 
     font = CFontMgrInst->lookupFont("courier", CFONT_STYLE_NORMAL, 12);

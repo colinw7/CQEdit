@@ -13,9 +13,9 @@ class CVEditCursor : public CEditCursor {
 
   virtual ~CVEditCursor() { }
 
-  virtual CVEditCursor *dup() const;
+  CVEditCursor *dup() const override;
 
-  virtual void setPos(const CIPoint2D &pos);
+  void setPos(const CIPoint2D &pos) override;
 
   const CRGBA &getBg() const { return bg_; }
   const CRGBA &getFg() const { return fg_; }

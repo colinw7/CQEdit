@@ -1,6 +1,8 @@
 #include <CQEdit.h>
 #include <CEdit.h>
 #include <CQUtil.h>
+#include <CQUtilRGBA.h>
+#include <CQUtilGeom.h>
 #include <CQEditCanvas.h>
 #include <CQHistoryLineEdit.h>
 #include <CQEditMgr.h>

@@ -1,5 +1,6 @@
 #include <CQEditCanvas.h>
 #include <CQUtil.h>
+#include <CQUtilEvent.h>
 #include <CQEdit.h>
 
 #include <QGridLayout>
