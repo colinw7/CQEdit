@@ -1198,7 +1198,7 @@ updateSyntax()
       line_ = line;
     }
 
-    void addToken(uint, uint word_start, const std::string &word, CSyntaxToken token) {
+    void addToken(uint, uint word_start, const std::string &word, CSyntaxToken token) override {
       line_->addAnnotation(word_start, word_start + uint(word.size()) - 1, bg_, fg_[int(token)]);
     }
   };

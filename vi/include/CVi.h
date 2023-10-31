@@ -303,13 +303,15 @@ class CViLine {
 
   virtual void deleteChar(uint pos);
 
-  bool findNext(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findNext(const std::string &str, int char_num1=0,
+                int char_num2=-1, uint *char_num=nullptr) const;
   bool findNext(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
-  bool findPrev(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findPrev(const std::string &str, int char_num1=0,
+                int char_num2=-1, uint *char_num=nullptr) const;
   bool findPrev(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
   virtual void replace(const std::string &str);
   virtual void replace(int spos, int epos, const std::string &str);
@@ -831,15 +833,15 @@ class CVi : public CViInterface {
   bool findNext(const std::string &pattern, uint line_num1, int char_num1,
                 int line_num2, int char_num2, uint *fline_num, uint *fchar_num);
 
-  bool findNext(const CRegExp &pattern, uint *len=0);
-  bool findNext(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=0);
-  bool findNext(const CRegExp &pattern, uint line_num, int char_num, uint *len=0);
+  bool findNext(const CRegExp &pattern, uint *len=nullptr);
+  bool findNext(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=nullptr);
+  bool findNext(const CRegExp &pattern, uint line_num, int char_num, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num, int char_num,
-                uint *fline_num, uint *fchar_num, uint *len=0);
+                uint *fline_num, uint *fchar_num, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *len=0);
+                int line_num2, int char_num2, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=0);
+                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=nullptr);
 
   bool findPrev(const std::string &str);
   bool findPrev(const std::string &pattern, uint *fline_num, uint *fchar_num);
@@ -851,15 +853,15 @@ class CVi : public CViInterface {
   bool findPrev(const std::string &pattern, uint line_num1, int char_num1,
                 int line_num2, int char_num2, uint *fline_num, uint *fchar_num);
 
-  bool findPrev(const CRegExp &pattern, uint *len=0);
-  bool findPrev(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=0);
-  bool findPrev(const CRegExp &pattern, uint line_num, int char_num, uint *len=0);
+  bool findPrev(const CRegExp &pattern, uint *len=nullptr);
+  bool findPrev(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=nullptr);
+  bool findPrev(const CRegExp &pattern, uint line_num, int char_num, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num, int char_num,
-                uint *fline_num, uint *fchar_num, uint *len=0);
+                uint *fline_num, uint *fchar_num, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *len=0);
+                int line_num2, int char_num2, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=0);
+                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=nullptr);
 
   bool findNextChar(char c, bool multiline);
   bool findNextChar(const std::string &str, bool multiline);

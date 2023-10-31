@@ -416,15 +416,15 @@ class CEditFile {
   bool findNext(const std::string &pattern, uint line_num1, int char_num1,
                 int line_num2, int char_num2, uint *fline_num, uint *fchar_num);
 
-  bool findNext(const CRegExp &pattern, uint *len=0);
-  bool findNext(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=0);
-  bool findNext(const CRegExp &pattern, uint line_num, int char_num=0, uint *len=0);
+  bool findNext(const CRegExp &pattern, uint *len=nullptr);
+  bool findNext(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=nullptr);
+  bool findNext(const CRegExp &pattern, uint line_num, int char_num=0, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num, int char_num,
-                uint *fline_num, uint *fchar_num, uint *len=0);
+                uint *fline_num, uint *fchar_num, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2=-1, uint *len=0);
+                int line_num2, int char_num2=-1, uint *len=nullptr);
   bool findNext(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=0);
+                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=nullptr);
 
   bool findPrev(const std::string &pattern);
   bool findPrev(const std::string &pattern, uint *fline_num, uint *fchar_num);
@@ -436,15 +436,15 @@ class CEditFile {
   bool findPrev(const std::string &pattern, uint line_num1, int char_num1,
                 int line_num2, int char_num2, uint *fline_num, uint *fchar_num);
 
-  bool findPrev(const CRegExp &pattern, uint *len=0);
-  bool findPrev(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=0);
-  bool findPrev(const CRegExp &pattern, uint line_num, int char_num=0, uint *len=0);
+  bool findPrev(const CRegExp &pattern, uint *len=nullptr);
+  bool findPrev(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len=nullptr);
+  bool findPrev(const CRegExp &pattern, uint line_num, int char_num=0, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num, int char_num,
-                uint *fline_num, uint *fchar_num, uint *len=0);
+                uint *fline_num, uint *fchar_num, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2=-1, uint *len=0);
+                int line_num2, int char_num2=-1, uint *len=nullptr);
   bool findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
-                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=0);
+                int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len=nullptr);
 
   bool findNextChar(char c, bool multiline);
   bool findNextChar(const std::string &str, bool multiline);

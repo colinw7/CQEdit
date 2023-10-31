@@ -21,7 +21,7 @@ class CVEditLine : public CEditLine {
 
   virtual ~CVEditLine();
 
-  virtual CVEditLine *dup() const;
+  CVEditLine *dup() const override;
 
   ACCESSOR(ExtraCharChanged, bool, extraCharChanged)
 

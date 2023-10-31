@@ -20,7 +20,7 @@ class CVEditChar : public CEditChar {
 
   virtual ~CVEditChar();
 
-  virtual CVEditChar *dup() const;
+  CVEditChar *dup() const override;
 
   // Style
   const CRGBA &getBg(const CVEditLine *vline) const;

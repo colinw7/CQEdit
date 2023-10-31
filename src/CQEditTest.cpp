@@ -16,6 +16,8 @@
 #include <CQTabWidget.h>
 #include <CQEditBg.h>
 #include <CQUtil.h>
+#include <CQUtilFont.h>
+#include <CQUtilRGBA.h>
 #include <CSyntaxCPP.h>
 #include <CFile.h>
 #include <CRGBName.h>

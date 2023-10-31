@@ -76,13 +76,15 @@ class CEditLineUtil {
 
   bool isSection(uint pos, uint *n) const;
 
-  bool findNext(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findNext(const std::string &str, int char_num1=0, int char_num2=-1,
+                uint *char_num=nullptr) const;
   bool findNext(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
-  bool findPrev(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findPrev(const std::string &str, int char_num1=0, int char_num2=-1,
+                uint *char_num=nullptr) const;
   bool findPrev(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
  private:
   CEditLine *line_;
@@ -136,13 +138,15 @@ class CEditLine {
 
   virtual void deleteChar(uint pos);
 
-  bool findNext(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findNext(const std::string &str, int char_num1=0, int char_num2=-1,
+                uint *char_num=nullptr) const;
   bool findNext(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
-  bool findPrev(const std::string &str, int char_num1=0, int char_num2=-1, uint *char_num=0) const;
+  bool findPrev(const std::string &str, int char_num1=0, int char_num2=-1,
+                uint *char_num=nullptr) const;
   bool findPrev(const CRegExp &pattern, int char_num1=0,
-                int char_num2=-1, uint *spos=0, uint *epos=0) const;
+                int char_num2=-1, uint *spos=nullptr, uint *epos=nullptr) const;
 
   virtual void replace(const std::string &str);
   virtual void replace(int spos, int epos, const std::string &str);

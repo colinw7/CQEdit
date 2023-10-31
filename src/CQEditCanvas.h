@@ -47,19 +47,19 @@ class CQEditCanvas : public QWidget {
  public:
   CQEditCanvas(CQEditArea *edit);
 
-  void paintEvent(QPaintEvent *);
-  void resizeEvent(QResizeEvent *);
+  void paintEvent(QPaintEvent *) override;
+  void resizeEvent(QResizeEvent *) override;
 
-  void keyPressEvent(QKeyEvent *event);
-  void keyReleaseEvent(QKeyEvent *event);
+  void keyPressEvent(QKeyEvent *event) override;
+  void keyReleaseEvent(QKeyEvent *event) override;
 
-  void mousePressEvent(QMouseEvent *event);
-  void mouseMoveEvent(QMouseEvent *event);
-  void mouseReleaseEvent(QMouseEvent *event);
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
 
   //void selectionNotify(CButtonAction action);
 
-  bool focusNextPrevChild(bool) { return false; }
+  bool focusNextPrevChild(bool) override { return false; }
 
  private:
   void selectionNotify(const QPoint &, const QPoint &);

@@ -23,9 +23,9 @@ class CQEditTest : public CQMainWindow {
   CQEdit *getEdit() const { return edit_; }
 
  private:
-  void createMenus();
-  void createToolBars();
-  void createStatusBar();
+  void createMenus() override;
+  void createToolBars() override;
+  void createStatusBar() override;
 
   void setCurrent(CQEdit *edit, CQEdit *output);
 

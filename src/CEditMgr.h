@@ -24,12 +24,12 @@ class CEditDefFactory : public CEditFactory {
  public:
   virtual ~CEditDefFactory() { }
 
-  virtual CEditFile   *createFile    ();
-  virtual CEditCursor *createCursor  (CEditFile *file);
-  virtual CEditEd     *createEd      (CEditFile *file);
-  virtual CEditLine   *createLine    (CEditFile *file);
-  virtual CEditChar   *createChar    (CEditLine *line);
-  virtual CLineEdit   *createLineEdit(CEditFile *file);
+  CEditFile   *createFile    () override;
+  CEditCursor *createCursor  (CEditFile *file) override;
+  CEditEd     *createEd      (CEditFile *file) override;
+  CEditLine   *createLine    (CEditFile *file) override;
+  CEditChar   *createChar    (CEditLine *line) override;
+  CLineEdit   *createLineEdit(CEditFile *file) override;
 };
 
 //---

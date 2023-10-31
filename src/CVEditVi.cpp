@@ -6,15 +6,15 @@
 #include <cstring>
 
 class LineEditRenderer : public CVLineEditRenderer {
-  void setForeground(const CRGBA &rgba) {
+  void setForeground(const CRGBA &rgba) override {
     return CVEditMgrInst->setForeground(rgba);
   }
 
-  void fillRectangle(const CIBBox2D &rect, const CRGBA &rgba) {
+  void fillRectangle(const CIBBox2D &rect, const CRGBA &rgba) override {
     return CVEditMgrInst->fillRectangle(rect, rgba);
   }
 
-  void drawChar(const CIPoint2D &p, char c) {
+  void drawChar(const CIPoint2D &p, char c) override {
     return CVEditMgrInst->drawChar(p, c);
   }
 };

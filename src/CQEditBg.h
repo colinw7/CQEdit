@@ -8,7 +8,7 @@ class CQEditBg : public CQDialog {
    CQDialog(parent) {
   }
 
-  void createWidgets(QWidget *frame);
+  void createWidgets(QWidget *frame) override;
 
   const QString &getColorName() const { return colorName_; }
 

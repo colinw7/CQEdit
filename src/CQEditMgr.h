@@ -7,7 +7,7 @@ class QPainter;
 
 class CQEditFactory : public CVEditFactory {
  public:
-  CEditCursor *createCursor(CEditFile *file) {
+  CEditCursor *createCursor(CEditFile *file) override {
     return new CQEditCursor(dynamic_cast<CQEditFile *>(file));
   }
 };
@@ -20,17 +20,17 @@ class CQEditRenderer : public CVEditRenderer {
 
  ~CQEditRenderer() { }
 
-  void fill(const CRGBA &bg);
+  void fill(const CRGBA &bg) override;
 
-  void setFont(CFontPtr font);
+  void setFont(CFontPtr font) override;
 
-  void setForeground(const CRGBA &fg);
+  void setForeground(const CRGBA &fg) override;
 
-  void fillRectangle(const CIBBox2D &rect, const CRGBA &rgba);
+  void fillRectangle(const CIBBox2D &rect, const CRGBA &rgba) override;
 
-  void drawChar(const CIPoint2D &p, char c);
+  void drawChar(const CIPoint2D &p, char c) override;
 
-  void drawString(const CIPoint2D &p, const std::string &str);
+  void drawString(const CIPoint2D &p, const std::string &str) override;
 
  private:
   QWidget*  w_       { nullptr };

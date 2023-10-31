@@ -9,8 +9,8 @@ class CEditEd : public CEd {
 
   virtual ~CEditEd();
 
-  virtual void output(const std::string &msg);
-  virtual void error (const std::string &msg);
+  void output(const std::string &msg) override;
+  void error (const std::string &msg) override;
 
  protected:
   CEditEd(const CEditEd &ed);
