@@ -8,14 +8,15 @@ class CEditCursor;
 class CEditEd;
 class CEditFileUtil;
 
-#include <map>
-
 #include <CIPoint2D.h>
 #include <CEditCmd.h>
 #include <CUndo.h>
-#include <COptVal.h>
 #include <CRegExp.h>
 #include <CTextFile.h>
+
+#include <map>
+#include <optional>
+
 
 //---
 
@@ -215,9 +216,9 @@ class CEditFile {
 
   bool isLinesEmpty() const;
 
-  bool hasFindPattern() const { return findPattern_.isValid(); }
-  const CRegExp &getFindPattern() const { return findPattern_.getValue(); }
-  void setFindPattern(const CRegExp &pattern) { findPattern_.setValue(pattern); }
+  bool hasFindPattern() const { return bool(findPattern_); }
+  const CRegExp &getFindPattern() const { return findPattern_.value(); }
+  void setFindPattern(const CRegExp &pattern) { findPattern_ = pattern; }
 
   bool isExtraLineChar() const { return extraLineChar_; }
   virtual void setExtraLineChar(bool extraLineChar);
@@ -536,7 +537,7 @@ class CEditFile {
   CEditFile &operator=(const CEditFile &rhs);
 
  protected:
-  using OptRegExp = COptValT<CRegExp>;
+  using OptRegExp = std::optional<CRegExp>;
 
   CEditFileUtil *util_ { nullptr };
 

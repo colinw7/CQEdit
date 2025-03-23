@@ -1,7 +1,6 @@
 #ifndef CVI_H
 #define CVI_H
 
-#include <COptVal.h>
 #include <CUndo.h>
 #include <CRegExp.h>
 
@@ -9,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <cassert>
+#include <optional>
 
 class CVi;
 class CEd;
@@ -660,9 +660,9 @@ class CVi : public CViInterface {
 
   bool isLinesEmpty() const;
 
-  bool hasFindPattern() const { return findPattern_.isValid(); }
-  const CRegExp &getFindPattern() const { return findPattern_.getValue(); }
-  void setFindPattern(const CRegExp &pattern) { findPattern_.setValue(pattern); }
+  bool hasFindPattern() const { return bool(findPattern_); }
+  const CRegExp &getFindPattern() const { return findPattern_.value(); }
+  void setFindPattern(const CRegExp &pattern) { findPattern_ = pattern; }
 
   bool getChanged() const { return changed_; }
   void setChanged(bool changed);
@@ -981,6 +981,7 @@ class CVi : public CViInterface {
   using MarkPosMap = std::map<std::string, MarkPos>;
   using Buffers    = std::map<char, CViBuffer>;
   using Lines      = std::vector<CViLine>;
+  using OptRegExp  = std::optional<CRegExp>;
 
   // data
   std::string filename_;
@@ -1011,10 +1012,10 @@ class CVi : public CViInterface {
   CViLastCommand lastCommand_;
 
   // find
-  char              findChar_      { '\0' };
-  bool              findForward_   { false };
-  bool              findTill_      { false };
-  COptValT<CRegExp> findPattern_;
+  char      findChar_    { '\0' };
+  bool      findForward_ { false };
+  bool      findTill_    { false };
+  OptRegExp findPattern_;
 
   // groups
   GroupList groupList_;

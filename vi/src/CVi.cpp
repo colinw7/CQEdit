@@ -2,8 +2,10 @@
 #include <CEd.h>
 #include <CFile.h>
 #include <CStrUtil.h>
+
 #include <cstring>
 #include <cmath>
+#include <iostream>
 
 static bool my_assert(const char *m, bool ret) {
   std::cerr << m << "\n";

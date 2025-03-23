@@ -23,10 +23,12 @@ class CSyntax;
 class CVEditVi;
 class CVEditGen;
 
+using OptFont = std::optional<CFontPtr>;
+
 struct CVEditFileStyle {
-  CPOptValT<CRGBA>   fg;
-  CPOptValT<CRGBA>   bg;
-  COptValT<CFontPtr> font;
+  CPOptValT<CRGBA> fg;
+  CPOptValT<CRGBA> bg;
+  OptFont          font;
 };
 
 #define CVEditFileMgrInst CVEditFileMgr::getInstance()

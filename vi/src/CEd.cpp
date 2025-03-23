@@ -1,11 +1,13 @@
 #include <CEd.h>
 #include <CVi.h>
-#include <COptVal.h>
 #include <CFile.h>
 #include <CRegExp.h>
 #include <CStrUtil.h>
 #include <CStrParse.h>
 #include <CCommand.h>
+
+#include <optional>
+#include <iostream>
 
 CEd::
 CEd(CVi *file) :
@@ -96,8 +98,8 @@ execCmd(const std::string &cmd)
 
   //----------
 
-  COptValT<int> line_num1, line_num2;
-  COptValT<int> char_num1, char_num2;
+  std::optional<int> line_num1, line_num2;
+  std::optional<int> char_num1, char_num2;
 
   CStrParse parse(cmd);
 
@@ -165,7 +167,7 @@ execCmd(const std::string &cmd)
       if (parse.isDigit())
         parse.readInteger(&d);
 
-      line_num1 = line_num1.getValue() + d*s;
+      line_num1 = line_num1.value() + d*s;
     }
   }
   else if (parse.isChar('$')) {
@@ -184,7 +186,7 @@ execCmd(const std::string &cmd)
       if (parse.isDigit())
         parse.readInteger(&d);
 
-      line_num1 = line_num1.getValue() + d*s;
+      line_num1 = line_num1.value() + d*s;
     }
   }
   else if (parse.isChar('\'')) {
@@ -271,17 +273,17 @@ execCmd(const std::string &cmd)
 
   parse.skipSpace();
 
-  if (! line_num2.isValid()) {
+  if (! line_num2) {
     // read range end (can be more than one value)
     while (parse.isChar(',') || parse.isChar(';')) {
       char c = parse.getCharAt();
 
-      if (line_num2.isValid())
+      if (line_num2)
         line_num1 = line_num2;
 
       parse.skipChar();
 
-      if (! line_num1.isValid())
+      if (! line_num1)
         line_num1 = 1;
 
       parse.skipSpace();
@@ -296,7 +298,7 @@ execCmd(const std::string &cmd)
           parse.readInteger(&i);
 
           if (c == ';')
-            line_num2 = line_num1.getValue() + i;
+            line_num2 = line_num1.value() + i;
           else
             line_num2 = getRow() + i + 1;
         }
@@ -311,7 +313,7 @@ execCmd(const std::string &cmd)
           parse.readInteger(&i);
 
           if (c == ';')
-            line_num2 = line_num1.getValue() - i;
+            line_num2 = line_num1.value() - i;
           else
             line_num2 = getRow() - i + 1;
         }
@@ -341,7 +343,7 @@ execCmd(const std::string &cmd)
           if (parse.isDigit())
             parse.readInteger(&d);
 
-          line_num2 = line_num2.getValue() + d*s;
+          line_num2 = line_num2.value() + d*s;
         }
       }
       // last line
@@ -361,7 +363,7 @@ execCmd(const std::string &cmd)
           if (parse.isDigit())
             parse.readInteger(&d);
 
-          line_num2 = line_num2.getValue() + d*s;
+          line_num2 = line_num2.value() + d*s;
         }
       }
       else if (parse.isChar('\'')) {
@@ -409,7 +411,7 @@ execCmd(const std::string &cmd)
         uint fline_num, fchar_num;
 
         if (c == ';') {
-          if (file_->findNext(regexp, line_num1.getValue() - 1, 0, &fline_num, &fchar_num)) {
+          if (file_->findNext(regexp, line_num1.value() - 1, 0, &fline_num, &fchar_num)) {
             line_num2 = fline_num + 1;
             char_num2 = fchar_num;
           }
@@ -444,7 +446,7 @@ execCmd(const std::string &cmd)
         parse.skipChar();
       }
 
-      if (! line_num2.isValid())
+      if (! line_num2)
         line_num2 = file_->getNumLines();
 
       parse.skipSpace();
@@ -459,47 +461,47 @@ execCmd(const std::string &cmd)
 
   if      (c == '/') {
     // no start range so use current
-    if (! line_num1.isValid()) {
+    if (! line_num1) {
       line_num1 = getRow() + 1;
       char_num1 = 0;
     }
 
     // no end range so use last line
-    if (! line_num2.isValid()) {
+    if (! line_num2) {
       line_num2 = file_->getNumLines();
       char_num2 = 0;
     }
   }
   else if (c == '?') {
     // no start range so use current
-    if (! line_num1.isValid()) {
+    if (! line_num1) {
       line_num1 = getRow() - 1;
       char_num1 = 0;
     }
 
     // no end range so use last line
-    if (! line_num2.isValid()) {
+    if (! line_num2) {
       line_num2 = 1;
       char_num2 = 0;
     }
   }
   else {
     // no start range so use current
-    if (! line_num1.isValid()) {
+    if (! line_num1) {
       line_num1 = getRow() + 1;
       char_num1 = 0;
     }
 
     // no end range so use start
-    if (! line_num2.isValid()) {
+    if (! line_num2) {
       line_num2 = line_num1;
       char_num2 = char_num1;
     }
   }
 
   // ensure valid range
-  if (line_num1.getValue() < 1 || line_num1.getValue() > int(file_->getNumLines()) + 1 ||
-      line_num2.getValue() < 1 || line_num2.getValue() > int(file_->getNumLines()) + 1) {
+  if (line_num1.value() < 1 || line_num1.value() > int(file_->getNumLines()) + 1 ||
+      line_num2.value() < 1 || line_num2.value() > int(file_->getNumLines()) + 1) {
     error("Invalid range");
     return false;
   }
@@ -510,15 +512,15 @@ execCmd(const std::string &cmd)
     case 'i': { // (.)i - insert line and enter input mode
       mode_ = INPUT;
 
-      input_data_.setStartLine(line_num1.getValue());
-      input_data_.setEndLine  (line_num2.getValue());
+      input_data_.setStartLine(line_num1.value());
+      input_data_.setEndLine  (line_num2.value());
 
       input_data_.setCmd(c);
 
       break;
     }
     case 'd': { // (.,.)d - delete line
-      doDelete(line_num1.getValue(), line_num2.getValue());
+      doDelete(line_num1.value(), line_num2.value());
 
       break;
     }
@@ -632,7 +634,7 @@ execCmd(const std::string &cmd)
         return false;
       }
 
-      doGlob(line_num1.getValue(), line_num2.getValue(), find, cmd1);
+      doGlob(line_num1.value(), line_num2.value(), find, cmd1);
 
       break;
     }
@@ -649,7 +651,7 @@ execCmd(const std::string &cmd)
       break;
     }
     case 'j': { // (.,.)j - join lines
-      doJoin(line_num1.getValue(), line_num2.getValue());
+      doJoin(line_num1.value(), line_num2.value());
 
       break;
     }
@@ -659,17 +661,17 @@ execCmd(const std::string &cmd)
       if (! parse.readChar(&c1))
         return false;
 
-      doMark(line_num1.getValue(), c1);
+      doMark(line_num1.value(), c1);
 
       break;
     }
     case 'l': { // (.,.)l - print lines unambiguously ($ at end)
-      doPrint(line_num1.getValue(), line_num2.getValue(), /*numbered*/false, /*eol*/true);
+      doPrint(line_num1.value(), line_num2.value(), /*numbered*/false, /*eol*/true);
 
       break;
     }
     case 'm': { // (.,.)m(.) - move lines
-      COptValT<int> line_num3;
+      std::optional<int> line_num3;
 
       parse.skipSpace();
 
@@ -694,22 +696,22 @@ execCmd(const std::string &cmd)
 
       parse.skipSpace();
 
-      if (! line_num3.isValid())
+      if (! line_num3)
         line_num3 = getRow() + 1;
 
-      doMove(line_num1.getValue(), line_num2.getValue(), line_num3.getValue());
+      doMove(line_num1.value(), line_num2.value(), line_num3.value());
 
       break;
     }
     case 'n': { // (.,.)n - print numbered lines
-      doPrint(line_num1.getValue(), line_num2.getValue(), /*numbered*/true, /*eol*/false);
+      doPrint(line_num1.value(), line_num2.value(), /*numbered*/true, /*eol*/false);
 
       break;
     }
     case 'p': { // (.,.)p - print lines
-      doPrint(line_num1.getValue(), line_num2.getValue(), /*numbered*/false, /*eol*/false);
+      doPrint(line_num1.value(), line_num2.value(), /*numbered*/false, /*eol*/false);
 
-      setPos(0, line_num2.getValue() - 1);
+      setPos(0, line_num2.value() - 1);
 
       break;
     }
@@ -755,11 +757,11 @@ execCmd(const std::string &cmd)
         int numLines = int(lines.size());
 
         for (int l = 0; l < numLines; ++l)
-          addLine(line_num1.getValue() + l, lines[l]);
+          addLine(line_num1.value() + l, lines[l]);
       }
       else {
         if (! fileName.empty())
-          file_->addFileLines(fileName, line_num1.getValue());
+          file_->addFileLines(fileName, line_num1.value());
       }
 
       // TODO: fix line pos after read
@@ -822,12 +824,12 @@ execCmd(const std::string &cmd)
       if (! parse.eof())
         return false;
 
-      doSubstitute(line_num1.getValue(), line_num2.getValue(), find, replace, mod);
+      doSubstitute(line_num1.value(), line_num2.value(), find, replace, mod);
 
       break;
     }
     case 't': { // (.,.)t(.) - copy lines
-      COptValT<int> line_num3;
+      std::optional<int> line_num3;
 
       parse.skipSpace();
 
@@ -852,10 +854,10 @@ execCmd(const std::string &cmd)
 
       parse.skipSpace();
 
-      if (! line_num3.isValid())
+      if (! line_num3)
         line_num3 = getRow() + 1;
 
-      doCopy(line_num1.getValue(), line_num2.getValue(), line_num3.getValue());
+      doCopy(line_num1.value(), line_num2.value(), line_num3.value());
 
       break;
     }
@@ -909,12 +911,12 @@ execCmd(const std::string &cmd)
       break;
     }
     case 'x': { // (.)x - paste cut buffer
-      doPaste(line_num1.getValue());
+      doPaste(line_num1.value());
 
       break;
     }
     case 'y': { // (.,.)y - copy to buffer
-      doCopy(line_num1.getValue(), line_num2.getValue());
+      doCopy(line_num1.value(), line_num2.value());
 
       break;
     }
@@ -925,7 +927,7 @@ execCmd(const std::string &cmd)
     case '!': { // ![!]<command> - execute command
       std::string str = parse.getAt();
 
-      doExecute(line_num1.getValue(), line_num2.getValue(), str);
+      doExecute(line_num1.value(), line_num2.value(), str);
 
       break;
     }
@@ -933,7 +935,7 @@ execCmd(const std::string &cmd)
       break;
     }
     case '=': { // (.)= - print line number
-      output(CStrUtil::toString(line_num1.getValue()));
+      output(CStrUtil::toString(line_num1.value()));
 
       break;
     }
@@ -949,7 +951,7 @@ execCmd(const std::string &cmd)
         find += c1;
       }
 
-      doFindNext(line_num1.getValue(), line_num2.getValue(), find);
+      doFindNext(line_num1.value(), line_num2.value(), find);
 
       break;
     }
@@ -965,7 +967,7 @@ execCmd(const std::string &cmd)
         find += c1;
       }
 
-      doFindPrev(line_num1.getValue(), line_num2.getValue(), find);
+      doFindPrev(line_num1.value(), line_num2.value(), find);
 
       break;
     }
@@ -978,12 +980,12 @@ execCmd(const std::string &cmd)
     }
     case '\0': { // move to line
       if (! getEx())
-        doPrint(line_num1.getValue(), line_num2.getValue(), /*numbered*/false, /*eol*/false);
+        doPrint(line_num1.value(), line_num2.value(), /*numbered*/false, /*eol*/false);
 
-      if (! char_num2.isValid())
-        char_num2.setValue(0);
+      if (! char_num2)
+        char_num2 = 0;
 
-      setPos(char_num2.getValue(), line_num2.getValue() - 1);
+      setPos(char_num2.value(), line_num2.value() - 1);
 
       break;
     }

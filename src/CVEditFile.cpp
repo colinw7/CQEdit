@@ -263,7 +263,7 @@ getFont() const
 
   const CVEditFileStyle &style = style_.getValue();
 
-  return style.font.getValue();
+  return style.font.value();
 }
 
 void
@@ -303,7 +303,7 @@ setFont(CFontPtr font)
 
   CVEditFileStyle &style = style_.getValue();
 
-  style.font.setValue(font);
+  style.font = font;
 
   char_width_  = uint(font->getStringWidth("X"));
   char_height_ = uint(font->getCharHeight());
