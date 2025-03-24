@@ -60,6 +60,28 @@ class CQViCmdLine : public QFrame, public CViCmdLine  {
 
 //---
 
+class CQVi;
+
+class CQViInterface : public CViInterface {
+ public:
+  CQViInterface(CQVi *vi);
+
+  int getPageTop   () const override;
+  int getPageBottom() const override;
+  int getPageLength() const override;
+
+  void scrollTop   () override;
+  void scrollMiddle() override;
+  void scrollBottom() override;
+
+  void positionChanged() override;
+
+ private:
+  CQVi* vi_ { nullptr };
+};
+
+//---
+
 class CQVi : public QObject, public CVi {
   Q_OBJECT
 
@@ -67,6 +89,16 @@ class CQVi : public QObject, public CVi {
   CQVi(CQViApp *app);
 
   CViCmdLine *createCmdLine() const override;
+
+  int getPageTop   () const;
+  int getPageBottom() const;
+  int getPageLength() const;
+
+  void scrollTop   ();
+  void scrollMiddle();
+  void scrollBottom();
+
+  void scrollCursor();
 
  private:
   CQViApp *app_ { nullptr };
@@ -111,6 +143,13 @@ class CQViApp : public QWidget {
 
   void draw(QPainter *painter);
 
+  int pageTop   () const;
+  int pageBottom() const;
+
+  int pageLength() const;
+
+  void scrollTo(uint x, uint y, bool force=false);
+
   void updateScrollbars();
 
   void updateStatus();
@@ -124,19 +163,25 @@ class CQViApp : public QWidget {
 
   using ViP = std::unique_ptr<CQVi>;
 
-  ViP          vi_;
-  CQViCanvas*  canvas_        { nullptr };
-  QScrollBar*  hscroll_       { nullptr };
-  QScrollBar*  vscroll_       { nullptr };
-  CQViStatus*  status_        { nullptr };
-  CQViCmdLine* cmdLine_       { nullptr };
-  QRect        char_rect_;
-  int          char_width_    { 8 };
-  int          char_ascent_   { 10 };
-  int          char_height_   { 12 };
-  int          x_offset_      { 0 };
-  int          y_offset_      { 0 };
-  YLineMap     yLineMap_;
-  uint         maxLineLength_ { 0 };
-  QPoint       press_pos_;
+  ViP vi_;
+
+  CQViCanvas*  canvas_  { nullptr };
+  QScrollBar*  hscroll_ { nullptr };
+  QScrollBar*  vscroll_ { nullptr };
+  CQViStatus*  status_  { nullptr };
+  CQViCmdLine* cmdLine_ { nullptr };
+
+  QRect char_rect_;
+  int   char_width_  { 8 };
+  int   char_ascent_ { 10 };
+  int   char_height_ { 12 };
+
+  int      x_offset_      { 0 };
+  int      y_offset_      { 0 };
+  YLineMap yLineMap_;
+  uint     maxLineLength_ { 0 };
+  int      y1_            { 0 };
+  int      y2_            { 0 };
+
+  QPoint press_pos_;
 };

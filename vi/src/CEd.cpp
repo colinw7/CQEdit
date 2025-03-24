@@ -1076,8 +1076,8 @@ findPrev(const std::string &str, int *line_num, int *char_num)
   else {
     row1 = getRow() - 1;
     col1 = -1;
-    row1 = getRow();
-    col1 = 0;
+    row2 = getRow();
+    col2 = 0;
   }
 
   if (file_->findPrev(regexp, row1, col1, &fline_num, &fchar_num) ||

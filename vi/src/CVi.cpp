@@ -19,6 +19,7 @@ static bool my_assert(const char *m, bool ret) {
 CVi::
 CVi()
 {
+  iface_ = new CViInterface;
 }
 
 CVi::
@@ -27,6 +28,15 @@ CVi::
   resetUndo();
 
   delete ed_;
+}
+
+void
+CVi::
+setInterface(CViInterface *iface)
+{
+  delete iface_;
+
+  iface_ = iface;
 }
 
 void
@@ -216,7 +226,7 @@ processCommandChar(const CViKeyData &keyData)
       }
       case '"': { // set register
         if      (key == '\t') {
-          displayRegisters();
+          iface_->displayRegisters();
         }
         else if (isalnum(key) || strchr("#/", key))
           register_ = key;
@@ -227,7 +237,7 @@ processCommandChar(const CViKeyData &keyData)
       }
       case '\'': { // goto mark line
         if (key == '\t')
-          displayMarks();
+          iface_->displayMarks();
         else {
           markReturn();
 
@@ -392,23 +402,23 @@ processCommandChar(const CViKeyData &keyData)
       }
       case 'z': { // scroll to
         if      (key == '\r' || key == '+')
-          scrollTop();
+          iface_->scrollTop();
         else if (key == '.' || key == 'z')
-          scrollMiddle();
+          iface_->scrollMiddle();
         else if (key == 'b' || key == '-')
-          scrollBottom();
+          iface_->scrollBottom();
         else if (key == 't')
-          scrollTop();
+          iface_->scrollTop();
 
         break;
       }
       case 'Z': {
         if      (key == 'Q')
-          quit();
+          iface_->quit();
         else if (key == 'Z') {
           saveLines(getFileName());
 
-          quit();
+          iface_->quit();
         }
 
         break;
@@ -576,11 +586,11 @@ processNormalChar(const CViKeyData &keyData)
     }
     case int(CViKeyData::KeyCode::DOWN): {
       if (keyData.is_shift) {
-        int num = getPageLength();
+        int num = iface_->getPageLength();
 
         cursorDown(num);
 
-        scrollTop();
+        iface_->scrollTop();
       }
       else
         cursorDown(std::max(count_, 1U));
@@ -594,11 +604,11 @@ processNormalChar(const CViKeyData &keyData)
     }
     case int(CViKeyData::KeyCode::UP): {
       if (keyData.is_shift) {
-        int num = getPageLength();
+        int num = iface_->getPageLength();
 
         cursorUp(num);
 
-        scrollBottom();
+        iface_->scrollBottom();
       }
       else
         cursorUp(std::max(count_, 1U));
@@ -679,44 +689,44 @@ processNormalChar(const CViKeyData &keyData)
     // scroll
     case int(CViKeyData::KeyCode::PAGE_DOWN):
     case '\006': /*ACK*/ {
-      int num = getPageLength();
+      int num = iface_->getPageLength();
 
       cursorDown(num);
 
-      scrollTop();
+      iface_->scrollTop();
 
       break;
     }
     case int(CViKeyData::KeyCode::PAGE_UP):
     case 0x02 /*STX*/: {
-      int num = getPageLength();
+      int num = iface_->getPageLength();
 
       cursorUp(num);
 
-      scrollBottom();
+      iface_->scrollBottom();
 
       break;
     }
     case int(CViKeyData::KeyCode::SYS_REQ): {
-      int num = getPageLength() / 2;
+      int num = iface_->getPageLength() / 2;
 
       cursorUp(num);
 
-      scrollBottom();
+      iface_->scrollBottom();
 
       break;
     }
     case 0x04 /*EOT*/: {
-      int num = getPageLength() / 2;
+      int num = iface_->getPageLength() / 2;
 
       cursorDown(num);
 
-      scrollTop();
+      iface_->scrollTop();
 
       break;
     }
     case 0x05 /*ENQ*/: {
-      int row1 = getPageTop();
+      int row1 = iface_->getPageTop();
       int row2 = getRow();
 
       int num = row2 - row1 - 1;
@@ -724,20 +734,20 @@ processNormalChar(const CViKeyData &keyData)
       if (num > 0) {
         cursorUp(num);
 
-        scrollTop();
+        iface_->scrollTop();
 
         cursorDown(num);
       }
       else {
         cursorDown(1);
 
-        scrollTop();
+        iface_->scrollTop();
       }
 
       break;
     }
     case 0x19 /*EM*/: {
-      int row1 = getPageBottom();
+      int row1 = iface_->getPageBottom();
       int row2 = getRow();
 
       int num = row1 - row2 - 1;
@@ -745,14 +755,14 @@ processNormalChar(const CViKeyData &keyData)
       if (num > 0) {
         cursorDown(num);
 
-        scrollBottom();
+        iface_->scrollBottom();
 
         cursorUp(num);
       }
       else {
         cursorUp(1);
 
-        scrollBottom();
+        iface_->scrollBottom();
       }
 
       break;
@@ -997,21 +1007,21 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     case 'H': {
-      int row = getPageTop();
+      int row = iface_->getPageTop();
 
       cursorTo(row, 0);
 
       break;
     }
     case 'M': {
-      int row = (getPageBottom() + getPageTop())/2;
+      int row = (iface_->getPageBottom() + iface_->getPageTop())/2;
 
       cursorTo(row, 0);
 
       break;
     }
     case 'L': {
-      int row = getPageBottom();
+      int row = iface_->getPageBottom();
 
       cursorTo(row, 0);
 
@@ -1204,7 +1214,7 @@ processNormalChar(const CViKeyData &keyData)
     }
 
     case '\t': {
-      cursorRight(getTabStop());
+      cursorRight(iface_->getTabStop());
 
       break;
     }
@@ -1232,27 +1242,27 @@ processControlChar(const CViKeyData &keyData)
   switch (keyData.key) {
     case 'b':
     case 0x02 /*STX*/: {
-      int num = getPageLength();
+      int num = iface_->getPageLength();
 
       cursorUp(num);
 
-      scrollBottom();
+      iface_->scrollBottom();
 
       break;
     }
     case 'd':
     case 0x04 /*EOT*/: {
-      int num = getPageLength() / 2;
+      int num = iface_->getPageLength() / 2;
 
       cursorDown(num);
 
-      scrollTop();
+      iface_->scrollTop();
 
       break;
     }
     case 'e':
     case 0x05 /*ENQ*/: {
-      int row1 = getPageTop();
+      int row1 = iface_->getPageTop();
       int row2 = getRow();
 
       int num = row2 - row1 - 1;
@@ -1260,25 +1270,25 @@ processControlChar(const CViKeyData &keyData)
       if (num > 0) {
         cursorUp(num);
 
-        scrollTop();
+        iface_->scrollTop();
 
         cursorDown(num);
       }
       else {
         cursorDown(1);
 
-        scrollTop();
+        iface_->scrollTop();
       }
 
       break;
     }
     case 'f':
     case 0x06 /*ACK*/: {
-      int num = getPageLength();
+      int num = iface_->getPageLength();
 
       cursorDown(num);
 
-      scrollTop();
+      iface_->scrollTop();
 
       break;
     }
@@ -1295,9 +1305,11 @@ processControlChar(const CViKeyData &keyData)
       break;
     case 'l':
     case '\f': { // mark all lines changed ?
-      setIgnoreChanged(true);
+      iface_->setIgnoreChanged(true);
 
-      updateSyntax();
+      iface_->updateSyntax();
+
+      iface_->setIgnoreChanged(false);
 
       break;
     }
@@ -1309,11 +1321,11 @@ processControlChar(const CViKeyData &keyData)
     }
     case 'u':
     case int(CViKeyData::KeyCode::SYS_REQ): {
-      int num = getPageLength() / 2;
+      int num = iface_->getPageLength() / 2;
 
       cursorUp(num);
 
-      scrollBottom();
+      iface_->scrollBottom();
 
       break;
     }
@@ -1322,7 +1334,7 @@ processControlChar(const CViKeyData &keyData)
       break;
     case 'y':
     case 0x19 /*EM*/: {
-      int row1 = getPageBottom();
+      int row1 = iface_->getPageBottom();
       int row2 = getRow();
 
       int num = row1 - row2 - 1;
@@ -1330,14 +1342,14 @@ processControlChar(const CViKeyData &keyData)
       if (num > 0) {
         cursorDown(num);
 
-        scrollBottom();
+        iface_->scrollBottom();
 
         cursorUp(num);
       }
       else {
         cursorUp(1);
 
-        scrollBottom();
+        iface_->scrollBottom();
       }
 
       break;
@@ -1472,7 +1484,7 @@ processInsertChar(const CViKeyData &keyData)
       break;
 
     case '\t': {
-      for (uint i = 0; i < getTabStop(); ++i)
+      for (uint i = 0; i < iface_->getTabStop(); ++i)
         insertChar(' ');
 
       break;
@@ -1529,7 +1541,7 @@ processCmdLineChar(const CViKeyData &keyData)
       runEdCmd(line, quitted);
 
     if (quitted)
-      quit();
+      iface_->quit();
 
     setCmdLineMode(false, "");
   }
@@ -1679,7 +1691,7 @@ setInsertMode(bool insertMode)
 
   setOverwriteMode(false);
 
-  stateChanged();
+  iface_->stateChanged();
 
   if (insertMode) {
     startGroup();
@@ -1739,8 +1751,12 @@ void
 CVi::
 setPos(uint x, uint y)
 {
-  cursorPos_.row = y;
-  cursorPos_.col = x;
+  if (y != cursorPos_.row || x != cursorPos_.col) {
+    cursorPos_.row = y;
+    cursorPos_.col = x;
+
+    iface_->positionChanged();
+  }
 }
 
 uint
@@ -4864,6 +4880,11 @@ runEdCmd(const std::string &str, bool &quitted)
 }
 
 //------
+
+CViLines::
+CViLines()
+{
+}
 
 CViLines::
 ~CViLines()

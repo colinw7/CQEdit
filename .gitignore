@@ -1,7 +1,12 @@
 *.o
+*.a
 
 moc_*.cpp
 
 bin/
 obj/
 lib/
+
+vi/bin/
+vi/obj/
+vi/lib/

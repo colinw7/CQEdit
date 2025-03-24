@@ -283,6 +283,8 @@ class CViLine {
   virtual void addChar (uint pos, char c);
   virtual void addChars(uint pos, uint num, char c);
 
+  const std::string &chars() const { return chars_; }
+
   virtual const_char_iterator beginChar() const;
   virtual const_char_iterator endChar  () const;
 
@@ -358,10 +360,7 @@ class CViLines {
   typedef LineList::const_iterator const_iterator;
 
  public:
-  CViLines() :
-   lines_() {
-  }
-
+  CViLines();
  ~CViLines();
 
   uint size() const { return uint(lines_.size()); }
@@ -491,9 +490,11 @@ class CViInterface {
 
   virtual uint getTabStop() const { return 8; }
 
-  virtual void setIgnoreChanged(bool value) { assert(value); }
+  virtual void setIgnoreChanged(bool value) { ignoredChanged_ = value; }
 
   virtual void stateChanged() { }
+
+  virtual void positionChanged() { }
 
   virtual void updateSyntax() { }
 
@@ -501,13 +502,16 @@ class CViInterface {
 
   //------
 
-  virtual int getPageTop() const { return 0; }
+  virtual int getPageTop   () const { return 0; }
   virtual int getPageBottom() const { return 80; }
   virtual int getPageLength() const { return 80; }
 
-  virtual void scrollTop() { }
+  virtual void scrollTop   () { }
   virtual void scrollMiddle() { }
   virtual void scrollBottom() { }
+
+ protected:
+  bool ignoredChanged_ { false };
 };
 
 //---
@@ -565,7 +569,7 @@ struct CViKeyData {
   bool        is_meta    { false };
 };
 
-class CVi : public CViInterface {
+class CVi {
  public:
   using const_line_iterator = CViLines::const_iterator;
 
@@ -573,6 +577,10 @@ class CVi : public CViInterface {
   CVi();
 
   virtual ~CVi();
+
+  //---
+
+  void setInterface(CViInterface *iface);
 
   //---
 
@@ -630,10 +638,15 @@ class CVi : public CViInterface {
   void getPos(uint *x, uint *y) const;
   void setPos(uint x, uint y);
 
+  const CViLines &lines() const { return lines_; }
+
   const_line_iterator beginLine() const { return lines_.begin(); }
   const_line_iterator endLine  () const { return lines_.end  (); }
 
   uint getNumLines() const;
+
+  const CViLine *getLine(uint line_num) const { return lines_.getLine(line_num); }
+  CViLine *getLine(uint line_num) { return lines_.getLine(line_num); }
 
  private:
   friend class CEd;
@@ -669,9 +682,6 @@ class CVi : public CViInterface {
 
   bool getUnsaved() const { return unsaved_; }
   void setUnsaved(bool unsaved);
-
-  const CViLine *getLine(uint line_num) const { return lines_.getLine(line_num); }
-  CViLine *getLine(uint line_num) { return lines_.getLine(line_num); }
 
   char getChar() const;
   char getChar(uint line_num, uint char_num) const;
@@ -982,6 +992,8 @@ class CVi : public CViInterface {
   using Buffers    = std::map<char, CViBuffer>;
   using Lines      = std::vector<CViLine>;
   using OptRegExp  = std::optional<CRegExp>;
+
+  CViInterface *iface_ { nullptr };
 
   // data
   std::string filename_;

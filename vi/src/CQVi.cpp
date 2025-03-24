@@ -118,74 +118,74 @@ draw(QPainter *painter)
   x_offset_ = hscroll_->value();
   y_offset_ = vscroll_->value();
 
+  // get cursor pos
   uint cx, cy;
-
   vi_->getPos(&cx, &cy);
 
-  char cc = ' ';
-  uint cp = 0;
+  char cc = ' '; // cursor char
+  uint cp = 0;   // cursor pos
 
-  uint iy  = 0;
-  uint ix1 = 0;
-  uint ix2 = 0;
-
-  int x = -x_offset_;
-  int y = -y_offset_;
+  uint iy = 0;
+  int  y  = -y_offset_;
 
   maxLineLength_ = 0;
 
-  auto pl1 = vi_->beginLine();
-  auto pl2 = vi_->endLine  ();
+  //---
 
-  for ( ; pl1 != pl2; ++pl1) {
-    auto *line = *pl1;
+  auto drawLine = [&](CViLine *line) {
+    uint ix1 = 0;
+    uint ix2 = 0;
 
-    if      (y + char_height_ < 0)
-      goto next_line;
-    else if (y > h)
-      break;
+    int x = -x_offset_;
 
-    yLineMap_[y + char_height_] = iy;
-
-    {
-      ix1 = 0;
-      ix2 = 0;
-      x   = -x_offset_;
-
-      auto pc1 = line->beginChar();
-      auto pc2 = line->endChar  ();
-
-      for ( ; pc1 != pc2; ++pc1) {
-        char c = *pc1;
-
-        if (ix1 == cx && iy == cy) {
-          cc = c;
-          cp = ix2;
-        }
-
-        uint n = 1;
-
-        if (! isspace(c))
-          painter->drawText(x, y + char_ascent_, QString(c));
-        else if (c == '\t')
-          n = 8 - (ix2 % 8);
-
-        x += n*char_width_;
-
-        ix2 += n;
-
-        ++ix1;
+    for (const auto &c : line->chars()) {
+      if (ix1 == cx && iy == cy) {
+        cc = c;
+        cp = ix2;
       }
 
-      maxLineLength_ = std::max(ix2, maxLineLength_);
+      uint n = 1;
+
+      if (! isspace(c))
+        painter->drawText(x, y + char_ascent_, QString(c));
+      else if (c == '\t')
+        n = 8 - (ix2 % 8);
+
+      x += n*char_width_;
+
+      ix2 += n;
+
+      ++ix1;
     }
 
- next_line:
+    maxLineLength_ = std::max(ix2, maxLineLength_);
+  };
+
+  //---
+
+  // draw lines
+  y1_ = y;
+
+  for (auto *line : vi_->lines()) {
+    if (y > h)
+      break;
+
+    if (y + char_height_ >= 0) {
+      yLineMap_[y + char_height_] = iy;
+
+      drawLine(line);
+    }
+
     y += char_height_;
 
     ++iy;
   }
 
+  y2_ = y1_ + vi_->getNumLines()*char_height_;
+
+  //---
+
+  // draw cursor
   int xc = cp*char_width_  - x_offset_;
   int yc = cy*char_height_ - y_offset_;
 
@@ -194,6 +194,8 @@ draw(QPainter *painter)
   painter->setPen(QColor(0, 0, 0));
 
   painter->drawText(xc, yc + char_ascent_, QString(cc));
+
+  //---
 
   updateScrollbars();
 }
@@ -216,6 +218,48 @@ CQViApp::
 resizeEvent(QResizeEvent *)
 {
   updateScrollbars();
+}
+
+int
+CQViApp::
+pageTop() const
+{
+  return y_offset_/char_height_;
+}
+
+int
+CQViApp::
+pageBottom() const
+{
+  return pageTop() + pageLength();
+}
+
+int
+CQViApp::
+pageLength() const
+{
+  return canvas_->height()/char_height_;
+}
+
+void
+CQViApp::
+scrollTo(uint x, uint y, bool force)
+{
+  int x1 = x*char_width_  - x_offset_;
+  int y1 = y*char_height_ - y_offset_;
+
+  int w = canvas_->width ();
+  int h = canvas_->height();
+
+  if      (x1 < 0 || force)
+    hscroll_->setValue(x*char_width_);
+  else if (x1 >= w)
+    hscroll_->setValue((x + 1)*char_width_ - w);
+
+  if      (y1 < 0 || force)
+    vscroll_->setValue(y*char_height_);
+  else if (y1 >= h)
+    vscroll_->setValue((y + 1)*char_height_ - h);
 }
 
 void
@@ -252,7 +296,13 @@ mousePressEvent(QMouseEvent *e)
     if (press_pos_.y() < yLine.first) {
       int iy = yLine.second;
 
-      vi_->setPos(0, iy);
+      auto *line = vi_->getLine(iy);
+
+      auto ix = (x_offset_ + press_pos_.x())/char_width_;
+
+      ix = std::min(ix, int(line->getLength()));
+
+      vi_->setPos(ix, iy);
 
       update();
 
@@ -384,6 +434,8 @@ CQVi(CQViApp *app) :
  CVi(), app_(app)
 {
   setObjectName("vi");
+
+  setInterface(new CQViInterface(this));
 }
 
 CViCmdLine *
@@ -395,6 +447,67 @@ createCmdLine() const
   app_->setCmdLine(cmdLine);
 
   return cmdLine;
+}
+
+int
+CQVi::
+getPageTop() const
+{
+  return app_->pageTop();
+}
+
+int
+CQVi::
+getPageBottom() const
+{
+  return app_->pageBottom();
+}
+
+int
+CQVi::
+getPageLength() const
+{
+  return app_->pageLength();
+}
+
+void
+CQVi::
+scrollTop()
+{
+  uint cx, cy;
+  getPos(&cx, &cy);
+
+  app_->scrollTo(cx, cy, /*force*/true);
+}
+
+void
+CQVi::
+scrollMiddle()
+{
+  uint cx, cy;
+  getPos(&cx, &cy);
+
+  app_->scrollTo(cx, cy - getPageLength()/2, /*force*/true);
+}
+
+void
+CQVi::
+scrollBottom()
+{
+  uint cx, cy;
+  getPos(&cx, &cy);
+
+  app_->scrollTo(cx, cy - getPageLength(), /*force*/true);
+}
+
+void
+CQVi::
+scrollCursor()
+{
+  uint cx, cy;
+  getPos(&cx, &cy);
+
+  app_->scrollTo(cx, cy);
 }
 
 //------
@@ -477,4 +590,61 @@ CQViStatus(CQViApp *app) :
   QFontMetrics fm(font());
 
   setFixedHeight(fm.height() + 4);
+}
+
+//------
+
+CQViInterface::
+CQViInterface(CQVi *vi) :
+ vi_(vi)
+{
+}
+
+int
+CQViInterface::
+getPageTop() const
+{
+  return vi_->getPageTop();
+}
+
+int
+CQViInterface::
+getPageBottom() const
+{
+  return vi_->getPageBottom();
+}
+
+int
+CQViInterface::
+getPageLength() const
+{
+  return vi_->getPageLength();
+}
+
+void
+CQViInterface::
+scrollTop()
+{
+  vi_->scrollTop();
+}
+
+void
+CQViInterface::
+scrollMiddle()
+{
+  vi_->scrollMiddle();
+}
+
+void
+CQViInterface::
+scrollBottom()
+{
+  vi_->scrollBottom();
+}
+
+void
+CQViInterface::
+positionChanged()
+{
+  vi_->scrollCursor();
 }
