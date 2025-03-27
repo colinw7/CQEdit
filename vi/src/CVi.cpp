@@ -16,14 +16,16 @@ static bool my_assert(const char *m, bool ret) {
 
 //---
 
-CVi::
-CVi()
+namespace CVi {
+
+App::
+App()
 {
-  iface_ = new CViInterface;
+  iface_ = new Interface;
 }
 
-CVi::
-~CVi()
+App::
+~App()
 {
   resetUndo();
 
@@ -31,8 +33,8 @@ CVi::
 }
 
 void
-CVi::
-setInterface(CViInterface *iface)
+App::
+setInterface(Interface *iface)
 {
   delete iface_;
 
@@ -40,14 +42,14 @@ setInterface(CViInterface *iface)
 }
 
 void
-CVi::
+App::
 init()
 {
   addLine("");
 
   //---
 
-  ed_ = new CEd(this);
+  ed_ = new Ed(this);
 
   ed_->init();
 
@@ -58,15 +60,15 @@ init()
   cmdLine_ = CmdLineP(createCmdLine());
 }
 
-CViCmdLine *
-CVi::
+CmdLine *
+App::
 createCmdLine() const
 {
-  return new CViCmdLine(const_cast<CVi *>(this));
+  return new CmdLine(const_cast<App *>(this));
 }
 
 void
-CVi::
+App::
 setFileName(const std::string &filename)
 {
   filename_ = filename;
@@ -81,7 +83,7 @@ setFileName(const std::string &filename)
 //---
 
 bool
-CVi::
+App::
 loadLines(const std::string &filename)
 {
   subDeleteAllLines();
@@ -106,14 +108,14 @@ loadLines(const std::string &filename)
 }
 
 bool
-CVi::
+App::
 addFileLines(const std::string &filename)
 {
   return addFileLines(filename, getRow());
 }
 
 bool
-CVi::
+App::
 addFileLines(const std::string &filename, uint line_num)
 {
   CFile file(filename);
@@ -142,7 +144,7 @@ addFileLines(const std::string &filename, uint line_num)
 }
 
 bool
-CVi::
+App::
 saveLines(const std::string &filename)
 {
   CFile file(filename);
@@ -169,10 +171,10 @@ saveLines(const std::string &filename)
 //---
 
 void
-CVi::
+App::
 processChar(char key)
 {
-  CViKeyData keyData;
+  KeyData keyData;
 
   keyData.key = key;
 
@@ -180,8 +182,8 @@ processChar(char key)
 }
 
 void
-CVi::
-processChar(const CViKeyData &keyData)
+App::
+processChar(const KeyData &keyData)
 {
   if      (getInsertMode())
     processInsertChar(keyData);
@@ -192,19 +194,19 @@ processChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
-processCommandChar(const CViKeyData &keyData)
+App::
+processCommandChar(const KeyData &keyData)
 {
   char key = char(keyData.key);
 
   switch (keyData.key) {
-    case int(CViKeyData::KeyCode::SHIFT):
-    case int(CViKeyData::KeyCode::CONTROL):
-    case int(CViKeyData::KeyCode::CAPS_LOCK):
-    case int(CViKeyData::KeyCode::META):
-    case int(CViKeyData::KeyCode::ALT):
-    case int(CViKeyData::KeyCode::SUPER):
-    case int(CViKeyData::KeyCode::HYPER):
+    case int(KeyData::KeyCode::SHIFT):
+    case int(KeyData::KeyCode::CONTROL):
+    case int(KeyData::KeyCode::CAPS_LOCK):
+    case int(KeyData::KeyCode::META):
+    case int(KeyData::KeyCode::ALT):
+    case int(KeyData::KeyCode::SUPER):
+    case int(KeyData::KeyCode::HYPER):
       return;
     default:
       break;
@@ -215,12 +217,13 @@ processCommandChar(const CViKeyData &keyData)
   if (lastKey_ != '\0') {
     switch (lastKey_) {
       case '`': { // goto mark line and char
-        markReturn();
-
         uint line_num, char_num;
 
-        if (getMarkPos(std::string(&key, 1), &line_num, &char_num))
+        if (getMarkPos(std::string(&key, 1), &line_num, &char_num)) {
+          markReturn();
+
           cursorTo(line_num, char_num);
+        }
 
         goto done;
       }
@@ -239,12 +242,13 @@ processCommandChar(const CViKeyData &keyData)
         if (key == '\t')
           iface_->displayMarks();
         else {
-          markReturn();
-
           uint line_num, char_num;
 
-          if (getMarkPos(std::string(&key, 1), &line_num, &char_num))
+          if (getMarkPos(std::string(&key, 1), &line_num, &char_num)) {
+            markReturn();
+
             cursorTo(line_num, 0);
+          }
         }
 
         goto done;
@@ -401,7 +405,9 @@ processCommandChar(const CViKeyData &keyData)
         break;
       }
       case 'z': { // scroll to
-        if      (key == '\r' || key == '+')
+        if (keyData.key == int(KeyData::KeyCode::ENTER) ||
+            keyData.key == int(KeyData::KeyCode::RETURN) ||
+            key == '\r' || key == '+')
           iface_->scrollTop();
         else if (key == '.' || key == 'z')
           iface_->scrollMiddle();
@@ -529,6 +535,7 @@ processCommandChar(const CViKeyData &keyData)
       count_ = count_*10 + (key - '0');
 
       //count_str_ += CEvent::keyTypeChar(key);
+      iface_->stateChanged();
 
       return;
     }
@@ -537,6 +544,7 @@ processCommandChar(const CViKeyData &keyData)
     count_ = count_*10 + (key - '0');
 
     //count_str_ += CEvent::keyTypeChar(key);
+    iface_->stateChanged();
 
     return;
   }
@@ -556,20 +564,21 @@ processCommandChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
-processNormalChar(const CViKeyData &keyData)
+App::
+processNormalChar(const KeyData &keyData)
 {
   char key = char(keyData.key);
 
   switch (keyData.key) {
     // cursor movement
     case 'h':
-    case '\b': {
+    case '\b':
+    case int(KeyData::KeyCode::BACKSPACE): {
       cursorLeft(std::max(count_, 1U));
 
       break;
     }
-    case int(CViKeyData::KeyCode::LEFT): {
+    case int(KeyData::KeyCode::LEFT): {
       if (keyData.is_shift) {
         for (uint i = 0; i < std::max(count_, 1U); ++i)
           prevWord();
@@ -584,7 +593,7 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::DOWN): {
+    case int(KeyData::KeyCode::DOWN): {
       if (keyData.is_shift) {
         int num = iface_->getPageLength();
 
@@ -602,7 +611,7 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::UP): {
+    case int(KeyData::KeyCode::UP): {
       if (keyData.is_shift) {
         int num = iface_->getPageLength();
 
@@ -622,7 +631,7 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::RIGHT): {
+    case int(KeyData::KeyCode::RIGHT): {
       if (keyData.is_shift) {
         for (uint i = 0; i < std::max(count_, 1U); ++i)
           nextWord();
@@ -632,17 +641,17 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::INSERT): {
+    case int(KeyData::KeyCode::INSERT): {
       setOverwriteMode(! getOverwriteMode());
 
       break;
     }
-    case int(CViKeyData::KeyCode::HOME): {
+    case int(KeyData::KeyCode::HOME): {
       cursorTo(0, 0);
 
       break;
     }
-    case int(CViKeyData::KeyCode::END): {
+    case int(KeyData::KeyCode::END): {
       cursorTo(getNumLines() - 1, 0);
 
       break;
@@ -687,7 +696,7 @@ processNormalChar(const CViKeyData &keyData)
     //----------
 
     // scroll
-    case int(CViKeyData::KeyCode::PAGE_DOWN):
+    case int(KeyData::KeyCode::PAGE_DOWN):
     case '\006': /*ACK*/ {
       int num = iface_->getPageLength();
 
@@ -697,7 +706,7 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::PAGE_UP):
+    case int(KeyData::KeyCode::PAGE_UP):
     case 0x02 /*STX*/: {
       int num = iface_->getPageLength();
 
@@ -707,7 +716,7 @@ processNormalChar(const CViKeyData &keyData)
 
       break;
     }
-    case int(CViKeyData::KeyCode::SYS_REQ): {
+    case int(KeyData::KeyCode::SYS_REQ): {
       int num = iface_->getPageLength() / 2;
 
       cursorUp(num);
@@ -814,6 +823,8 @@ processNormalChar(const CViKeyData &keyData)
       cursorFirstNonBlankUp();
       break;
 
+    case int(KeyData::KeyCode::ENTER):
+    case int(KeyData::KeyCode::RETURN):
     case '+': // first non-blank down
     case '\r':
       cursorFirstNonBlankDown();
@@ -1009,7 +1020,10 @@ processNormalChar(const CViKeyData &keyData)
     case 'H': {
       int row = iface_->getPageTop();
 
-      cursorTo(row, 0);
+      if (count_ == 0)
+        cursorTo(row, 0);
+      else
+        cursorTo(row + count_ - 1, 0);
 
       break;
     }
@@ -1023,7 +1037,10 @@ processNormalChar(const CViKeyData &keyData)
     case 'L': {
       int row = iface_->getPageBottom();
 
-      cursorTo(row, 0);
+      if (count_ == 0)
+        cursorTo(row, 0);
+      else
+        cursorTo(row - count_ + 1, 0);
 
       break;
     }
@@ -1219,7 +1236,7 @@ processNormalChar(const CViKeyData &keyData)
       break;
     }
 
-    case int(CViKeyData::KeyCode::ESCAPE): case '\033':
+    case int(KeyData::KeyCode::ESCAPE): case '\033':
       break;
 
     default:
@@ -1234,8 +1251,8 @@ processNormalChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
-processControlChar(const CViKeyData &keyData)
+App::
+processControlChar(const KeyData &keyData)
 {
   //char key = char(keyData.key);
 
@@ -1300,9 +1317,11 @@ processControlChar(const CViKeyData &keyData)
     }
     case 'h':
     case '\b':
+    case int(KeyData::KeyCode::BACKSPACE): {
       cursorLeft(1);
 
       break;
+    }
     case 'l':
     case '\f': { // mark all lines changed ?
       iface_->setIgnoreChanged(true);
@@ -1320,7 +1339,7 @@ processControlChar(const CViKeyData &keyData)
       break;
     }
     case 'u':
-    case int(CViKeyData::KeyCode::SYS_REQ): {
+    case int(KeyData::KeyCode::SYS_REQ): {
       int num = iface_->getPageLength() / 2;
 
       cursorUp(num);
@@ -1360,8 +1379,8 @@ processControlChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
-processInsertChar(const CViKeyData &keyData)
+App::
+processInsertChar(const KeyData &keyData)
 {
   char key = char(keyData.key);
 
@@ -1382,6 +1401,7 @@ processInsertChar(const CViKeyData &keyData)
       break;
 
     case '\b':
+    case int(KeyData::KeyCode::BACKSPACE): {
       if (getOverwriteMode()) {
         if      (cursorLeft(1)) {
           // TODO: revert char
@@ -1401,6 +1421,7 @@ processInsertChar(const CViKeyData &keyData)
       }
 
       break;
+    }
     case 0x7f /*DEL*/:
       if (getOverwriteMode()) {
         if      (cursorLeft(1)) {
@@ -1454,7 +1475,7 @@ processInsertChar(const CViKeyData &keyData)
 
       break;
 
-    case int(CViKeyData::KeyCode::ESCAPE): case '\033':
+    case int(KeyData::KeyCode::ESCAPE): case '\033':
       setInsertMode(false);
 
       cursorLeft(1);
@@ -1470,16 +1491,16 @@ processInsertChar(const CViKeyData &keyData)
       splitLine();
       break;
 
-    case int(CViKeyData::KeyCode::LEFT):
+    case int(KeyData::KeyCode::LEFT):
       cursorLeft(1);
       break;
-    case int(CViKeyData::KeyCode::UP):
+    case int(KeyData::KeyCode::UP):
       cursorUp(1);
       break;
-    case int(CViKeyData::KeyCode::RIGHT):
+    case int(KeyData::KeyCode::RIGHT):
       cursorRight(1);
       break;
-    case int(CViKeyData::KeyCode::DOWN):
+    case int(KeyData::KeyCode::DOWN):
       cursorDown(1);
       break;
 
@@ -1490,19 +1511,19 @@ processInsertChar(const CViKeyData &keyData)
       break;
     }
 
-    case int(CViKeyData::KeyCode::INSERT): {
+    case int(KeyData::KeyCode::INSERT): {
       setOverwriteMode(! getOverwriteMode());
 
       break;
     }
 
-    case int(CViKeyData::KeyCode::SHIFT):
-    case int(CViKeyData::KeyCode::CONTROL):
-    case int(CViKeyData::KeyCode::CAPS_LOCK):
-    case int(CViKeyData::KeyCode::META):
-    case int(CViKeyData::KeyCode::ALT):
-    case int(CViKeyData::KeyCode::SUPER):
-    case int(CViKeyData::KeyCode::HYPER):
+    case int(KeyData::KeyCode::SHIFT):
+    case int(KeyData::KeyCode::CONTROL):
+    case int(KeyData::KeyCode::CAPS_LOCK):
+    case int(KeyData::KeyCode::META):
+    case int(KeyData::KeyCode::ALT):
+    case int(KeyData::KeyCode::SUPER):
+    case int(KeyData::KeyCode::HYPER):
       break;
 
     default:
@@ -1516,23 +1537,25 @@ processInsertChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
-processCmdLineChar(const CViKeyData &keyData)
+App::
+processCmdLineChar(const KeyData &keyData)
 {
   char key = char(keyData.key);
 
-  if (keyData.key == int(CViKeyData::KeyCode::ESCAPE) || key == '\033') {
+  if (keyData.key == int(KeyData::KeyCode::ESCAPE) || key == '\033') {
     setCmdLineMode(false, "");
     return;
   }
 
-  if (keyData.key <= 127)
+  if      (keyData.key == int(KeyData::KeyCode::BACKSPACE))
+    cmdLine_->backspace();
+  else if (keyData.key <= 127)
     cmdLine_->keyPress(key);
 
   auto line = getCmdLineString();
 
-  if (keyData.key == int(CViKeyData::KeyCode::ENTER) ||
-      keyData.key == int(CViKeyData::KeyCode::RETURN) || key == '\r') {
+  if (keyData.key == int(KeyData::KeyCode::ENTER) ||
+      keyData.key == int(KeyData::KeyCode::RETURN) || key == '\r') {
     bool quitted;
 
     if (line[0] == ':')
@@ -1551,7 +1574,7 @@ processCmdLineChar(const CViKeyData &keyData)
 }
 
 void
-CVi::
+App::
 normalInsertChar(char key)
 {
   if (getOverwriteMode())
@@ -1565,8 +1588,8 @@ normalInsertChar(char key)
 }
 
 bool
-CVi::
-processMoveChar(const CViKeyData &keyData, int new_pos_x, int new_pos_y)
+App::
+processMoveChar(const KeyData &keyData, int new_pos_x, int new_pos_y)
 {
   uint x = new_pos_x;
   uint y = new_pos_y;
@@ -1593,20 +1616,22 @@ processMoveChar(const CViKeyData &keyData, int new_pos_x, int new_pos_y)
       endWORD(&y, &x);
       break;
     case 'h':
-    case int(CViKeyData::KeyCode::LEFT):
     case '\b':
+    case int(KeyData::KeyCode::BACKSPACE):
+    case int(KeyData::KeyCode::LEFT): {
       rc = cursorLeft (1, &y, &x);
       break;
+    }
     case 'j':
-    case int(CViKeyData::KeyCode::DOWN):
+    case int(KeyData::KeyCode::DOWN):
       rc = cursorDown (1, &y, &x);
       break;
     case 'k':
-    case int(CViKeyData::KeyCode::UP):
+    case int(KeyData::KeyCode::UP):
       rc = cursorUp   (1, &y, &x);
       break;
     case 'l':
-    case int(CViKeyData::KeyCode::RIGHT):
+    case int(KeyData::KeyCode::RIGHT):
     case ' ':
       rc = cursorRight(1, &y, &x);
       break;
@@ -1649,7 +1674,7 @@ processMoveChar(const CViKeyData &keyData, int new_pos_x, int new_pos_y)
 //---
 
 bool
-CVi::
+App::
 doFindChar(char c, uint count, bool forward, bool till)
 {
   findChar_    = c;
@@ -1681,7 +1706,7 @@ doFindChar(char c, uint count, bool forward, bool till)
 }
 
 void
-CVi::
+App::
 setInsertMode(bool insertMode)
 {
   if (insertMode == insertMode_)
@@ -1706,7 +1731,7 @@ setInsertMode(bool insertMode)
 }
 
 void
-CVi::
+App::
 setCmdLineMode(bool cmdLineMode, const std::string &str)
 {
   cmdLineMode_ = cmdLineMode;
@@ -1722,7 +1747,7 @@ setCmdLineMode(bool cmdLineMode, const std::string &str)
 }
 
 std::string
-CVi::
+App::
 getCmdLineString() const
 {
   return cmdLine_->getLine();
@@ -1731,7 +1756,7 @@ getCmdLineString() const
 //---
 
 void
-CVi::
+App::
 error(const std::string &msg) const
 {
   std::cerr << "Error: " << msg << "\n";
@@ -1740,7 +1765,7 @@ error(const std::string &msg) const
 //---
 
 void
-CVi::
+App::
 getPos(uint *x, uint *y) const
 {
   *y = cursorPos_.row;
@@ -1748,7 +1773,7 @@ getPos(uint *x, uint *y) const
 }
 
 void
-CVi::
+App::
 setPos(uint x, uint y)
 {
   if (y != cursorPos_.row || x != cursorPos_.col) {
@@ -1760,7 +1785,7 @@ setPos(uint x, uint y)
 }
 
 uint
-CVi::
+App::
 getRow() const
 {
   uint x, y;
@@ -1771,7 +1796,7 @@ getRow() const
 }
 
 uint
-CVi::
+App::
 getCol() const
 {
   uint x, y;
@@ -1782,7 +1807,7 @@ getCol() const
 }
 
 void
-CVi::
+App::
 fixPos()
 {
   bool changed = false;
@@ -1810,35 +1835,35 @@ fixPos()
 }
 
 uint
-CVi::
+App::
 getNumLines() const
 {
   return uint(lines_.size());
 }
 
 bool
-CVi::
+App::
 isLinesEmpty() const
 {
   return lines_.empty();
 }
 
 void
-CVi::
+App::
 setExtraLineChar(bool extraLineChar)
 {
   extraLineChar_ = extraLineChar;
 }
 
 void
-CVi::
+App::
 setChanged(bool changed)
 {
   changed_ = changed;
 }
 
 void
-CVi::
+App::
 setUnsaved(bool unsaved)
 {
   unsaved_ = unsaved;
@@ -1847,7 +1872,7 @@ setUnsaved(bool unsaved)
 //---
 
 char
-CVi::
+App::
 getChar() const
 {
   uint x, y;
@@ -1858,7 +1883,7 @@ getChar() const
 }
 
 char
-CVi::
+App::
 getChar(uint line_num, uint char_num) const
 {
   if (line_num >= getNumLines())
@@ -1870,19 +1895,19 @@ getChar(uint line_num, uint char_num) const
 //---
 
 void
-CVi::
+App::
 addLine(const std::string &str)
 {
   addLine(getRow(), str);
 }
 
 void
-CVi::
+App::
 addLine(uint line_num, const std::string &str)
 {
   CASSERT(line_num <= getNumLines(), "Invalid Line Num");
 
-  auto *line = new CViLine;
+  auto *line = new Line;
 
   line->addChars(0, str);
 
@@ -1890,19 +1915,19 @@ addLine(uint line_num, const std::string &str)
 }
 
 void
-CVi::
-subAddLine(uint line_num, CViLine *line)
+App::
+subAddLine(uint line_num, Line *line)
 {
   lines_.addLine(line_num, line);
 
-  addUndo(new CViDeleteLineUndoCmd(this, line_num));
+  addUndo(new DeleteLineUndoCmd(this, line_num));
 
   setChanged(true);
   setUnsaved(true);
 }
 
 void
-CVi::
+App::
 addChars(uint line_num, uint char_num, const std::string &chars)
 {
   CASSERT(line_num <= getNumLines(), "Invalid Line Num");
@@ -1911,12 +1936,12 @@ addChars(uint line_num, uint char_num, const std::string &chars)
 }
 
 void
-CVi::
+App::
 subAddChars(uint line_num, uint char_num, const std::string &chars)
 {
   lines_.addLineChars(line_num, char_num, chars);
 
-  addUndo(new CViDeleteCharsUndoCmd(this, line_num, char_num, int(chars.size())));
+  addUndo(new DeleteCharsUndoCmd(this, line_num, char_num, int(chars.size())));
 
   setChanged(true);
   setUnsaved(true);
@@ -1925,7 +1950,7 @@ subAddChars(uint line_num, uint char_num, const std::string &chars)
 //---
 
 void
-CVi::
+App::
 moveLine(uint line_num1, int line_num2)
 {
   CASSERT(line_num1 < getNumLines(), "Invalid Line Num");
@@ -1936,19 +1961,19 @@ moveLine(uint line_num1, int line_num2)
 }
 
 void
-CVi::
+App::
 subMoveLine(uint line_num1, int line_num2)
 {
   lines_.moveLine(line_num1, line_num2);
 
-  addUndo(new CViMoveLineUndoCmd(this, line_num2, line_num1 - 1));
+  addUndo(new MoveLineUndoCmd(this, line_num2, line_num1 - 1));
 
   setChanged(true);
   setUnsaved(true);
 }
 
 void
-CVi::
+App::
 copyLine(uint line_num1, uint line_num2)
 {
   CASSERT(line_num1 < getNumLines(), "Invalid Line Num");
@@ -1961,7 +1986,7 @@ copyLine(uint line_num1, uint line_num2)
 //---
 
 void
-CVi::
+App::
 deleteAllLines()
 {
   subDeleteAllLines();
@@ -1970,7 +1995,7 @@ deleteAllLines()
 }
 
 void
-CVi::
+App::
 subDeleteAllLines()
 {
   uint numLines = getNumLines();
@@ -1980,14 +2005,14 @@ subDeleteAllLines()
 }
 
 void
-CVi::
+App::
 deleteLine()
 {
   deleteLine(getRow());
 }
 
 void
-CVi::
+App::
 deleteLine(uint line_num)
 {
   if (! CASSERT(line_num < getNumLines(), "Invalid Line Num")) return;
@@ -2001,28 +2026,28 @@ deleteLine(uint line_num)
 }
 
 void
-CVi::
+App::
 subDeleteLine(uint line_num)
 {
   auto str = getLine(line_num)->getString();
 
   lines_.deleteLine(line_num);
 
-  addUndo(new CViAddLineUndoCmd(this, line_num, str));
+  addUndo(new AddLineUndoCmd(this, line_num, str));
 
   setChanged(true);
   setUnsaved(true);
 }
 
 void
-CVi::
+App::
 deleteWord()
 {
   deleteWord(getRow(), getCol());
 }
 
 void
-CVi::
+App::
 deleteWord(uint line_num, uint char_num)
 {
   auto *line = getLine(line_num);
@@ -2048,14 +2073,14 @@ deleteWord(uint line_num, uint char_num)
 }
 
 void
-CVi::
+App::
 deleteEOL()
 {
   deleteEOL(getRow(), getCol());
 }
 
 void
-CVi::
+App::
 deleteEOL(uint line_num, uint char_num)
 {
   auto *line = getLine(line_num);
@@ -2067,14 +2092,14 @@ deleteEOL(uint line_num, uint char_num)
 }
 
 void
-CVi::
+App::
 deleteTo(uint line_num, uint char_num)
 {
   deleteTo(getRow(), getCol(), line_num, char_num);
 }
 
 void
-CVi::
+App::
 deleteTo(uint line_num1, uint char_num1, uint line_num2, uint char_num2)
 {
   startGroup();
@@ -2128,14 +2153,14 @@ deleteTo(uint line_num1, uint char_num1, uint line_num2, uint char_num2)
 }
 
 void
-CVi::
+App::
 deleteChar()
 {
   deleteChar(getRow());
 }
 
 void
-CVi::
+App::
 deleteChar(uint line_num)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -2149,14 +2174,14 @@ deleteChar(uint line_num)
 }
 
 void
-CVi::
+App::
 deleteChars(uint n)
 {
   deleteChars(getRow(), getCol(), n);
 }
 
 void
-CVi::
+App::
 deleteChars(uint line_num, uint char_num, uint n)
 {
   startGroup();
@@ -2167,7 +2192,7 @@ deleteChars(uint line_num, uint char_num, uint n)
 }
 
 void
-CVi::
+App::
 subDeleteChars(uint line_num, uint char_num, uint n)
 {
   const auto *line = getLine(line_num);
@@ -2177,7 +2202,7 @@ subDeleteChars(uint line_num, uint char_num, uint n)
   for (uint i = 0; i < n; ++i) {
     char c = line->getChar(char_num + i);
 
-    addUndo(new CViInsertCharUndoCmd(this, line_num, char_num, c));
+    addUndo(new InsertCharUndoCmd(this, line_num, char_num, c));
   }
 
   lines_.deleteLineChars(line_num, char_num, n);
@@ -2191,7 +2216,7 @@ subDeleteChars(uint line_num, uint char_num, uint n)
 //---
 
 void
-CVi::
+App::
 shiftLeft(uint line_num1, uint line_num2)
 {
   if (line_num1 > line_num2)
@@ -2223,7 +2248,7 @@ shiftLeft(uint line_num1, uint line_num2)
 }
 
 void
-CVi::
+App::
 shiftRight(uint line_num1, uint line_num2)
 {
   if (line_num1 > line_num2)
@@ -2252,14 +2277,14 @@ shiftRight(uint line_num1, uint line_num2)
 //---
 
 void
-CVi::
+App::
 yankLines(char c, uint n)
 {
   yankLines(c, getRow(), n);
 }
 
 void
-CVi::
+App::
 yankLines(char id, uint line_num, uint n)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -2278,14 +2303,14 @@ yankLines(char id, uint line_num, uint n)
 }
 
 void
-CVi::
+App::
 yankWords(char id, uint n)
 {
   yankWords(id, getRow(), getCol(), n);
 }
 
 void
-CVi::
+App::
 yankWords(char id, uint line_num, uint char_num, uint n)
 {
   yankClear(id);
@@ -2300,14 +2325,14 @@ yankWords(char id, uint line_num, uint char_num, uint n)
 }
 
 void
-CVi::
+App::
 yankChar(char id)
 {
   yankChar(id, getRow(), getCol());
 }
 
 void
-CVi::
+App::
 yankChar(char id, uint line_num, uint char_num)
 {
   yankClear(id);
@@ -2316,7 +2341,7 @@ yankChar(char id, uint line_num, uint char_num)
 }
 
 void
-CVi::
+App::
 yankTo(char id, uint line_num, uint char_num, bool is_line)
 {
   yankClear(id);
@@ -2325,7 +2350,7 @@ yankTo(char id, uint line_num, uint char_num, bool is_line)
 }
 
 void
-CVi::
+App::
 yankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num2, bool is_line)
 {
   yankClear(id);
@@ -2334,7 +2359,7 @@ yankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num2, 
 }
 
 void
-CVi::
+App::
 yankClear(char id)
 {
   if (! inGroup()) {
@@ -2345,50 +2370,50 @@ yankClear(char id)
 }
 
 void
-CVi::
+App::
 subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num2, bool is_line)
 {
   CASSERT(line_num1 < getNumLines() && line_num2 < getNumLines(), "Invalid Line Num");
 
-  std::vector<CViBufferLine> lines;
+  std::vector<BufferLine> lines;
 
   if      (line_num1 < line_num2) {
     const auto *line1 = getLine(line_num1);
 
     const std::string &str1 = line1->getString();
 
-    lines.push_back(CViBufferLine(str1.substr(char_num1), is_line));
+    lines.push_back(BufferLine(str1.substr(char_num1), is_line));
 
     for (uint i = line_num1 + 1; i < line_num2; ++i) {
       const auto *line = getLine(i);
 
-      lines.push_back(CViBufferLine(line->getString(), true));
+      lines.push_back(BufferLine(line->getString(), true));
     }
 
     const auto *line2 = getLine(line_num2);
 
     const std::string &str2 = line2->getString();
 
-    lines.push_back(CViBufferLine(str2.substr(0, char_num2), is_line));
+    lines.push_back(BufferLine(str2.substr(0, char_num2), is_line));
   }
   else if (line_num2 < line_num1) {
     const auto *line2 = getLine(line_num2);
 
     const std::string &str2 = line2->getString();
 
-    lines.push_back(CViBufferLine(str2.substr(char_num2), is_line));
+    lines.push_back(BufferLine(str2.substr(char_num2), is_line));
 
     for (uint i = line_num2 + 1; i < line_num1; ++i) {
       const auto *line = getLine(i);
 
-      lines.push_back(CViBufferLine(line->getString(), true));
+      lines.push_back(BufferLine(line->getString(), true));
     }
 
     const auto *line1 = getLine(line_num1);
 
     const std::string &str1 = line1->getString();
 
-    lines.push_back(CViBufferLine(str1.substr(0, char_num1), is_line));
+    lines.push_back(BufferLine(str1.substr(0, char_num1), is_line));
   }
    else {
     const auto *line1 = getLine(line_num1);
@@ -2402,7 +2427,7 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
     else
       str2 = str1.substr(char_num2, char_num1 - char_num2 + 1);
 
-    lines.push_back(CViBufferLine(str2, is_line));
+    lines.push_back(BufferLine(str2, is_line));
   }
 
   auto p1 = lines.begin();
@@ -2426,21 +2451,21 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
 }
 
 void
-CVi::
+App::
 pasteAfter(char id)
 {
   pasteAfter(id, getRow(), getCol());
 }
 
 void
-CVi::
+App::
 pasteBefore(char id)
 {
   pasteBefore(id, getRow(), getCol());
 }
 
 void
-CVi::
+App::
 pasteAfter(char id, uint line_num, uint char_num)
 {
   auto &buffer = getBuffer(id);
@@ -2451,7 +2476,7 @@ pasteAfter(char id, uint line_num, uint char_num)
     return;
 
   auto *sline = buffer.getLine(0);
-  auto *eline = static_cast<CViBufferLine *>(nullptr);
+  auto *eline = static_cast<BufferLine *>(nullptr);
 
   if (num_lines > 1)
     eline = buffer.getLine(num_lines - 1);
@@ -2512,7 +2537,7 @@ pasteAfter(char id, uint line_num, uint char_num)
 }
 
 void
-CVi::
+App::
 pasteBefore(char id, uint line_num, uint char_num)
 {
   auto &buffer = getBuffer(id);
@@ -2523,7 +2548,7 @@ pasteBefore(char id, uint line_num, uint char_num)
     return;
 
   auto *sline = buffer.getLine(0);
-  auto *eline = static_cast<CViBufferLine *>(nullptr);
+  auto *eline = static_cast<BufferLine *>(nullptr);
 
   if (num_lines > 1)
     eline = buffer.getLine(num_lines - 1);
@@ -2558,7 +2583,7 @@ pasteBefore(char id, uint line_num, uint char_num)
 //---
 
 void
-CVi::
+App::
 insertChar(char c)
 {
   uint x, y;
@@ -2571,7 +2596,7 @@ insertChar(char c)
 }
 
 void
-CVi::
+App::
 insertChar(uint line_num, uint char_num, char c)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -2584,11 +2609,11 @@ insertChar(uint line_num, uint char_num, char c)
 }
 
 void
-CVi::
+App::
 subInsertChar(uint line_num, uint char_num, char c)
 {
   if (isLinesEmpty()) {
-    auto *line = new CViLine;
+    auto *line = new Line;
 
     subAddLine(0, line);
 
@@ -2597,7 +2622,7 @@ subInsertChar(uint line_num, uint char_num, char c)
 
   lines_.addLineChar(line_num, char_num, c);
 
-  addUndo(new CViDeleteCharsUndoCmd(this, line_num, char_num, 1));
+  addUndo(new DeleteCharsUndoCmd(this, line_num, char_num, 1));
 
   setChanged(true);
   setUnsaved(true);
@@ -2606,7 +2631,7 @@ subInsertChar(uint line_num, uint char_num, char c)
 //---
 
 void
-CVi::
+App::
 replaceChar(char c)
 {
   uint x, y;
@@ -2619,7 +2644,7 @@ replaceChar(char c)
 }
 
 void
-CVi::
+App::
 replaceChar(uint line_num, uint char_num, char c)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -2632,11 +2657,11 @@ replaceChar(uint line_num, uint char_num, char c)
 }
 
 void
-CVi::
+App::
 subReplaceChar(uint line_num, uint char_num, char c)
 {
   if (isLinesEmpty()) {
-    auto *line = new CViLine;
+    auto *line = new Line;
 
     subAddLine(0, line);
   }
@@ -2647,7 +2672,7 @@ subReplaceChar(uint line_num, uint char_num, char c)
 
   lines_.replaceLineChar(line_num, char_num, c);
 
-  addUndo(new CViReplaceCharUndoCmd(this, line_num, char_num, c1));
+  addUndo(new ReplaceCharUndoCmd(this, line_num, char_num, c1));
 
   setChanged(true);
   setUnsaved(true);
@@ -2656,14 +2681,14 @@ subReplaceChar(uint line_num, uint char_num, char c)
 //---
 
 void
-CVi::
+App::
 splitLine()
 {
   splitLine(getRow(), getCol());
 }
 
 void
-CVi::
+App::
 splitLine(uint line_num, uint char_num)
 {
   startGroup();
@@ -2674,16 +2699,16 @@ splitLine(uint line_num, uint char_num)
 }
 
 void
-CVi::
+App::
 subSplitLine(uint line_num, uint char_num)
 {
-  auto *line = new CViLine;
+  auto *line = new Line;
 
   lines_.addLine(line_num + 1, line);
 
   lines_.splitLine(line_num, char_num);
 
-  addUndo(new CViJoinLineUndoCmd(this, line_num));
+  addUndo(new JoinLineUndoCmd(this, line_num));
 
   setChanged(true);
   setUnsaved(true);
@@ -2695,14 +2720,14 @@ subSplitLine(uint line_num, uint char_num)
 //---
 
 void
-CVi::
+App::
 joinLine()
 {
   joinLine(getRow());
 }
 
 void
-CVi::
+App::
 joinLine(uint line_num)
 {
   CASSERT(line_num < getNumLines() - 1, "Invalid Line Num");
@@ -2715,7 +2740,7 @@ joinLine(uint line_num)
 }
 
 void
-CVi::
+App::
 subJoinLine(uint line_num)
 {
   const auto *line1 = getLine(line_num);
@@ -2724,7 +2749,7 @@ subJoinLine(uint line_num)
 
   lines_.joinLine(line_num);
 
-  addUndo(new CViSplitLineUndoCmd(this, line_num, len1));
+  addUndo(new SplitLineUndoCmd(this, line_num, len1));
 
   subDeleteLine(line_num + 1);
 }
@@ -2732,7 +2757,7 @@ subJoinLine(uint line_num)
 //---
 
 void
-CVi::
+App::
 newLineBelow()
 {
   uint line_num = getRow();
@@ -2745,7 +2770,7 @@ newLineBelow()
 }
 
 void
-CVi::
+App::
 newLineAbove()
 {
   addLine(getRow(), "");
@@ -2756,7 +2781,7 @@ newLineAbove()
 //---
 
 bool
-CVi::
+App::
 cursorLeft(uint n)
 {
   uint x, y;
@@ -2771,7 +2796,7 @@ cursorLeft(uint n)
 }
 
 bool
-CVi::
+App::
 cursorLeft(uint n, uint *, uint *char_num)
 {
   for (uint i = 0; i < n; ++i) {
@@ -2785,7 +2810,7 @@ cursorLeft(uint n, uint *, uint *char_num)
 }
 
 bool
-CVi::
+App::
 cursorRight(uint n)
 {
   uint x, y;
@@ -2800,7 +2825,7 @@ cursorRight(uint n)
 }
 
 bool
-CVi::
+App::
 cursorRight(uint n, uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -2818,7 +2843,7 @@ cursorRight(uint n, uint *line_num, uint *char_num)
 }
 
 bool
-CVi::
+App::
 cursorUp(uint n)
 {
   uint x, y;
@@ -2833,7 +2858,7 @@ cursorUp(uint n)
 }
 
 bool
-CVi::
+App::
 cursorUp(uint n, uint *line_num, uint *char_num)
 {
   bool rc = true;
@@ -2858,7 +2883,7 @@ cursorUp(uint n, uint *line_num, uint *char_num)
 }
 
 bool
-CVi::
+App::
 cursorDown(uint n)
 {
   uint x, y;
@@ -2873,7 +2898,7 @@ cursorDown(uint n)
 }
 
 bool
-CVi::
+App::
 cursorDown(uint n, uint *line_num, uint *char_num)
 {
   if (n > 0 && isLinesEmpty())
@@ -2901,7 +2926,7 @@ cursorDown(uint n, uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorToLeft()
 {
   uint x, y;
@@ -2914,14 +2939,14 @@ cursorToLeft()
 }
 
 void
-CVi::
+App::
 cursorToLeft(uint *, uint *char_num)
 {
   *char_num = 0;
 }
 
 void
-CVi::
+App::
 cursorToRight()
 {
   uint x, y;
@@ -2934,7 +2959,7 @@ cursorToRight()
 }
 
 void
-CVi::
+App::
 cursorToRight(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -2945,7 +2970,7 @@ cursorToRight(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorSkipSpace()
 {
   uint x, y;
@@ -2958,7 +2983,7 @@ cursorSkipSpace()
 }
 
 void
-CVi::
+App::
 cursorSkipSpace(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -2970,7 +2995,7 @@ cursorSkipSpace(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlankUp()
 {
   uint x, y;
@@ -2983,7 +3008,7 @@ cursorFirstNonBlankUp()
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlankUp(uint *line_num, uint *char_num)
 {
   cursorUp(1, line_num, char_num);
@@ -2992,7 +3017,7 @@ cursorFirstNonBlankUp(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlankDown()
 {
   uint x, y;
@@ -3005,7 +3030,7 @@ cursorFirstNonBlankDown()
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlankDown(uint *line_num, uint *char_num)
 {
   cursorDown(1, line_num, char_num);
@@ -3014,7 +3039,7 @@ cursorFirstNonBlankDown(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlank()
 {
   uint x, y;
@@ -3027,7 +3052,7 @@ cursorFirstNonBlank()
 }
 
 void
-CVi::
+App::
 cursorFirstNonBlank(uint *line_num, uint *char_num)
 {
   cursorToLeft(line_num, char_num);
@@ -3036,7 +3061,7 @@ cursorFirstNonBlank(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 cursorTo(uint line_num, uint char_num)
 {
   setPos(char_num, line_num);
@@ -3045,7 +3070,7 @@ cursorTo(uint line_num, uint char_num)
 //---
 
 void
-CVi::
+App::
 nextWord()
 {
   uint x, y;
@@ -3060,7 +3085,7 @@ nextWord()
 // a word a series of alphanumeric or _ characters OR
 // a series of non-blank characters
 void
-CVi::
+App::
 nextWord(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3122,7 +3147,7 @@ nextWord(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 nextWORD()
 {
   uint x, y;
@@ -3136,7 +3161,7 @@ nextWORD()
 
 // a WORD is a series of non-blank characters
 void
-CVi::
+App::
 nextWORD(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3190,7 +3215,7 @@ nextWORD(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 prevWord()
 {
   uint x, y;
@@ -3203,7 +3228,7 @@ prevWord()
 }
 
 void
-CVi::
+App::
 prevWord(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3251,7 +3276,7 @@ prevWord(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 prevWORD()
 {
   uint x, y;
@@ -3264,7 +3289,7 @@ prevWORD()
 }
 
 void
-CVi::
+App::
 prevWORD(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3305,7 +3330,7 @@ prevWORD(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 endWord()
 {
   uint x, y;
@@ -3318,7 +3343,7 @@ endWord()
 }
 
 void
-CVi::
+App::
 endWord(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3406,7 +3431,7 @@ endWord(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 endWORD()
 {
   uint x, y;
@@ -3419,7 +3444,7 @@ endWORD()
 }
 
 void
-CVi::
+App::
 endWORD(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3487,7 +3512,7 @@ endWORD(uint *line_num, uint *char_num)
 }
 
 bool
-CVi::
+App::
 getWord(std::string &word)
 {
   uint x, y;
@@ -3498,7 +3523,7 @@ getWord(std::string &word)
 }
 
 bool
-CVi::
+App::
 getWord(uint line_num, uint char_num, std::string &word)
 {
   auto *line = getLine(line_num);
@@ -3529,7 +3554,7 @@ getWord(uint line_num, uint char_num, std::string &word)
 }
 
 void
-CVi::
+App::
 nextSentence()
 {
   uint x, y;
@@ -3544,7 +3569,7 @@ nextSentence()
 // a sentence is the first non-blank after a blank line
 // of the first non-blank after a '. ' '? ' '! '
 void
-CVi::
+App::
 nextSentence(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3620,7 +3645,7 @@ nextSentence(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 prevSentence()
 {
   uint x, y;
@@ -3633,7 +3658,7 @@ prevSentence()
 }
 
 void
-CVi::
+App::
 prevSentence(uint *line_num, uint *char_num)
 {
   uint num = 0;
@@ -3714,7 +3739,7 @@ prevSentence(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 nextParagraph()
 {
   uint x, y;
@@ -3727,7 +3752,7 @@ nextParagraph()
 }
 
 void
-CVi::
+App::
 nextParagraph(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3748,7 +3773,7 @@ nextParagraph(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 prevParagraph()
 {
   uint x, y;
@@ -3761,7 +3786,7 @@ prevParagraph()
 }
 
 void
-CVi::
+App::
 prevParagraph(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3782,7 +3807,7 @@ prevParagraph(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 nextSection()
 {
   uint x, y;
@@ -3795,7 +3820,7 @@ nextSection()
 }
 
 void
-CVi::
+App::
 nextSection(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3816,7 +3841,7 @@ nextSection(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 prevSection()
 {
   uint x, y;
@@ -3829,7 +3854,7 @@ prevSection()
 }
 
 void
-CVi::
+App::
 prevSection(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3850,7 +3875,7 @@ prevSection(uint *line_num, uint *char_num)
 }
 
 bool
-CVi::
+App::
 nextLine(uint *line_num, uint *char_num)
 {
   auto *line = getLine(*line_num);
@@ -3868,7 +3893,7 @@ nextLine(uint *line_num, uint *char_num)
 }
 
 bool
-CVi::
+App::
 prevLine(uint *line_num, uint *char_num)
 {
   *char_num = 0;
@@ -3886,14 +3911,14 @@ prevLine(uint *line_num, uint *char_num)
 }
 
 void
-CVi::
+App::
 swapChar()
 {
   swapChar(getRow(), getCol());
 }
 
 void
-CVi::
+App::
 swapChar(uint line_num, uint char_num)
 {
   auto *line = getLine(line_num);
@@ -3907,35 +3932,35 @@ swapChar(uint line_num, uint char_num)
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern)
 {
   return findNext(pattern, getRow(), getCol() + 1);
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern, uint *fline_num, uint *fchar_num)
 {
   return findNext(pattern, getRow(), getCol() + 1, fline_num, fchar_num);
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern, uint line_num, int char_num)
 {
   return findNext(pattern, line_num, char_num, getNumLines() - 1, -1);
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern, uint line_num, int char_num, uint *fline_num, uint *fchar_num)
 {
   return findNext(pattern, line_num, char_num, getNumLines() - 1, -1, fline_num, fchar_num);
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern, uint line_num1, int char_num1, int line_num2, int char_num2)
 {
   uint fline_num, fchar_num;
@@ -3949,7 +3974,7 @@ findNext(const std::string &pattern, uint line_num1, int char_num1, int line_num
 }
 
 bool
-CVi::
+App::
 findNext(const std::string &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num)
 {
@@ -3976,28 +4001,28 @@ findNext(const std::string &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint *len)
 {
   return findNext(pattern, getRow(), getCol() + 1, len);
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len)
 {
   return findNext(pattern, getRow(), getCol() + 1, fline_num, fchar_num, len);
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint line_num, int char_num, uint *len)
 {
   return findNext(pattern, line_num, char_num, getNumLines() - 1, -1, len);
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint line_num, int char_num,
          uint *fline_num, uint *fchar_num, uint *len)
 {
@@ -4005,7 +4030,7 @@ findNext(const CRegExp &pattern, uint line_num, int char_num,
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *len)
 {
@@ -4020,7 +4045,7 @@ findNext(const CRegExp &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findNext(const CRegExp &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len)
 {
@@ -4055,35 +4080,35 @@ findNext(const CRegExp &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern)
 {
   return findPrev(pattern, getRow(), getCol() - 1);
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern, uint *fline_num, uint *fchar_num)
 {
   return findPrev(pattern, getRow(), getCol() - 1, fline_num, fchar_num);
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern, uint line_num, int char_num)
 {
   return findPrev(pattern, line_num, char_num, 0, 0);
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern, uint line_num, int char_num, uint *fline_num, uint *fchar_num)
 {
   return findPrev(pattern, line_num, char_num, 0, 0, fline_num, fchar_num);
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern, uint line_num1, int char_num1, int line_num2, int char_num2)
 {
   uint fline_num, fchar_num;
@@ -4097,7 +4122,7 @@ findPrev(const std::string &pattern, uint line_num1, int char_num1, int line_num
 }
 
 bool
-CVi::
+App::
 findPrev(const std::string &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num)
 {
@@ -4124,28 +4149,28 @@ findPrev(const std::string &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint *len)
 {
   return findPrev(pattern, getRow(), getCol() - 1, len);
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint *fline_num, uint *fchar_num, uint *len)
 {
   return findPrev(pattern, getRow(), getCol() - 1, fline_num, fchar_num, len);
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint line_num, int char_num, uint *len)
 {
   return findPrev(pattern, line_num, char_num, 0, 0, len);
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint line_num, int char_num,
          uint *fline_num, uint *fchar_num, uint *len)
 {
@@ -4153,7 +4178,7 @@ findPrev(const CRegExp &pattern, uint line_num, int char_num,
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *len)
 {
@@ -4168,7 +4193,7 @@ findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
          int line_num2, int char_num2, uint *fline_num, uint *fchar_num, uint *len)
 {
@@ -4203,21 +4228,21 @@ findPrev(const CRegExp &pattern, uint line_num1, int char_num1,
 }
 
 bool
-CVi::
+App::
 findNextChar(char c, bool multiline)
 {
   return findNextChar(getRow(), getCol(), c, multiline);
 }
 
 bool
-CVi::
+App::
 findNextChar(const std::string &str, bool multiline)
 {
   return findNextChar(getRow(), getCol(), str, multiline);
 }
 
 bool
-CVi::
+App::
 findNextChar(uint line_num, int char_num, char c, bool multiline)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -4249,7 +4274,7 @@ findNextChar(uint line_num, int char_num, char c, bool multiline)
 }
 
 bool
-CVi::
+App::
 findNextChar(uint line_num, int char_num, const std::string &str, bool multiline)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -4283,21 +4308,21 @@ findNextChar(uint line_num, int char_num, const std::string &str, bool multiline
 }
 
 bool
-CVi::
+App::
 findPrevChar(char c, bool multiline)
 {
   return findPrevChar(getRow(), getCol(), c, multiline);
 }
 
 bool
-CVi::
+App::
 findPrevChar(const std::string &str, bool multiline)
 {
   return findPrevChar(getRow(), getCol(), str, multiline);
 }
 
 bool
-CVi::
+App::
 findPrevChar(uint line_num, int char_num, char c, bool multiline)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -4331,7 +4356,7 @@ findPrevChar(uint line_num, int char_num, char c, bool multiline)
 }
 
 bool
-CVi::
+App::
 findPrevChar(uint line_num, int char_num, const std::string &str, bool multiline)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -4369,14 +4394,14 @@ findPrevChar(uint line_num, int char_num, const std::string &str, bool multiline
 //---
 
 bool
-CVi::
+App::
 replace(uint line_num, uint char_num, char c)
 {
   return replace(line_num, char_num, char_num, std::string(&c, 1));
 }
 
 bool
-CVi::
+App::
 replace(uint line_num, uint char_num1, uint char_num2, const std::string &replaceStr)
 {
   CASSERT(line_num < getNumLines(), "Invalid Line Num");
@@ -4391,7 +4416,7 @@ replace(uint line_num, uint char_num1, uint char_num2, const std::string &replac
 }
 
 bool
-CVi::
+App::
 subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &replaceStr)
 {
   const auto *line = getLine(line_num);
@@ -4402,7 +4427,7 @@ subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &rep
 
   char_num2 = char_num1 + uint(replaceStr.size()) - 1;
 
-  addUndo(new CViReplaceUndoCmd(this, line_num, char_num1, char_num2, old));
+  addUndo(new ReplaceUndoCmd(this, line_num, char_num1, char_num2, old));
 
   setChanged(true);
   setUnsaved(true);
@@ -4413,7 +4438,7 @@ subReplace(uint line_num, uint char_num1, uint char_num2, const std::string &rep
 //---
 
 bool
-CVi::
+App::
 getMarkPos(const std::string &name, uint *row, uint *col)
 {
   auto p = markPosMap_.find(name);
@@ -4428,7 +4453,7 @@ getMarkPos(const std::string &name, uint *row, uint *col)
 }
 
 void
-CVi::
+App::
 setMarkPos(const std::string &name)
 {
   uint x, y;
@@ -4439,14 +4464,14 @@ setMarkPos(const std::string &name)
 }
 
 void
-CVi::
+App::
 setMarkPos(const std::string &name, uint row, uint col)
 {
   markPosMap_[name] = MarkPos(row, col, true);
 }
 
 void
-CVi::
+App::
 markReturn()
 {
   setMarkPos("'");
@@ -4455,20 +4480,20 @@ markReturn()
 //---
 
 void
-CVi::
+App::
 startGroup()
 {
-  auto *group = new CViGroup;
+  auto *group = new Group;
 
   groupList_.push_back(group);
 
   undo_.startGroup();
 
-  addUndo(new CViMoveToUndoCmd(this, getRow(), getCol()));
+  addUndo(new MoveToUndoCmd(this, getRow(), getCol()));
 }
 
 void
-CVi::
+App::
 endGroup()
 {
   undo_.endGroup();
@@ -4492,15 +4517,15 @@ endGroup()
 }
 
 bool
-CVi::
+App::
 inGroup() const
 {
   return ! groupList_.empty();
 }
 
 void
-CVi::
-addUndo(CViUndoCmd *cmd)
+App::
+addUndo(UndoCmd *cmd)
 {
   if (! undo_.locked())
     undo_.addUndo(cmd);
@@ -4509,7 +4534,7 @@ addUndo(CViUndoCmd *cmd)
 }
 
 void
-CVi::
+App::
 undo()
 {
   undo_.undo();
@@ -4518,7 +4543,7 @@ undo()
 }
 
 void
-CVi::
+App::
 redo()
 {
   undo_.redo();
@@ -4527,21 +4552,21 @@ redo()
 }
 
 bool
-CVi::
+App::
 canUndo() const
 {
   return undo_.canUndo();
 }
 
 bool
-CVi::
+App::
 canRedo() const
 {
   return undo_.canRedo();
 }
 
 void
-CVi::
+App::
 undoLine()
 {
 #if 0
@@ -4558,7 +4583,7 @@ undoLine()
 }
 
 void
-CVi::
+App::
 resetUndo()
 {
   undo_.clear();
@@ -4566,8 +4591,8 @@ resetUndo()
 
 //---
 
-CViBuffer &
-CVi::
+Buffer &
+App::
 getBuffer(char c)
 {
   return buffers_[c];
@@ -4576,14 +4601,14 @@ getBuffer(char c)
 //---
 
 bool
-CVi::
+App::
 isWordChar(char c) const
 {
   return (isalnum(c) || c == '_');
 }
 
 uint
-CVi::
+App::
 getLineEnd(uint line_num) const
 {
   if (line_num >= getNumLines())
@@ -4602,8 +4627,8 @@ getLineEnd(uint line_num) const
 //---
 
 bool
-CVi::
-isSentenceEnd(const CViLine *line, uint pos, uint *n) const
+App::
+isSentenceEnd(const Line *line, uint pos, uint *n) const
 {
   *n = 0;
 
@@ -4644,8 +4669,8 @@ isSentenceEnd(const CViLine *line, uint pos, uint *n) const
 }
 
 bool
-CVi::
-isSection(const CViLine *line, uint, uint *n) const
+App::
+isSection(const Line *line, uint, uint *n) const
 {
   uint len = line->getLength();
 
@@ -4658,8 +4683,8 @@ isSection(const CViLine *line, uint, uint *n) const
 }
 
 bool
-CVi::
-isBlank(const CViLine *line) const
+App::
+isBlank(const Line *line) const
 {
   uint len = line->getLength();
 
@@ -4674,8 +4699,8 @@ isBlank(const CViLine *line) const
 }
 
 bool
-CVi::
-findNext(const CViLine *line, const std::string &pattern, int char_num1, int char_num2,
+App::
+findNext(const Line *line, const std::string &pattern, int char_num1, int char_num2,
          uint *char_num) const
 {
   if (line->isEmpty())
@@ -4705,8 +4730,8 @@ findNext(const CViLine *line, const std::string &pattern, int char_num1, int cha
 }
 
 bool
-CVi::
-findNext(const CViLine *line, const CRegExp &pattern, int char_num1, int char_num2,
+App::
+findNext(const Line *line, const CRegExp &pattern, int char_num1, int char_num2,
          uint *spos, uint *epos) const
 {
   if (line->isEmpty())
@@ -4737,8 +4762,8 @@ findNext(const CViLine *line, const CRegExp &pattern, int char_num1, int char_nu
 }
 
 bool
-CVi::
-findPrev(const CViLine *line, const std::string &pattern, int char_num1, int char_num2,
+App::
+findPrev(const Line *line, const std::string &pattern, int char_num1, int char_num2,
          uint *char_num) const
 {
   if (line->isEmpty())
@@ -4768,8 +4793,8 @@ findPrev(const CViLine *line, const std::string &pattern, int char_num1, int cha
 }
 
 bool
-CVi::
-findPrev(const CViLine *line, const CRegExp &pattern, int char_num1, int char_num2,
+App::
+findPrev(const Line *line, const CRegExp &pattern, int char_num1, int char_num2,
          uint *spos, uint *epos) const
 {
   if (line->isEmpty())
@@ -4800,7 +4825,7 @@ findPrev(const CViLine *line, const CRegExp &pattern, int char_num1, int char_nu
 }
 
 void
-CVi::
+App::
 getSelectStart(int *row, int *col) const
 {
   *row = selection_.row1;
@@ -4808,7 +4833,7 @@ getSelectStart(int *row, int *col) const
 }
 
 void
-CVi::
+App::
 getSelectEnd(int *row, int *col) const
 {
   *row = selection_.row2;
@@ -4816,7 +4841,7 @@ getSelectEnd(int *row, int *col) const
 }
 
 void
-CVi::
+App::
 setSelectRange(int row1, int col1, int row2, int col2)
 {
   selection_.set = true;
@@ -4828,14 +4853,14 @@ setSelectRange(int row1, int col1, int row2, int col2)
 }
 
 void
-CVi::
+App::
 clearSelection()
 {
   selection_.set = false;
 }
 
 void
-CVi::
+App::
 rangeSelect(int row1, int col1, int row2, int col2, bool select)
 {
   selection_.set = select;
@@ -4849,10 +4874,10 @@ rangeSelect(int row1, int col1, int row2, int col2, bool select)
 //---
 
 bool
-CVi::
+App::
 runEdCmd(const std::string &str, bool &quitted)
 {
-  std::cerr << "Run Ed Cmd '" << str << "'\n";
+  //std::cerr << "Run Ed Cmd '" << str << "'\n";
 
   quitted = false;
 
@@ -4879,21 +4904,39 @@ runEdCmd(const std::string &str, bool &quitted)
   return rc;
 }
 
+void
+App::
+setNameValue(const std::string &name, const std::string &value)
+{
+  if      (name == "list") {
+    if (value == "1")
+      listMode_ = true;
+  }
+  else if (name == "nolist") {
+    if (value == "1")
+      listMode_ = false;
+  }
+
+  nameValues_[name] = value;
+
+  iface_->stateChanged();
+}
+
 //------
 
-CViLines::
-CViLines()
+Lines::
+Lines()
 {
 }
 
-CViLines::
-~CViLines()
+Lines::
+~Lines()
 {
   clear();
 }
 
 void
-CViLines::
+Lines::
 clear()
 {
   auto p1 = begin();
@@ -4905,23 +4948,23 @@ clear()
   lines_.clear();
 }
 
-const CViLine *
-CViLines::
+const Line *
+Lines::
 getLine(uint line_num) const
 {
   return lines_[line_num];
 }
 
-CViLine *
-CViLines::
+Line *
+Lines::
 getLine(uint line_num)
 {
   return lines_[line_num];
 }
 
 void
-CViLines::
-addLine(uint line_num, CViLine *line)
+Lines::
+addLine(uint line_num, Line *line)
 {
   if (line_num == lines_.size()) {
     lines_.push_back(line);
@@ -4942,7 +4985,7 @@ addLine(uint line_num, CViLine *line)
 }
 
 void
-CViLines::
+Lines::
 addLineChar(uint line_num, uint char_num, char c)
 {
   auto *line = lines_[line_num];
@@ -4953,7 +4996,7 @@ addLineChar(uint line_num, uint char_num, char c)
 }
 
 void
-CViLines::
+Lines::
 addLineChars(uint line_num, uint char_num, const std::string &chars)
 {
   auto *line = lines_[line_num];
@@ -4964,7 +5007,7 @@ addLineChars(uint line_num, uint char_num, const std::string &chars)
 }
 
 void
-CViLines::
+Lines::
 setLineChar(uint line_num, uint char_num, char c)
 {
   auto *line = lines_[line_num];
@@ -4975,7 +5018,7 @@ setLineChar(uint line_num, uint char_num, char c)
 }
 
 void
-CViLines::
+Lines::
 replaceLineChar(uint line_num, uint char_num, char c)
 {
   auto *line = lines_[line_num];
@@ -4986,7 +5029,7 @@ replaceLineChar(uint line_num, uint char_num, char c)
 }
 
 void
-CViLines::
+Lines::
 replaceLineChars(uint line_num, const std::string &str)
 {
   auto *line = lines_[line_num];
@@ -4997,7 +5040,7 @@ replaceLineChars(uint line_num, const std::string &str)
 }
 
 void
-CViLines::
+Lines::
 replaceLineChars(uint line_num, uint char_num1, uint char_num2, const std::string &str)
 {
   auto *line = lines_[line_num];
@@ -5008,7 +5051,7 @@ replaceLineChars(uint line_num, uint char_num1, uint char_num2, const std::strin
 }
 
 void
-CViLines::
+Lines::
 moveLine(uint line_num1, int line_num2)
 {
   auto *line = lines_[line_num1];
@@ -5034,7 +5077,7 @@ moveLine(uint line_num1, int line_num2)
 }
 
 void
-CViLines::
+Lines::
 splitLine(uint line_num, uint char_num)
 {
   auto *line1 = lines_[line_num    ];
@@ -5044,7 +5087,7 @@ splitLine(uint line_num, uint char_num)
 }
 
 void
-CViLines::
+Lines::
 joinLine(uint line_num)
 {
   auto *line1 = lines_[line_num    ];
@@ -5054,7 +5097,7 @@ joinLine(uint line_num)
 }
 
 void
-CViLines::
+Lines::
 deleteLine(uint line_num)
 {
   auto *line = lines_[line_num];
@@ -5075,7 +5118,7 @@ deleteLine(uint line_num)
 }
 
 void
-CViLines::
+Lines::
 deleteLineChars(uint line_num, uint char_num, uint n)
 {
   auto *line = lines_[line_num];
@@ -5088,26 +5131,26 @@ deleteLineChars(uint line_num, uint char_num, uint n)
 
 //------
 
-CViLine::
-CViLine()
+Line::
+Line()
 {
 }
 
-CViLine::
-CViLine(const CViLine &line) :
+Line::
+Line(const Line &line) :
  chars_(line.chars_)
 {
 }
 
-CViLine::
-~CViLine()
+Line::
+~Line()
 {
   clear();
 }
 
-CViLine &
-CViLine::
-operator=(const CViLine &line)
+Line &
+Line::
+operator=(const Line &line)
 {
   chars_   = line.chars_;
   changed_ = true;
@@ -5115,15 +5158,15 @@ operator=(const CViLine &line)
   return *this;
 }
 
-CViLine *
-CViLine::
+Line *
+Line::
 dup() const
 {
-  return new CViLine(*this);
+  return new Line(*this);
 }
 
 void
-CViLine::
+Line::
 addChars(uint pos, const std::string &chars)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
@@ -5151,14 +5194,14 @@ addChars(uint pos, const std::string &chars)
 }
 
 void
-CViLine::
+Line::
 addChar(uint pos, char c)
 {
   addChars(pos, std::string(&c, 1));
 }
 
 void
-CViLine::
+Line::
 addChars(uint pos, uint num, char c)
 {
   if (num <= 0) return;
@@ -5171,35 +5214,35 @@ addChars(uint pos, uint num, char c)
 }
 
 uint
-CViLine::
+Line::
 getLength() const
 {
   return uint(chars_.size());
 }
 
 bool
-CViLine::
+Line::
 isEmpty() const
 {
   return chars_.empty();
 }
 
-CViLine::const_char_iterator
-CViLine::
+Line::const_char_iterator
+Line::
 beginChar() const
 {
   return chars_.begin();
 }
 
-CViLine::const_char_iterator
-CViLine::
+Line::const_char_iterator
+Line::
 endChar() const
 {
   return chars_.end();
 }
 
 void
-CViLine::
+Line::
 clear()
 {
   chars_.clear();
@@ -5208,7 +5251,7 @@ clear()
 }
 
 char
-CViLine::
+Line::
 getChar(uint pos) const
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return '\0';
@@ -5220,7 +5263,7 @@ getChar(uint pos) const
 }
 
 void
-CViLine::
+Line::
 setChar(uint pos, char c)
 {
   if (! CASSERT(pos < getLength(), "Invalid Char Num")) return;
@@ -5231,7 +5274,7 @@ setChar(uint pos, char c)
 }
 
 void
-CViLine::
+Line::
 insertChar(uint pos, char c)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
@@ -5251,7 +5294,7 @@ insertChar(uint pos, char c)
 }
 
 void
-CViLine::
+Line::
 replaceChar(uint pos, char c)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
@@ -5263,7 +5306,7 @@ replaceChar(uint pos, char c)
 }
 
 void
-CViLine::
+Line::
 deleteChars(uint pos, uint num)
 {
   if (! CASSERT(pos < getLength() + num - 1, "Invalid Char Num")) return;
@@ -5273,7 +5316,7 @@ deleteChars(uint pos, uint num)
 }
 
 void
-CViLine::
+Line::
 deleteChar(uint pos)
 {
   if (! CASSERT(pos < getLength(), "Invalid Char Num")) return;
@@ -5281,13 +5324,13 @@ deleteChar(uint pos)
   //char c1 = chars_[pos];
 
   if (pos > 0)
-    chars_ = chars_.substr(0, pos - 1) + chars_.substr(pos + 1);
+    chars_ = chars_.substr(0, pos) + chars_.substr(pos + 1);
   else
     chars_ = chars_.substr(pos + 1);
 }
 
 bool
-CViLine::
+Line::
 findNext(const std::string & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
          uint* /*char_num*/) const
 {
@@ -5296,7 +5339,7 @@ findNext(const std::string & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
 }
 
 bool
-CViLine::
+Line::
 findNext(const CRegExp & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
          uint* /*spos*/, uint* /*epos*/) const
 {
@@ -5305,7 +5348,7 @@ findNext(const CRegExp & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
 }
 
 bool
-CViLine::
+Line::
 findPrev(const std::string & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
          uint* /*char_num*/) const
 {
@@ -5314,7 +5357,7 @@ findPrev(const std::string & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
 }
 
 bool
-CViLine::
+Line::
 findPrev(const CRegExp & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
          uint* /*spos*/, uint* /*epos*/) const
 {
@@ -5323,14 +5366,14 @@ findPrev(const CRegExp & /*pattern*/, int /*char_num1*/, int /*char_num2*/,
 }
 
 void
-CViLine::
+Line::
 replace(const std::string &str)
 {
   replace(0, getLength() - 1, str);
 }
 
 void
-CViLine::
+Line::
 replace(int spos, int epos, const std::string &str)
 {
   if (epos < 0)
@@ -5360,8 +5403,8 @@ replace(int spos, int epos, const std::string &str)
 }
 
 void
-CViLine::
-split(CViLine *line, uint pos)
+Line::
+split(Line *line, uint pos)
 {
   if (! CASSERT(pos <= getLength(), "Invalid Char Num")) return;
 
@@ -5375,8 +5418,8 @@ split(CViLine *line, uint pos)
 }
 
 void
-CViLine::
-join(CViLine *line)
+Line::
+join(Line *line)
 {
   chars_ += line->chars_;
 
@@ -5386,14 +5429,14 @@ join(CViLine *line)
 }
 
 const std::string &
-CViLine::
+Line::
 getString() const
 {
   return chars_;
 }
 
 std::string
-CViLine::
+Line::
 getSubString(int spos, int epos) const
 {
   if (epos < 0)
@@ -5403,14 +5446,14 @@ getSubString(int spos, int epos) const
 }
 
 const char *
-CViLine::
+Line::
 getCString() const
 {
   return getString().c_str();
 }
 
 const char *
-CViLine::
+Line::
 getSubCString(int spos, int epos) const
 {
   static std::string buffer = getSubString(spos, epos);
@@ -5419,7 +5462,7 @@ getSubCString(int spos, int epos) const
 }
 
 uint
-CViLine::
+Line::
 getEnd(bool extraLineChar) const
 {
   uint len = getLength();
@@ -5431,21 +5474,21 @@ getEnd(bool extraLineChar) const
 }
 
 void
-CViLine::
+Line::
 setChanged(bool changed)
 {
   changed_ = changed;
 }
 
 void
-CViLine::
+Line::
 print(std::ostream &os) const
 {
   os << chars_;
 }
 
 std::ostream &
-operator<<(std::ostream &os, const CViLine &line)
+operator<<(std::ostream &os, const Line &line)
 {
   line.print(os);
 
@@ -5454,20 +5497,20 @@ operator<<(std::ostream &os, const CViLine &line)
 
 //-------
 
-CViLastCommand::
-CViLastCommand()
+LastCommand::
+LastCommand()
 {
 }
 
 void
-CViLastCommand::
+LastCommand::
 clear()
 {
   keys_.clear();
 }
 
 void
-CViLastCommand::
+LastCommand::
 addCount(uint n)
 {
   if (n == 0) return;
@@ -5484,15 +5527,15 @@ addCount(uint n)
 }
 
 void
-CViLastCommand::
+LastCommand::
 addKey(char key)
 {
   keys_.push_back(key);
 }
 
 void
-CViLastCommand::
-exec(CVi *vi)
+LastCommand::
+exec(App *vi)
 {
   uint len = uint(keys_.size());
 
@@ -5503,30 +5546,50 @@ exec(CVi *vi)
 //------
 
 void
-CViCmdLine::
+CmdLine::
+setLine(const std::string &line)
+{
+  line_ = line;
+
+  updateLine();
+}
+
+void
+CmdLine::
 keyPress(char c)
 {
   line_ += c;
+
+  updateLine();
+}
+
+void
+CmdLine::
+backspace()
+{
+  line_ = line_.substr(0, line_.size() - 1);
+
+  updateLine();
 }
 
 //------
 
-CViAddLineUndoCmd::
-CViAddLineUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0)
+AddLineUndoCmd::
+AddLineUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0)
 {
 }
 
-CViAddLineUndoCmd::
-CViAddLineUndoCmd(CVi *vi, int line_num, const std::string &line) :
- CViUndoCmd(vi), line_num_(line_num), line_(line)
+AddLineUndoCmd::
+AddLineUndoCmd(App *vi, int line_num, const std::string &line) :
+ UndoCmd(vi), line_num_(line_num), line_(line)
 {
   if (vi_->getDebug())
     std::cerr << "Add: Add Line " << line_num << " '" << line << "'\n";
 }
 
 bool
-CViAddLineUndoCmd::
+AddLineUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
@@ -5540,7 +5603,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViAddLineUndoCmd::
+AddLineUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE) {
@@ -5561,15 +5624,15 @@ exec()
 
 //------
 
-CViDeleteLineUndoCmd::
-CViDeleteLineUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0)
+DeleteLineUndoCmd::
+DeleteLineUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0)
 {
 }
 
-CViDeleteLineUndoCmd::
-CViDeleteLineUndoCmd(CVi *vi, int line_num) :
- CViUndoCmd(vi), line_num_(line_num)
+DeleteLineUndoCmd::
+DeleteLineUndoCmd(App *vi, int line_num) :
+ UndoCmd(vi), line_num_(line_num)
 {
   if (vi_->getDebug())
     std::cerr << "Add: Delete Line " << line_num_ << "\n";
@@ -5578,7 +5641,7 @@ CViDeleteLineUndoCmd(CVi *vi, int line_num) :
 }
 
 bool
-CViDeleteLineUndoCmd::
+DeleteLineUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
@@ -5591,7 +5654,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViDeleteLineUndoCmd::
+DeleteLineUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE) {
@@ -5612,20 +5675,20 @@ exec()
 
 //------
 
-CViMoveLineUndoCmd::
-CViMoveLineUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num1_(0), line_num2_(0)
+MoveLineUndoCmd::
+MoveLineUndoCmd(App *vi) :
+ UndoCmd(vi), line_num1_(0), line_num2_(0)
 {
 }
 
-CViMoveLineUndoCmd::
-CViMoveLineUndoCmd(CVi *vi, int line_num1, int line_num2) :
- CViUndoCmd(vi), line_num1_(line_num1), line_num2_(line_num2)
+MoveLineUndoCmd::
+MoveLineUndoCmd(App *vi, int line_num1, int line_num2) :
+ UndoCmd(vi), line_num1_(line_num1), line_num2_(line_num2)
 {
 }
 
 bool
-CViMoveLineUndoCmd::
+MoveLineUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
@@ -5639,7 +5702,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViMoveLineUndoCmd::
+MoveLineUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE)
@@ -5652,20 +5715,20 @@ exec()
 
 //------
 
-CViReplaceUndoCmd::
-CViReplaceUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0), char_num1_(0), char_num2_(0)
+ReplaceUndoCmd::
+ReplaceUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0), char_num1_(0), char_num2_(0)
 {
 }
 
-CViReplaceUndoCmd::
-CViReplaceUndoCmd(CVi *vi, int line_num, int char_num1, int char_num2, const std::string &str) :
- CViUndoCmd(vi), line_num_(line_num), char_num1_(char_num1), char_num2_(char_num2), str_(str)
+ReplaceUndoCmd::
+ReplaceUndoCmd(App *vi, int line_num, int char_num1, int char_num2, const std::string &str) :
+ UndoCmd(vi), line_num_(line_num), char_num1_(char_num1), char_num2_(char_num2), str_(str)
 {
 }
 
 bool
-CViReplaceUndoCmd::
+ReplaceUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 4);
@@ -5681,7 +5744,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViReplaceUndoCmd::
+ReplaceUndoCmd::
 exec()
 {
   auto str = vi_->getLine(line_num_)->getSubString(char_num1_, char_num2_);
@@ -5695,22 +5758,22 @@ exec()
 
 //------
 
-CViInsertCharUndoCmd::
-CViInsertCharUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0), char_num_(0), c_(0)
+InsertCharUndoCmd::
+InsertCharUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0), char_num_(0), c_(0)
 {
 }
 
-CViInsertCharUndoCmd::
-CViInsertCharUndoCmd(CVi *vi, int line_num, int char_num, char c) :
- CViUndoCmd(vi), line_num_(line_num), char_num_(char_num), c_(c)
+InsertCharUndoCmd::
+InsertCharUndoCmd(App *vi, int line_num, int char_num, char c) :
+ UndoCmd(vi), line_num_(line_num), char_num_(char_num), c_(c)
 {
   if (vi_->getDebug())
     std::cerr << "Add: Insert Char " << line_num_ << " " << char_num_ << " '" << c_ << "'\n";
 }
 
 bool
-CViInsertCharUndoCmd::
+InsertCharUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
@@ -5725,7 +5788,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViInsertCharUndoCmd::
+InsertCharUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE) {
@@ -5746,20 +5809,20 @@ exec()
 
 //------
 
-CViReplaceCharUndoCmd::
-CViReplaceCharUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0), char_num_(0), c_(0)
+ReplaceCharUndoCmd::
+ReplaceCharUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0), char_num_(0), c_(0)
 {
 }
 
-CViReplaceCharUndoCmd::
-CViReplaceCharUndoCmd(CVi *vi, int line_num, int char_num, char c) :
- CViUndoCmd(vi), line_num_(line_num), char_num_(char_num), c_(c)
+ReplaceCharUndoCmd::
+ReplaceCharUndoCmd(App *vi, int line_num, int char_num, char c) :
+ UndoCmd(vi), line_num_(line_num), char_num_(char_num), c_(c)
 {
 }
 
 bool
-CViReplaceCharUndoCmd::
+ReplaceCharUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
@@ -5774,7 +5837,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViReplaceCharUndoCmd::
+ReplaceCharUndoCmd::
 exec()
 {
   auto str = vi_->getLine(line_num_)->getSubString(char_num_, char_num_);
@@ -5788,15 +5851,15 @@ exec()
 
 //------
 
-CViDeleteCharsUndoCmd::
-CViDeleteCharsUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0), char_num_(0)
+DeleteCharsUndoCmd::
+DeleteCharsUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0), char_num_(0)
 {
 }
 
-CViDeleteCharsUndoCmd::
-CViDeleteCharsUndoCmd(CVi *vi, int line_num, int char_num, int num_chars) :
- CViUndoCmd(vi), line_num_(line_num), char_num_(char_num)
+DeleteCharsUndoCmd::
+DeleteCharsUndoCmd(App *vi, int line_num, int char_num, int num_chars) :
+ UndoCmd(vi), line_num_(line_num), char_num_(char_num)
 {
   chars_ = vi_->getLine(line_num_)->getSubString(char_num_, char_num_ + num_chars - 1);
 
@@ -5806,7 +5869,7 @@ CViDeleteCharsUndoCmd(CVi *vi, int line_num, int char_num, int num_chars) :
 }
 
 bool
-CViDeleteCharsUndoCmd::
+DeleteCharsUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 3);
@@ -5821,7 +5884,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViDeleteCharsUndoCmd::
+DeleteCharsUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE) {
@@ -5843,20 +5906,20 @@ exec()
 
 //------
 
-CViSplitLineUndoCmd::
-CViSplitLineUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0), char_num_(0)
+SplitLineUndoCmd::
+SplitLineUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0), char_num_(0)
 {
 }
 
-CViSplitLineUndoCmd::
-CViSplitLineUndoCmd(CVi *vi, int line_num, int char_num) :
- CViUndoCmd(vi), line_num_(line_num), char_num_(char_num)
+SplitLineUndoCmd::
+SplitLineUndoCmd(App *vi, int line_num, int char_num) :
+ UndoCmd(vi), line_num_(line_num), char_num_(char_num)
 {
 }
 
 bool
-CViSplitLineUndoCmd::
+SplitLineUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
@@ -5870,7 +5933,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViSplitLineUndoCmd::
+SplitLineUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE)
@@ -5883,21 +5946,21 @@ exec()
 
 //------
 
-CViJoinLineUndoCmd::
-CViJoinLineUndoCmd(CVi *vi) :
- CViUndoCmd(vi), line_num_(0)
+JoinLineUndoCmd::
+JoinLineUndoCmd(App *vi) :
+ UndoCmd(vi), line_num_(0)
 {
 }
 
-CViJoinLineUndoCmd::
-CViJoinLineUndoCmd(CVi *vi, int line_num) :
- CViUndoCmd(vi), line_num_(line_num)
+JoinLineUndoCmd::
+JoinLineUndoCmd(App *vi, int line_num) :
+ UndoCmd(vi), line_num_(line_num)
 {
   char_num_ = vi_->getCol();
 }
 
 bool
-CViJoinLineUndoCmd::
+JoinLineUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 1);
@@ -5910,7 +5973,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViJoinLineUndoCmd::
+JoinLineUndoCmd::
 exec()
 {
   if (getState() == UNDO_STATE)
@@ -5923,22 +5986,22 @@ exec()
 
 //------
 
-CViMoveToUndoCmd::
-CViMoveToUndoCmd(CVi *vi) :
- CViUndoCmd(vi)
+MoveToUndoCmd::
+MoveToUndoCmd(App *vi) :
+ UndoCmd(vi)
 {
 }
 
-CViMoveToUndoCmd::
-CViMoveToUndoCmd(CVi *vi, int line_num, int char_num) :
- CViUndoCmd(vi), line_num_(line_num), char_num_(char_num)
+MoveToUndoCmd::
+MoveToUndoCmd(App *vi, int line_num, int char_num) :
+ UndoCmd(vi), line_num_(line_num), char_num_(char_num)
 {
   if (vi_->getDebug())
     std::cerr << "Add: Move To " << line_num << " " << char_num << "\n";
 }
 
 bool
-CViMoveToUndoCmd::
+MoveToUndoCmd::
 exec(const std::vector<std::string> &argList)
 {
   assert(argList.size() == 2);
@@ -5952,7 +6015,7 @@ exec(const std::vector<std::string> &argList)
 }
 
 bool
-CViMoveToUndoCmd::
+MoveToUndoCmd::
 exec()
 {
   uint line_num = vi_->getRow();
@@ -5971,9 +6034,10 @@ exec()
 
 //------
 
-CViUndoCmd::
-CViUndoCmd(CVi *vi) :
+UndoCmd::
+UndoCmd(App *vi) :
  vi_(vi)
 {
 }
 
+}

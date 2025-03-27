@@ -9,27 +9,29 @@
 #include <optional>
 #include <iostream>
 
-CEd::
-CEd(CVi *file) :
- file_(file)
+namespace CVi {
+
+Ed::
+Ed(CVi::App *app) :
+ app_(app)
 {
 }
 
-CEd::
-~CEd()
+Ed::
+~Ed()
 {
 }
 
 void
-CEd::
+Ed::
 init()
 {
   // move to first character on last line
-  setPos(0, std::max(0, int(file_->getNumLines()) - 1));
+  setPos(0, std::max(0, int(app_->getNumLines()) - 1));
 }
 
 bool
-CEd::
+Ed::
 execFile(const std::string &fileName)
 {
   std::vector<std::string> lines;
@@ -56,12 +58,12 @@ execFile(const std::string &fileName)
 }
 
 bool
-CEd::
+Ed::
 execCmd(const std::string &cmd)
 {
   if (mode_ == INPUT) {
     if (cmd == ".") {
-      file_->startGroup();
+      app_->startGroup();
 
       int start;
 
@@ -82,7 +84,7 @@ execCmd(const std::string &cmd)
       for (p1 = input_data_.getLines().begin(), p2 = input_data_.getLines().end(); p1 != p2; ++p1)
         addLine(i++, *p1);
 
-      file_->endGroup();
+      app_->endGroup();
 
       mode_ = COMMAND;
 
@@ -173,7 +175,7 @@ execCmd(const std::string &cmd)
   else if (parse.isChar('$')) {
     parse.skipChar();
 
-    line_num1 = file_->getNumLines();
+    line_num1 = app_->getNumLines();
 
     // offset
     if (parse.isChar('+') || parse.isChar('-')) {
@@ -199,7 +201,7 @@ execCmd(const std::string &cmd)
 
     uint line_num, char_num;
 
-    if (! file_->getMarkPos(std::string(&c, 1), &line_num, &char_num)) {
+    if (! app_->getMarkPos(std::string(&c, 1), &line_num, &char_num)) {
       error("Mark not set");
       return false;
     }
@@ -210,7 +212,7 @@ execCmd(const std::string &cmd)
     parse.skipChar();
 
     line_num1 = 1;
-    line_num2 = file_->getNumLines();
+    line_num2 = app_->getNumLines();
   }
   else if (parse.isChar('/')) {
     std::string str;
@@ -233,6 +235,9 @@ execCmd(const std::string &cmd)
     }
 
     parse.skipChar();
+
+    if (str == "")
+      str = app_->getFindPattern().getPattern();
 
     int fline_num, fchar_num;
 
@@ -263,12 +268,56 @@ execCmd(const std::string &cmd)
 
     parse.skipChar();
 
+    if (str == "")
+      str = app_->getFindPattern().getPattern();
+
     int fline_num, fchar_num;
 
     if (findPrev(str, &fline_num, &fchar_num)) {
       line_num1 = fline_num;
       char_num1 = fchar_num;
     }
+  }
+  else if (parse.isAlpha()) {
+    auto readWord = [&](std::string &word) {
+      word = "";
+
+      if (! parse.isAlpha())
+        return false;
+
+      while (! parse.eof() && (parse.isAlnum() || parse.isChar('_'))) {
+        char c;
+
+        if (parse.readChar(&c))
+          word += c;
+      }
+
+      return true;
+    };
+
+    auto pos = parse.getPos();
+
+    std::string cmd1;
+    (void) readWord(cmd1);
+
+    if (cmd1 == "set") {
+      parse.skipSpace();
+
+      std::string name;
+      (void) readWord(name);
+
+      std::string value;
+      (void) readWord(value);
+
+      if (value == "")
+        value = "1";
+
+      app_->setNameValue(name, value);
+
+      return true;
+    }
+
+    parse.setPos(pos);
   }
 
   parse.skipSpace();
@@ -350,7 +399,7 @@ execCmd(const std::string &cmd)
       else if (parse.isChar('$')) {
         parse.skipChar();
 
-        line_num2 = file_->getNumLines();
+        line_num2 = app_->getNumLines();
 
         // offset
         if (parse.isChar('+') || parse.isChar('-')) {
@@ -374,7 +423,7 @@ execCmd(const std::string &cmd)
         if (parse.readChar(&c1)) {
           uint line_num, char_num;
 
-          if (! file_->getMarkPos(std::string(&c1, 1), &line_num, &char_num)) {
+          if (! app_->getMarkPos(std::string(&c1, 1), &line_num, &char_num)) {
             error("Mark not set");
             return false;
           }
@@ -411,13 +460,13 @@ execCmd(const std::string &cmd)
         uint fline_num, fchar_num;
 
         if (c == ';') {
-          if (file_->findNext(regexp, line_num1.value() - 1, 0, &fline_num, &fchar_num)) {
+          if (app_->findNext(regexp, line_num1.value() - 1, 0, &fline_num, &fchar_num)) {
             line_num2 = fline_num + 1;
             char_num2 = fchar_num;
           }
         }
         else {
-          if (file_->findNext(regexp, getRow(), 0, &fline_num, &fchar_num)) {
+          if (app_->findNext(regexp, getRow(), 0, &fline_num, &fchar_num)) {
             line_num2 = fline_num + 1;
             char_num2 = fchar_num + 1;
           }
@@ -447,7 +496,7 @@ execCmd(const std::string &cmd)
       }
 
       if (! line_num2)
-        line_num2 = file_->getNumLines();
+        line_num2 = app_->getNumLines();
 
       parse.skipSpace();
     }
@@ -468,7 +517,7 @@ execCmd(const std::string &cmd)
 
     // no end range so use last line
     if (! line_num2) {
-      line_num2 = file_->getNumLines();
+      line_num2 = app_->getNumLines();
       char_num2 = 0;
     }
   }
@@ -500,8 +549,8 @@ execCmd(const std::string &cmd)
   }
 
   // ensure valid range
-  if (line_num1.value() < 1 || line_num1.value() > int(file_->getNumLines()) + 1 ||
-      line_num2.value() < 1 || line_num2.value() > int(file_->getNumLines()) + 1) {
+  if (line_num1.value() < 1 || line_num1.value() > int(app_->getNumLines()) + 1 ||
+      line_num2.value() < 1 || line_num2.value() > int(app_->getNumLines()) + 1) {
     error("Invalid range");
     return false;
   }
@@ -542,9 +591,9 @@ execCmd(const std::string &cmd)
       parse.readNonSpace(fileName);
 
       if (fileName.empty())
-        fileName = file_->getFileName();
+        fileName = app_->getFileName();
 
-      file_->startGroup();
+      app_->startGroup();
 
       if (! fileName.empty() && fileName[0] == '!') {
         CCommand cmd1(fileName.substr(1));
@@ -557,7 +606,7 @@ execCmd(const std::string &cmd)
 
         std::vector<std::string> lines;
 
-        file_->deleteAllLines();
+        app_->deleteAllLines();
 
         CStrUtil::addLines(dest, lines);
 
@@ -568,12 +617,12 @@ execCmd(const std::string &cmd)
       }
       else {
         if (! fileName.empty())
-          file_->loadLines(fileName);
+          app_->loadLines(fileName);
       }
 
-      setPos(0, file_->getNumLines() - 1);
+      setPos(0, app_->getNumLines() - 1);
 
-      file_->endGroup();
+      app_->endGroup();
 
       break;
     }
@@ -589,7 +638,7 @@ execCmd(const std::string &cmd)
       parse.readNonSpace(fileName);
 
       if (! fileName.empty())
-        file_->setFileName(fileName);
+        app_->setFileName(fileName);
 
       break;
     }
@@ -615,7 +664,7 @@ execCmd(const std::string &cmd)
 
       // use previous find if empty
       if (find.empty())
-        find = file_->getFindPattern().getPattern();
+        find = app_->getFindPattern().getPattern();
 
       if (parse.isChar(sep))
         parse.skipChar();
@@ -691,7 +740,7 @@ execCmd(const std::string &cmd)
       else if (parse.isChar('$')) {
         parse.skipChar();
 
-        line_num3 = file_->getNumLines();
+        line_num3 = app_->getNumLines();
       }
 
       parse.skipSpace();
@@ -737,9 +786,9 @@ execCmd(const std::string &cmd)
       parse.readNonSpace(fileName);
 
       if (fileName.empty())
-        fileName = file_->getFileName();
+        fileName = app_->getFileName();
 
-      file_->startGroup();
+      app_->startGroup();
 
       if (! fileName.empty() && fileName[0] == '!') {
         CCommand cmd1(fileName.substr(1));
@@ -761,13 +810,13 @@ execCmd(const std::string &cmd)
       }
       else {
         if (! fileName.empty())
-          file_->addFileLines(fileName, line_num1.value());
+          app_->addFileLines(fileName, line_num1.value());
       }
 
       // TODO: fix line pos after read
-      setPos(0, file_->getNumLines() - 1);
+      setPos(0, app_->getNumLines() - 1);
 
-      file_->endGroup();
+      app_->endGroup();
 
       break;
     }
@@ -791,7 +840,7 @@ execCmd(const std::string &cmd)
 
       // use previous find if empty
       if (find.empty())
-        find = file_->getFindPattern().getPattern();
+        find = app_->getFindPattern().getPattern();
 
       if (parse.isChar(sep))
         parse.skipChar();
@@ -849,7 +898,7 @@ execCmd(const std::string &cmd)
       else if (parse.isChar('$')) {
         parse.skipChar();
 
-        line_num3 = file_->getNumLines();
+        line_num3 = app_->getNumLines();
       }
 
       parse.skipSpace();
@@ -890,7 +939,7 @@ execCmd(const std::string &cmd)
       parse.readNonSpace(fileName);
 
       if (fileName.empty())
-        fileName = file_->getFileName();
+        fileName = app_->getFileName();
 
       if (! fileName.empty() && fileName[0] == '!') {
         error("w!: Unimplemented");
@@ -898,7 +947,7 @@ execCmd(const std::string &cmd)
       }
       else {
         if (! fileName.empty())
-          file_->saveLines(fileName);
+          app_->saveLines(fileName);
       }
 
       if (quit)
@@ -997,7 +1046,7 @@ execCmd(const std::string &cmd)
 }
 
 bool
-CEd::
+Ed::
 findNext(const std::string &str, int *line_num, int *char_num)
 {
   CRegExp regexp(str);
@@ -1006,10 +1055,10 @@ findNext(const std::string &str, int *line_num, int *char_num)
 
   uint fline_num, fchar_num;
 
-  uint num_lines = file_->getNumLines();
+  uint num_lines = app_->getNumLines();
 
   if (! getEx() && getRow() >= num_lines) {
-    if (file_->findNext(regexp, 0, 0, num_lines - 1, -1, &fline_num, &fchar_num)) {
+    if (app_->findNext(regexp, 0, 0, num_lines - 1, -1, &fline_num, &fchar_num)) {
       *line_num = fline_num + 1;
       *char_num = fchar_num;
       return true;
@@ -1033,8 +1082,8 @@ findNext(const std::string &str, int *line_num, int *char_num)
     col2 = -1;
   }
 
-  if (file_->findNext(regexp, row1, col1, &fline_num, &fchar_num) ||
-      file_->findNext(regexp, 0, 0, row2, col2, &fline_num, &fchar_num)) {
+  if (app_->findNext(regexp, row1, col1, &fline_num, &fchar_num) ||
+      app_->findNext(regexp, 0, 0, row2, col2, &fline_num, &fchar_num)) {
     *line_num = fline_num + 1;
     *char_num = fchar_num;
     return true;
@@ -1044,7 +1093,7 @@ findNext(const std::string &str, int *line_num, int *char_num)
 }
 
 bool
-CEd::
+Ed::
 findPrev(const std::string &str, int *line_num, int *char_num)
 {
   CRegExp regexp(str);
@@ -1053,10 +1102,10 @@ findPrev(const std::string &str, int *line_num, int *char_num)
 
   uint fline_num, fchar_num;
 
-  uint num_lines = file_->getNumLines();
+  uint num_lines = app_->getNumLines();
 
   if (! getEx() && getRow() == 0) {
-    if (file_->findPrev(regexp, num_lines - 1, -1, 0, 0, &fline_num, &fchar_num)) {
+    if (app_->findPrev(regexp, num_lines - 1, -1, 0, 0, &fline_num, &fchar_num)) {
       *line_num = fline_num + 1;
       *char_num = fchar_num;
       return true;
@@ -1080,8 +1129,8 @@ findPrev(const std::string &str, int *line_num, int *char_num)
     col2 = 0;
   }
 
-  if (file_->findPrev(regexp, row1, col1, &fline_num, &fchar_num) ||
-      file_->findPrev(regexp, num_lines - 1, -1, row2, col2, &fline_num, &fchar_num)) {
+  if (app_->findPrev(regexp, row1, col1, &fline_num, &fchar_num) ||
+      app_->findPrev(regexp, num_lines - 1, -1, row2, col2, &fline_num, &fchar_num)) {
     *line_num = fline_num + 1;
     *char_num = fchar_num;
     return true;
@@ -1091,13 +1140,13 @@ findPrev(const std::string &str, int *line_num, int *char_num)
 }
 
 void
-CEd::
+Ed::
 doSubstitute(int line_num1, int line_num2, const std::string &find,
              const std::string &replace, char mod)
 {
   bool global = (mod == 'g');
 
-  file_->startGroup();
+  app_->startGroup();
 
   CRegExp regexp(find);
 
@@ -1106,60 +1155,60 @@ doSubstitute(int line_num1, int line_num2, const std::string &find,
   for (int i = line_num1; i <= line_num2; ++i) {
     uint fline_num, fchar_num, len;
 
-    if (file_->findNext(regexp, i - 1, 0, i - 1, -1, &fline_num, &fchar_num, &len)) {
+    if (app_->findNext(regexp, i - 1, 0, i - 1, -1, &fline_num, &fchar_num, &len)) {
       int spos = fchar_num;
       int epos = spos + len - 1;
 
-      file_->replace(i - 1, spos, epos, replace);
+      app_->replace(i - 1, spos, epos, replace);
 
       if (global) {
-        while (file_->findNext(regexp, i - 1, epos + 1, i - 1, -1, &fline_num, &fchar_num, &len)) {
+        while (app_->findNext(regexp, i - 1, epos + 1, i - 1, -1, &fline_num, &fchar_num, &len)) {
           int spos1 = fchar_num;
           int epos1 = spos + len - 1;
 
-          file_->replace(i - 1, spos1, epos1, replace);
+          app_->replace(i - 1, spos1, epos1, replace);
         }
       }
     }
   }
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doFindNext(int line_num1, int line_num2, const std::string &find)
 {
   CRegExp regexp(find);
 
   regexp.setCaseSensitive(case_sensitive_);
 
-  file_->findNext(regexp, line_num1 - 1, 0, line_num2 - 1, -1);
+  app_->findNext(regexp, line_num1 - 1, 0, line_num2 - 1, -1);
 }
 
 void
-CEd::
+Ed::
 doFindPrev(int line_num1, int line_num2, const std::string &find)
 {
   CRegExp regexp(find);
 
   regexp.setCaseSensitive(case_sensitive_);
 
-  file_->findPrev(regexp, line_num1 - 1, -1, line_num2 - 1, 0);
+  app_->findPrev(regexp, line_num1 - 1, -1, line_num2 - 1, 0);
 }
 
 void
-CEd::
+Ed::
 doGlob(int line_num1, int line_num2, const std::string &find, const std::string &cmd)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   CRegExp regexp(find);
 
   regexp.setCaseSensitive(case_sensitive_);
 
   for (int i = line_num1; i <= line_num2; ++i) {
-    auto *line = file_->getLine(i - 1);
+    auto *line = app_->getLine(i - 1);
 
     if (! line->findNext(regexp))
       continue;
@@ -1174,109 +1223,109 @@ doGlob(int line_num1, int line_num2, const std::string &find, const std::string 
     }
   }
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doJoin(int line_num1, int line_num2)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   for (int i = line_num1; i < line_num2; ++i)
-    file_->joinLine(line_num1 - 1);
+    app_->joinLine(line_num1 - 1);
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doMove(int line_num1, int line_num2, int line_num3)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   if      (line_num3 < line_num1) {
     for (int i = line_num2; i >= line_num1; --i)
-      file_->moveLine(i - 1, line_num3 - 1);
+      app_->moveLine(i - 1, line_num3 - 1);
   }
   else if (line_num3 > line_num2) {
     for (int i = line_num1; i <= line_num2; ++i)
-      file_->moveLine(line_num1 - 1, line_num3 - 1);
+      app_->moveLine(line_num1 - 1, line_num3 - 1);
   }
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doCopy(int line_num1, int line_num2, int line_num3)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   if      (line_num3 < line_num1) {
     for (int i = line_num2; i >= line_num1; --i)
-      file_->copyLine(line_num2 - 1, line_num3 - 1);
+      app_->copyLine(line_num2 - 1, line_num3 - 1);
   }
   else if (line_num3 > line_num2) {
     for (int i = line_num2; i >= line_num1; --i)
-      file_->copyLine(i - 1, line_num3 - 1);
+      app_->copyLine(i - 1, line_num3 - 1);
   }
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doDelete(int line_num1, int line_num2)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   for (int i = line_num1; i <= line_num2; ++i)
     deleteLine(line_num1 - 1);
 
-  file_->endGroup();
+  app_->endGroup();
 
   setPos(0, line_num1 - 1);
 }
 
 void
-CEd::
+Ed::
 doCopy(int /*line_num1*/, int /*line_num2*/)
 {
 }
 
 void
-CEd::
+Ed::
 doPaste(int /*line_num1*/)
 {
 }
 
 void
-CEd::
+Ed::
 doUndo()
 {
-  file_->undo();
+  app_->undo();
 }
 
 void
-CEd::
+Ed::
 doMark(int i, char c)
 {
-  file_->setMarkPos(std::string(&c, 1), i - 1, 0);
+  app_->setMarkPos(std::string(&c, 1), i - 1, 0);
 }
 
 void
-CEd::
+Ed::
 doExecute(int line_num1, int line_num2, const std::string &cmdStr)
 {
-  file_->startGroup();
+  app_->startGroup();
 
   std::string src;
 
   for (int i = line_num1; i <= line_num2; ++i) {
     if (i > line_num1) src += "\n";
 
-    src += file_->getLine(line_num1 - 1)->getString();
+    src += app_->getLine(line_num1 - 1)->getString();
 
     deleteLine(line_num1 - 1);
   }
@@ -1299,15 +1348,15 @@ doExecute(int line_num1, int line_num2, const std::string &cmdStr)
   for (int l = 0; l < numLines; ++l)
     addLine(line_num1 + l - 1, lines[l]);
 
-  file_->endGroup();
+  app_->endGroup();
 }
 
 void
-CEd::
+Ed::
 doPrint(int line_num1, int line_num2, bool numbered, bool eol)
 {
   for (int i = line_num1; i <= line_num2; ++i) {
-    std::string line = file_->getLine(i - 1)->getString();
+    std::string line = app_->getLine(i - 1)->getString();
 
     std::string str;
 
@@ -1326,57 +1375,59 @@ doPrint(int line_num1, int line_num2, bool numbered, bool eol)
 }
 
 void
-CEd::
+Ed::
 output(const std::string &msg)
 {
   std::cout << msg << std::endl;
 }
 
 void
-CEd::
+Ed::
 error(const std::string &msg)
 {
   std::cerr << msg << std::endl;
 }
 
 void
-CEd::
+Ed::
 addLine(uint row, const std::string &line)
 {
-  file_->addLine(row, line);
+  app_->addLine(row, line);
 }
 
 void
-CEd::
+Ed::
 deleteLine(uint row)
 {
-  file_->deleteLine(row);
+  app_->deleteLine(row);
 }
 
 void
-CEd::
+Ed::
 setPos(uint x, uint y)
 {
-  file_->setPos(x, y);
+  app_->setPos(x, y);
 }
 
 uint
-CEd::
+Ed::
 getRow() const
 {
-  return file_->getRow();
+  return app_->getRow();
 }
 
 uint
-CEd::
+Ed::
 getCol() const
 {
-  return file_->getCol();
+  return app_->getCol();
 }
 
 void
-CEd::
+Ed::
 edNotifyQuit(bool /*force*/)
 {
   quit_ = true;
+}
+
 }

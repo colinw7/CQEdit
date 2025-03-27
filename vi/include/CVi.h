@@ -10,12 +10,15 @@
 #include <cassert>
 #include <optional>
 
-class CVi;
-class CEd;
+namespace CVi {
 
-class CViLastCommand {
+class Ed;
+
+class App;
+
+class LastCommand {
  public:
-  CViLastCommand();
+  LastCommand();
 
   void clear();
 
@@ -23,7 +26,7 @@ class CViLastCommand {
 
   void addKey(char key);
 
-  void exec(CVi *vi);
+  void exec(App *vi);
 
  private:
   std::vector<char> keys_;
@@ -31,33 +34,33 @@ class CViLastCommand {
 
 //---
 
-class CViUndoCmd : public CUndoData {
+class UndoCmd : public CUndoData {
  public:
-  CViUndoCmd(CVi *vi);
+  UndoCmd(App *vi);
 
-  virtual ~CViUndoCmd() { }
+  virtual ~UndoCmd() { }
 
   virtual const char *getName() const = 0;
 
   virtual bool exec(const std::vector<std::string> &argList) = 0;
 
  private:
-  CViUndoCmd(const CViUndoCmd &rhs);
-  CViUndoCmd &operator=(const CViUndoCmd &rhs);
+  UndoCmd(const UndoCmd &rhs);
+  UndoCmd &operator=(const UndoCmd &rhs);
 
   using CUndoData::exec;
 
  protected:
-  CVi *vi_ { nullptr };
+  App *vi_ { nullptr };
 };
 
 //---
 
-class CViAddLineUndoCmd : public CViUndoCmd {
+class AddLineUndoCmd : public UndoCmd {
  public:
-  CViAddLineUndoCmd(CVi *vi);
+  AddLineUndoCmd(App *vi);
 
-  CViAddLineUndoCmd(CVi *vi, int line_num, const std::string &line);
+  AddLineUndoCmd(App *vi, int line_num, const std::string &line);
 
   const char *getName() const override { return "add_line"; }
 
@@ -71,11 +74,11 @@ class CViAddLineUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViDeleteLineUndoCmd : public CViUndoCmd {
+class DeleteLineUndoCmd : public UndoCmd {
  public:
-  CViDeleteLineUndoCmd(CVi *vi);
+  DeleteLineUndoCmd(App *vi);
 
-  CViDeleteLineUndoCmd(CVi *vi, int line_num);
+  DeleteLineUndoCmd(App *vi, int line_num);
 
   const char *getName() const override { return "delete_line"; }
 
@@ -89,11 +92,11 @@ class CViDeleteLineUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViMoveLineUndoCmd : public CViUndoCmd {
+class MoveLineUndoCmd : public UndoCmd {
  public:
-  CViMoveLineUndoCmd(CVi *vi);
+  MoveLineUndoCmd(App *vi);
 
-  CViMoveLineUndoCmd(CVi *vi, int line_num1, int line_num2);
+  MoveLineUndoCmd(App *vi, int line_num1, int line_num2);
 
   const char *getName() const override { return "move_line"; }
 
@@ -107,11 +110,11 @@ class CViMoveLineUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViReplaceUndoCmd : public CViUndoCmd {
+class ReplaceUndoCmd : public UndoCmd {
  public:
-  CViReplaceUndoCmd(CVi *vi);
+  ReplaceUndoCmd(App *vi);
 
-  CViReplaceUndoCmd(CVi *vi, int line_num, int char_num1, int char_num2, const std::string &str);
+  ReplaceUndoCmd(App *vi, int line_num, int char_num1, int char_num2, const std::string &str);
 
   const char *getName() const override { return "replace"; }
 
@@ -127,11 +130,11 @@ class CViReplaceUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViInsertCharUndoCmd : public CViUndoCmd {
+class InsertCharUndoCmd : public UndoCmd {
  public:
-  CViInsertCharUndoCmd(CVi *vi);
+  InsertCharUndoCmd(App *vi);
 
-  CViInsertCharUndoCmd(CVi *vi, int line_num, int char_num, char c);
+  InsertCharUndoCmd(App *vi, int line_num, int char_num, char c);
 
   const char *getName() const override { return "insert_char"; }
 
@@ -146,11 +149,11 @@ class CViInsertCharUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViReplaceCharUndoCmd : public CViUndoCmd {
+class ReplaceCharUndoCmd : public UndoCmd {
  public:
-  CViReplaceCharUndoCmd(CVi *vi);
+  ReplaceCharUndoCmd(App *vi);
 
-  CViReplaceCharUndoCmd(CVi *vi, int line_num, int char_num, char c);
+  ReplaceCharUndoCmd(App *vi, int line_num, int char_num, char c);
 
   const char *getName() const override { return "replace_char"; }
 
@@ -165,11 +168,11 @@ class CViReplaceCharUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViDeleteCharsUndoCmd : public CViUndoCmd {
+class DeleteCharsUndoCmd : public UndoCmd {
  public:
-  CViDeleteCharsUndoCmd(CVi *vi);
+  DeleteCharsUndoCmd(App *vi);
 
-  CViDeleteCharsUndoCmd(CVi *vi, int line_num, int char_num, int num_chars);
+  DeleteCharsUndoCmd(App *vi, int line_num, int char_num, int num_chars);
 
   const char *getName() const override { return "delete_chars"; }
 
@@ -184,11 +187,11 @@ class CViDeleteCharsUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViSplitLineUndoCmd : public CViUndoCmd {
+class SplitLineUndoCmd : public UndoCmd {
  public:
-  CViSplitLineUndoCmd(CVi *vi);
+  SplitLineUndoCmd(App *vi);
 
-  CViSplitLineUndoCmd(CVi *vi, int line_num, int char_num);
+  SplitLineUndoCmd(App *vi, int line_num, int char_num);
 
   const char *getName() const override { return "split_line"; }
 
@@ -202,11 +205,11 @@ class CViSplitLineUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViJoinLineUndoCmd : public CViUndoCmd {
+class JoinLineUndoCmd : public UndoCmd {
  public:
-  CViJoinLineUndoCmd(CVi *vi);
+  JoinLineUndoCmd(App *vi);
 
-  CViJoinLineUndoCmd(CVi *vi, int line_num);
+  JoinLineUndoCmd(App *vi, int line_num);
 
   const char *getName() const override { return "join_line"; }
 
@@ -220,11 +223,11 @@ class CViJoinLineUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViMoveToUndoCmd : public CViUndoCmd {
+class MoveToUndoCmd : public UndoCmd {
  public:
-  CViMoveToUndoCmd(CVi *vi);
+  MoveToUndoCmd(App *vi);
 
-  CViMoveToUndoCmd(CVi *vi, int line_num, int char_num);
+  MoveToUndoCmd(App *vi, int line_num, int char_num);
 
   const char *getName() const override { return "move_to"; }
 
@@ -238,45 +241,48 @@ class CViMoveToUndoCmd : public CViUndoCmd {
 
 //---
 
-class CViCmdLine {
+class CmdLine {
  public:
-  CViCmdLine(CVi *vi) :
+  CmdLine(App *vi) :
    vi_(vi) {
   }
 
-  virtual ~CViCmdLine() { }
+  virtual ~CmdLine() { }
 
-  CVi *vi() const { return vi_; }
+  App *vi() const { return vi_; }
 
   virtual void setVisible(bool /*visible*/) { }
 
   virtual const std::string &getLine() const { return line_; }
-  virtual void setLine(const std::string &line) { line_ = line; }
+  virtual void setLine(const std::string &line);
 
   virtual void cursorEnd() { }
 
   virtual void keyPress(char c);
+  virtual void backspace();
+
+  virtual void updateLine() { }
 
  private:
-  CVi*        vi_ { nullptr };
+  App*        vi_ { nullptr };
   std::string line_;
 };
 
 //---
 
 // need abstract line and file ?
-class CViLine {
+class Line {
  public:
   using const_char_iterator = std::string::const_iterator;
 
-  CViLine();
-  CViLine(const CViLine &line);
+  Line();
+  Line(const Line &line);
 
-  virtual ~CViLine();
+  virtual ~Line();
 
-  CViLine &operator=(const CViLine &line);
+  Line &operator=(const Line &line);
 
-  CViLine *dup() const;
+  Line *dup() const;
 
   // Chars
   virtual void addChars(uint pos, const std::string &str);
@@ -319,10 +325,10 @@ class CViLine {
   virtual void replace(int spos, int epos, const std::string &str);
 
   // TODO: move out of class
-  virtual void split(CViLine *line, uint pos);
+  virtual void split(Line *line, uint pos);
 
   // TODO: move out of class
-  virtual void join(CViLine *line);
+  virtual void join(Line *line);
 
   virtual uint getEnd(bool extraLineChar) const;
 
@@ -340,7 +346,7 @@ class CViLine {
   // print
   virtual void print(std::ostream &os) const;
 
-  friend std::ostream &operator<<(std::ostream &os, const CViLine &line);
+  friend std::ostream &operator<<(std::ostream &os, const Line &line);
 
  private:
   const char *getSubCString(int spos, int epos) const;
@@ -352,16 +358,16 @@ class CViLine {
 
 //---
 
-class CViLines {
+class Lines {
  public:
-  typedef std::vector<CViLine *> LineList;
+  using LineList = std::vector<Line *>;
 
-  typedef LineList::iterator       iterator;
-  typedef LineList::const_iterator const_iterator;
+  using iterator       = LineList::iterator;
+  using const_iterator = LineList::const_iterator;
 
  public:
-  CViLines();
- ~CViLines();
+  Lines();
+ ~Lines();
 
   uint size() const { return uint(lines_.size()); }
 
@@ -369,14 +375,14 @@ class CViLines {
 
   void clear();
 
-  const CViLine *getLine(uint line_num) const;
+  const Line *getLine(uint line_num) const;
 
-  CViLine *getLine(uint line_num);
+  Line *getLine(uint line_num);
 
   const_iterator begin() const { return lines_.begin(); }
   const_iterator end  () const { return lines_.end  (); }
 
-  void addLine(uint line_num, CViLine *line);
+  void addLine(uint line_num, Line *line);
 
   void addLineChar (uint line_num, uint char_num, char c);
   void addLineChars(uint line_num, uint char_num, const std::string &chars);
@@ -403,9 +409,9 @@ class CViLines {
 
 //---
 
-class CViBufferLine {
+class BufferLine {
  public:
-  CViBufferLine(const std::string &line, bool new_line) :
+  BufferLine(const std::string &line, bool new_line) :
    line_(line), new_line_(new_line) {
   }
 
@@ -420,9 +426,9 @@ class CViBufferLine {
 
 //---
 
-class CViBuffer {
+class Buffer {
  public:
-  CViBuffer(char c='\0') : c_(c) { }
+  Buffer(char c='\0') : c_(c) { }
 
   char c() const { return c_; }
 
@@ -430,60 +436,60 @@ class CViBuffer {
 
   uint getNumLines() const { return uint(lines_.size()); }
 
-  CViBufferLine *getLine(uint i) { return lines_[i]; }
+  BufferLine *getLine(uint i) { return lines_[i]; }
 
   void addLine(const std::string &line, bool new_line) {
-    lines_.push_back(new CViBufferLine(line, new_line));
+    lines_.push_back(new BufferLine(line, new_line));
   }
 
-  void addLine(const CViBufferLine &line) {
-    lines_.push_back(new CViBufferLine(line));
+  void addLine(const BufferLine &line) {
+    lines_.push_back(new BufferLine(line));
   }
 
  private:
-  using Lines = std::vector<CViBufferLine *>;
+  using BufferLines = std::vector<BufferLine *>;
 
-  char  c_ { '\0' };
-  Lines lines_;
+  char        c_ { '\0' };
+  BufferLines lines_;
 };
 
 //---
 
-struct CViGroup {
-  using LineList = std::vector<CViBufferLine>;
+struct Group {
+  using LineList = std::vector<BufferLine>;
 
   LineList lines;
 
-  CViGroup() :
+  Group() :
    lines() {
   }
 
   void addLine(const std::string &line, bool newline) {
-    lines.push_back(CViBufferLine(line, newline));
+    lines.push_back(BufferLine(line, newline));
   }
 };
 
 //---
 
-class CViOptions {
+class Options {
  public:
-  CViOptions() : shift_width_(2) { }
+  Options() { }
 
-  virtual ~CViOptions() { }
+  virtual ~Options() { }
 
-  virtual uint getShiftWidth() const { return shift_width_; }
+  virtual uint getShiftWidth() const { return shiftWidth_; }
 
  private:
-  uint shift_width_ { 2 };
+  uint shiftWidth_ { 2 };
 };
 
 //---
 
-class CViInterface {
+class Interface {
  public:
-  CViInterface() { }
+  Interface() { }
 
-  virtual ~CViInterface() { }
+  virtual ~Interface() { }
 
   virtual void displayRegisters() const { }
   virtual void displayMarks() const { }
@@ -516,7 +522,7 @@ class CViInterface {
 
 //---
 
-struct CViKeyData {
+struct KeyData {
   enum class KeyCode {
     NONE      = 0,
     ESCAPE    = 0x01000000,
@@ -569,29 +575,33 @@ struct CViKeyData {
   bool        is_meta    { false };
 };
 
-class CVi {
+class App {
  public:
-  using const_line_iterator = CViLines::const_iterator;
+  using const_line_iterator = Lines::const_iterator;
 
  public:
-  CVi();
+  App();
 
-  virtual ~CVi();
+  virtual ~App();
 
   //---
 
-  void setInterface(CViInterface *iface);
+  void setInterface(Interface *iface);
 
   //---
 
   void init();
 
-  virtual CViCmdLine *createCmdLine() const;
+  virtual CmdLine *createCmdLine() const;
 
   //---
 
   bool getDebug() const { return debug_; }
   void setDebug(bool b) { debug_ = b; }
+
+  //---
+
+  uint count() const { return count_; }
 
   //---
 
@@ -607,6 +617,9 @@ class CVi {
   bool getOverwriteMode() const { return overwriteMode_; }
   void setOverwriteMode(bool value) { overwriteMode_ = value; }
 
+  bool getListMode() const { return listMode_; }
+  void setListMode(bool value) { listMode_ = value; }
+
   bool getVisual() const { return visual_; }
   void setVisual(bool value) { visual_ = value; }
 
@@ -615,18 +628,18 @@ class CVi {
 
   std::string getCmdLineString() const;
 
-  void processChar(const CViKeyData &keyData);
+  void processChar(const KeyData &keyData);
   void processChar(char key);
 
-  void processInsertChar (const CViKeyData &key);
-  void processCommandChar(const CViKeyData &key);
-  void processNormalChar (const CViKeyData &key);
-  void processControlChar(const CViKeyData &key);
-  void processCmdLineChar(const CViKeyData &key);
+  void processInsertChar (const KeyData &key);
+  void processCommandChar(const KeyData &key);
+  void processNormalChar (const KeyData &key);
+  void processControlChar(const KeyData &key);
+  void processCmdLineChar(const KeyData &key);
 
   void normalInsertChar(char key);
 
-  bool processMoveChar(const CViKeyData &keyData, int x, int y);
+  bool processMoveChar(const KeyData &keyData, int x, int y);
 
   bool doFindChar(char c, uint count, bool forward, bool till);
 
@@ -638,35 +651,35 @@ class CVi {
   void getPos(uint *x, uint *y) const;
   void setPos(uint x, uint y);
 
-  const CViLines &lines() const { return lines_; }
+  const Lines &lines() const { return lines_; }
 
   const_line_iterator beginLine() const { return lines_.begin(); }
   const_line_iterator endLine  () const { return lines_.end  (); }
 
   uint getNumLines() const;
 
-  const CViLine *getLine(uint line_num) const { return lines_.getLine(line_num); }
-  CViLine *getLine(uint line_num) { return lines_.getLine(line_num); }
+  const Line *getLine(uint line_num) const { return lines_.getLine(line_num); }
+  Line *getLine(uint line_num) { return lines_.getLine(line_num); }
 
  private:
-  friend class CEd;
+  friend class Ed;
 
-  friend class CViUndoCmd;
-  friend class CViAddLineUndoCmd;
-  friend class CViDeleteLineUndoCmd;
-  friend class CViMoveLineUndoCmd;
-  friend class CViReplaceUndoCmd;
-  friend class CViInsertCharUndoCmd;
-  friend class CViReplaceCharUndoCmd;
-  friend class CViDeleteCharsUndoCmd;
-  friend class CViSplitLineUndoCmd;
-  friend class CViJoinLineUndoCmd;
-  friend class CViMoveToUndoCmd;
+  friend class UndoCmd;
+  friend class AddLineUndoCmd;
+  friend class DeleteLineUndoCmd;
+  friend class MoveLineUndoCmd;
+  friend class ReplaceUndoCmd;
+  friend class InsertCharUndoCmd;
+  friend class ReplaceCharUndoCmd;
+  friend class DeleteCharsUndoCmd;
+  friend class SplitLineUndoCmd;
+  friend class JoinLineUndoCmd;
+  friend class MoveToUndoCmd;
 
   const std::string &getFileName() const { return filename_; }
   void setFileName(const std::string &filename);
 
-  CEd *getEd() const { return ed_; }
+  Ed *getEd() const { return ed_; }
 
   uint getRow() const;
   uint getCol() const;
@@ -811,7 +824,7 @@ class CVi {
   void prevSentence();
   void prevSentence(uint *line_num, uint *char_num);
 
-  bool isSentenceEnd(const CViLine *line, uint col, uint *num) const;
+  bool isSentenceEnd(const Line *line, uint col, uint *num) const;
 
   void nextParagraph();
   void nextParagraph(uint *row, uint *col);
@@ -823,9 +836,9 @@ class CVi {
   void prevSection();
   void prevSection(uint *line_num, uint *char_num);
 
-  bool isSection(const CViLine *line, uint col, uint *num) const;
+  bool isSection(const Line *line, uint col, uint *num) const;
 
-  bool isBlank(const CViLine *line) const;
+  bool isBlank(const Line *line) const;
 
   bool nextLine(uint *line_num, uint *char_num);
   bool prevLine(uint *line_num, uint *char_num);
@@ -883,14 +896,14 @@ class CVi {
   bool findPrevChar(uint line_num, int char_num, char c, bool multiline);
   bool findPrevChar(uint line_num, int char_num, const std::string &str, bool multiline);
 
-  bool findNext(const CViLine *line, const std::string &pattern, int char_num1,
+  bool findNext(const Line *line, const std::string &pattern, int char_num1,
                 int char_num2, uint *char_num) const;
-  bool findNext(const CViLine *line, const CRegExp &pattern, int char_num1,
+  bool findNext(const Line *line, const CRegExp &pattern, int char_num1,
                 int char_num2, uint *spos, uint *epos) const;
 
-  bool findPrev(const CViLine *line, const std::string &pattern, int char_num1,
+  bool findPrev(const Line *line, const std::string &pattern, int char_num1,
                 int char_num2, uint *char_num) const;
-  bool findPrev(const CViLine *line, const CRegExp &pattern, int char_num1,
+  bool findPrev(const Line *line, const CRegExp &pattern, int char_num1,
                 int char_num2, uint *spos, uint *epos) const;
 
   bool replace(uint line_num, uint char_num, char c);
@@ -910,7 +923,7 @@ class CVi {
 
   //---
 
-  void addUndo(CViUndoCmd *cmd);
+  void addUndo(UndoCmd *cmd);
 
   void undo();
   void redo();
@@ -928,7 +941,7 @@ class CVi {
 
   uint getLineEnd(uint line_num) const;
 
-  CViBuffer &getBuffer(char c);
+  Buffer &getBuffer(char c);
 
   void getSelectStart(int *row, int *col) const;
   void getSelectEnd(int *row, int *col) const;
@@ -936,7 +949,7 @@ class CVi {
   void clearSelection();
   void rangeSelect(int row1, int col1, int row2, int col2, bool select);
 
-  void subAddLine(uint line_num, CViLine *line);
+  void subAddLine(uint line_num, Line *line);
   void subAddChars(uint line_num, uint char_num, const std::string &chars);
   void subMoveLine(uint line_num1, int line_num2);
 
@@ -952,7 +965,9 @@ class CVi {
 
   bool runEdCmd(const std::string &cmd, bool &quitted);
 
-  CViOptions &getOptions() { return options_; }
+  Options &getOptions() { return options_; }
+
+  void setNameValue(const std::string &name, const std::string &value);
 
  private:
   struct MarkPos {
@@ -986,20 +1001,20 @@ class CVi {
     }
   };
 
-  using CmdLineP   = std::unique_ptr<CViCmdLine>;
-  using GroupList  = std::vector<CViGroup *>;
+  using CmdLineP   = std::unique_ptr<CmdLine>;
+  using GroupList  = std::vector<Group *>;
   using MarkPosMap = std::map<std::string, MarkPos>;
-  using Buffers    = std::map<char, CViBuffer>;
-  using Lines      = std::vector<CViLine>;
+  using Buffers    = std::map<char, Buffer>;
   using OptRegExp  = std::optional<CRegExp>;
+  using NameValues = std::map<std::string, std::string>;
 
-  CViInterface *iface_ { nullptr };
+  Interface *iface_ { nullptr };
 
   // data
   std::string filename_;
-  CViLines    lines_;
+  Lines       lines_;
 
-  CEd*  ed_ { nullptr };
+  Ed*   ed_ { nullptr };
   CUndo undo_;
 
   // cursor
@@ -1010,6 +1025,7 @@ class CVi {
   uint count_         { 0 };
   bool insertMode_    { false };
   bool overwriteMode_ { false };
+  bool listMode_      { false };
   bool cmdLineMode_   { false };
   bool extraLineChar_ { false };
   bool visual_        { false };
@@ -1020,8 +1036,8 @@ class CVi {
   bool debug_ { false };
 
   // command line
-  CmdLineP       cmdLine_;
-  CViLastCommand lastCommand_;
+  CmdLineP    cmdLine_;
+  LastCommand lastCommand_;
 
   // find
   char      findChar_    { '\0' };
@@ -1037,10 +1053,14 @@ class CVi {
   Buffers    buffers_;
 
   // options
-  CViOptions options_;
+  Options options_;
 
   // selection
   Selection selection_;
+
+  NameValues nameValues_;
 };
+
+}
 
 #endif

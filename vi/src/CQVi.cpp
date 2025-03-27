@@ -9,22 +9,24 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-CQViApp::
-CQViApp(QWidget *parent) :
+namespace CQVi {
+
+Widget::
+Widget(QWidget *parent) :
  QWidget(parent)
 {
 }
 
 void
-CQViApp::
+Widget::
 init()
 {
   setObjectName("app");
 
-//initFont(QFont("Courier", 18));
-  initFont(QFont("Inconsolata", 18));
+//setFont(QFont("Courier", 18));
+  setFont(QFont("Inconsolata", 18));
 
-  vi_ = std::make_unique<CQVi>(this);
+  vi_ = std::make_unique<App>(this);
 
   vi_->init();
 
@@ -34,7 +36,7 @@ init()
   auto *grid = new QGridLayout;
   grid->setMargin(2); grid->setSpacing(2);
 
-  canvas_  = new CQViCanvas(this);
+  canvas_  = new Canvas(this);
   hscroll_ = new QScrollBar(Qt::Horizontal);
   vscroll_ = new QScrollBar(Qt::Vertical  );
 
@@ -55,41 +57,45 @@ init()
     cmdLine_->setVisible(false);
   }
 
-  status_ = new CQViStatus(this);
+  status_ = new Status(this);
 
   layout->addWidget(status_);
 }
 
 void
-CQViApp::
-initFont(const QFont &font)
+Widget::
+setFont(const QFont &font)
 {
-  setFont(font);
+  fontData_.font = font;
 
-  QFontMetrics fm(this->font());
+  QWidget::setFont(fontData_.font);
 
-  char_rect_   = fm.boundingRect("X");
-  char_width_  = fm.horizontalAdvance("X");
-  char_ascent_ = fm.ascent();
-  char_height_ = fm.ascent() + fm.descent();
+  QFontMetrics fm(fontData_.font);
+
+  fontData_.char_rect   = fm.boundingRect("X");
+  fontData_.char_width  = fm.horizontalAdvance("X");
+  fontData_.char_ascent = fm.ascent();
+  fontData_.char_height = fm.ascent() + fm.descent();
+
+  update();
 }
 
 void
-CQViApp::
+Widget::
 hscrollSlot(int)
 {
   update();
 }
 
 void
-CQViApp::
+Widget::
 vscrollSlot(int)
 {
   update();
 }
 
 void
-CQViApp::
+Widget::
 loadFile(const std::string &filename)
 {
   setWindowTitle(filename.c_str());
@@ -98,22 +104,22 @@ loadFile(const std::string &filename)
 }
 
 void
-CQViApp::
+Widget::
 paintEvent(QPaintEvent *)
 {
 }
 
 void
-CQViApp::
+Widget::
 draw(QPainter *painter)
 {
   int h = canvas_->height();
 
   painter->setFont(font());
 
-  painter->fillRect(rect(), QBrush(QColor(0, 0, 0)));
+  painter->fillRect(rect(), QBrush(bg()));
 
-  painter->setPen(QColor(255, 255, 255));
+  painter->setPen(fg());
 
   x_offset_ = hscroll_->value();
   y_offset_ = vscroll_->value();
@@ -132,7 +138,7 @@ draw(QPainter *painter)
 
   //---
 
-  auto drawLine = [&](CViLine *line) {
+  auto drawLine = [&](CVi::Line *line) {
     uint ix1 = 0;
     uint ix2 = 0;
 
@@ -147,15 +153,37 @@ draw(QPainter *painter)
       uint n = 1;
 
       if (! isspace(c))
-        painter->drawText(x, y + char_ascent_, QString(c));
-      else if (c == '\t')
-        n = 8 - (ix2 % 8);
+        painter->drawText(x, y + fontData_.char_ascent, QString(c));
+      else if (c == '\t') {
+        if (vi_->getListMode()) {
+          painter->setPen(emptyFg());
+          painter->drawText(x, y + fontData_.char_ascent, "^I");
+          painter->setPen(fg());
 
-      x += n*char_width_;
+          n = 2;
+        }
+        else
+          n = 8 - (ix2 % 8);
+      }
+
+      x += n*fontData_.char_width;
 
       ix2 += n;
 
       ++ix1;
+    }
+
+    if (ix1 == cx && iy == cy) {
+      cc = (vi_->getListMode() ? '$' : ' ');
+      cp = ix2;
+    }
+
+    if (vi_->getListMode()) {
+      painter->setPen(emptyFg());
+      painter->drawText(x, y + fontData_.char_ascent, QString("$"));
+      painter->setPen(fg());
+
+      ++ix2;
     }
 
     maxLineLength_ = std::max(ix2, maxLineLength_);
@@ -170,30 +198,42 @@ draw(QPainter *painter)
     if (y > h)
       break;
 
-    if (y + char_height_ >= 0) {
-      yLineMap_[y + char_height_] = iy;
+    if (y + fontData_.char_height >= 0) {
+      yLineMap_[y + fontData_.char_height] = iy;
 
       drawLine(line);
     }
 
-    y += char_height_;
+    y += fontData_.char_height;
 
     ++iy;
   }
 
-  y2_ = y1_ + vi_->getNumLines()*char_height_;
+  y2_ = y1_ + vi_->getNumLines()*fontData_.char_height;
 
   //---
 
   // draw cursor
-  int xc = cp*char_width_  - x_offset_;
-  int yc = cy*char_height_ - y_offset_;
+  int xc = cp*fontData_.char_width  - x_offset_;
+  int yc = cy*fontData_.char_height - y_offset_;
 
-  painter->fillRect(QRect(xc, yc, char_width_, char_height_), QBrush(QColor(255, 255, 0)));
+  painter->fillRect(QRect(xc, yc, fontData_.char_width, fontData_.char_height),
+                    QBrush(cursorBg()));
 
-  painter->setPen(QColor(0, 0, 0));
+  painter->setPen(cursorFg());
 
-  painter->drawText(xc, yc + char_ascent_, QString(cc));
+  painter->drawText(xc, yc + fontData_.char_ascent, QString(cc));
+
+  //---
+
+  // draw empty lines
+  painter->setPen(emptyFg());
+
+  while (y < h) {
+    painter->drawText(0, y + fontData_.char_ascent, "~");
+
+    y += fontData_.char_height;
+  }
 
   //---
 
@@ -201,76 +241,89 @@ draw(QPainter *painter)
 }
 
 void
-CQViApp::
+Widget::
 updateStatus()
 {
   uint cx, cy;
 
   vi_->getPos(&cx, &cy);
 
-  QString text = QString("Row %1, Col %2").arg(cy + 1).arg(cx + 1);
+  auto text = QString("Row %1, Col %2").arg(cy + 1).arg(cx + 1);
+
+  if (vi_->getInsertMode())
+    text += "  INS";
+
+  if (vi_->count() > 1)
+    text += "  #" + QString::number(vi_->count());
 
   status_->setText(text);
 }
 
 void
-CQViApp::
+Widget::
 resizeEvent(QResizeEvent *)
 {
   updateScrollbars();
 }
 
 int
-CQViApp::
+Widget::
 pageTop() const
 {
-  return y_offset_/char_height_;
+  return y_offset_/fontData_.char_height;
 }
 
 int
-CQViApp::
+Widget::
 pageBottom() const
 {
-  return pageTop() + pageLength();
+  int pos = pageTop() + pageLength();
+
+  int nl = vi_->getNumLines();
+
+  if (pos >= nl)
+    pos = nl - 1;
+
+  return pos;
 }
 
 int
-CQViApp::
+Widget::
 pageLength() const
 {
-  return canvas_->height()/char_height_;
+  return canvas_->height()/fontData_.char_height;
 }
 
 void
-CQViApp::
+Widget::
 scrollTo(uint x, uint y, bool force)
 {
-  int x1 = x*char_width_  - x_offset_;
-  int y1 = y*char_height_ - y_offset_;
+  int x1 = x*fontData_.char_width  - x_offset_;
+  int y1 = y*fontData_.char_height - y_offset_;
 
   int w = canvas_->width ();
   int h = canvas_->height();
 
   if      (x1 < 0 || force)
-    hscroll_->setValue(x*char_width_);
+    hscroll_->setValue(x*fontData_.char_width);
   else if (x1 >= w)
-    hscroll_->setValue((x + 1)*char_width_ - w);
+    hscroll_->setValue((x + 1)*fontData_.char_width - w);
 
   if      (y1 < 0 || force)
-    vscroll_->setValue(y*char_height_);
+    vscroll_->setValue(y*fontData_.char_height);
   else if (y1 >= h)
-    vscroll_->setValue((y + 1)*char_height_ - h);
+    vscroll_->setValue((y + 1)*fontData_.char_height - h);
 }
 
 void
-CQViApp::
+Widget::
 updateScrollbars()
 {
-  int w = width ();
-  int h = height();
+  int w = canvas_->width ();
+  int h = canvas_->height();
 
-  int aw = maxLineLength_*char_width_;
-  int ah = vi_->getNumLines()*char_height_;
+  int aw = maxLineLength_*fontData_.char_width;
+  int ah = vi_->getNumLines()*fontData_.char_height;
 
   int hs = std::min(w, aw);
   int vs = std::min(h, ah);
@@ -278,47 +331,37 @@ updateScrollbars()
   hscroll_->setMinimum(0);
   hscroll_->setMaximum(aw - hs);
   hscroll_->setPageStep(hs);
-  hscroll_->setSingleStep(char_width_);
+  hscroll_->setSingleStep(fontData_.char_width);
 
   vscroll_->setMinimum(0);
   vscroll_->setMaximum(ah - vs);
   vscroll_->setPageStep(vs);
-  vscroll_->setSingleStep(char_height_);
+  vscroll_->setSingleStep(fontData_.char_height);
 }
 
 void
-CQViApp::
+Widget::
 mousePressEvent(QMouseEvent *e)
 {
   press_pos_ = e->pos();
 
-  for (const auto &yLine : yLineMap_) {
-    if (press_pos_.y() < yLine.first) {
-      int iy = yLine.second;
+  int ix, iy;
 
-      auto *line = vi_->getLine(iy);
+  if (mouseToPos(press_pos_, ix, iy)) {
+    vi_->setPos(ix, iy);
 
-      auto ix = (x_offset_ + press_pos_.x())/char_width_;
-
-      ix = std::min(ix, int(line->getLength()));
-
-      vi_->setPos(ix, iy);
-
-      update();
-
-      break;
-    }
+    update();
   }
 }
 
 void
-CQViApp::
+Widget::
 mouseReleaseEvent(QMouseEvent *)
 {
 }
 
 void
-CQViApp::
+Widget::
 mouseMoveEvent(QMouseEvent *e)
 {
   press_pos_ = e->pos();
@@ -327,14 +370,23 @@ mouseMoveEvent(QMouseEvent *e)
 }
 
 void
-CQViApp::
-wheelEvent(QWheelEvent *)
+Widget::
+wheelEvent(QWheelEvent *e)
 {
-  update();
+  auto delta = e->angleDelta().y();
+
+  int value = vscroll_->value();
+
+  if      (delta < 0)
+    value = std::min(value + fontData_.char_height, vscroll_->maximum());
+  else if (delta > 0)
+    value = std::max(value - fontData_.char_height, vscroll_->minimum());
+
+  vscroll_->setValue(value);
 }
 
 void
-CQViApp::
+Widget::
 keyPressEvent(QKeyEvent *e)
 {
 #if 0
@@ -343,7 +395,7 @@ keyPressEvent(QKeyEvent *e)
   if (uint(keyType) <= 0xFF)
     vi_->processChar(keyType);
 #else
-  CViKeyData keyData;
+  CVi::KeyData keyData;
 
   keyData.key  = e->key();
   keyData.text = e->text().toStdString();
@@ -355,49 +407,49 @@ keyPressEvent(QKeyEvent *e)
       keyData.key = 'a' + (keyData.key - Qt::Key_A);
   }
 
-  if      (keyData.key == Qt::Key_Escape   ) keyData.key = int(CViKeyData::KeyCode::ESCAPE);
-  else if (keyData.key == Qt::Key_Tab      ) keyData.key = int(CViKeyData::KeyCode::TAB);
-  else if (keyData.key == Qt::Key_Backtab  ) keyData.key = int(CViKeyData::KeyCode::BACKTAB);
-  else if (keyData.key == Qt::Key_Backspace) keyData.key = int(CViKeyData::KeyCode::BACKSPACE);
-  else if (keyData.key == Qt::Key_Return   ) keyData.key = int(CViKeyData::KeyCode::RETURN);
-  else if (keyData.key == Qt::Key_Enter    ) keyData.key = int(CViKeyData::KeyCode::ENTER);
-  else if (keyData.key == Qt::Key_Insert   ) keyData.key = int(CViKeyData::KeyCode::INSERT);
-  else if (keyData.key == Qt::Key_Delete   ) keyData.key = int(CViKeyData::KeyCode::DELETE);
-  else if (keyData.key == Qt::Key_Pause    ) keyData.key = int(CViKeyData::KeyCode::PAUSE);
-  else if (keyData.key == Qt::Key_Print    ) keyData.key = int(CViKeyData::KeyCode::PRINT);
-  else if (keyData.key == Qt::Key_SysReq   ) keyData.key = int(CViKeyData::KeyCode::SYS_REQ);
-  else if (keyData.key == Qt::Key_Clear    ) keyData.key = int(CViKeyData::KeyCode::CLEAR);
-  else if (keyData.key == Qt::Key_Home     ) keyData.key = int(CViKeyData::KeyCode::HOME);
-  else if (keyData.key == Qt::Key_End      ) keyData.key = int(CViKeyData::KeyCode::END);
-  else if (keyData.key == Qt::Key_Left     ) keyData.key = int(CViKeyData::KeyCode::LEFT);
-  else if (keyData.key == Qt::Key_Up       ) keyData.key = int(CViKeyData::KeyCode::UP);
-  else if (keyData.key == Qt::Key_Right    ) keyData.key = int(CViKeyData::KeyCode::RIGHT);
-  else if (keyData.key == Qt::Key_Down     ) keyData.key = int(CViKeyData::KeyCode::DOWN);
-  else if (keyData.key == Qt::Key_PageUp   ) keyData.key = int(CViKeyData::KeyCode::PAGE_UP);
-  else if (keyData.key == Qt::Key_PageDown ) keyData.key = int(CViKeyData::KeyCode::PAGE_DOWN);
+  if      (keyData.key == Qt::Key_Escape   ) keyData.key = int(CVi::KeyData::KeyCode::ESCAPE);
+  else if (keyData.key == Qt::Key_Tab      ) keyData.key = int(CVi::KeyData::KeyCode::TAB);
+  else if (keyData.key == Qt::Key_Backtab  ) keyData.key = int(CVi::KeyData::KeyCode::BACKTAB);
+  else if (keyData.key == Qt::Key_Backspace) keyData.key = int(CVi::KeyData::KeyCode::BACKSPACE);
+  else if (keyData.key == Qt::Key_Return   ) keyData.key = int(CVi::KeyData::KeyCode::RETURN);
+  else if (keyData.key == Qt::Key_Enter    ) keyData.key = int(CVi::KeyData::KeyCode::ENTER);
+  else if (keyData.key == Qt::Key_Insert   ) keyData.key = int(CVi::KeyData::KeyCode::INSERT);
+  else if (keyData.key == Qt::Key_Delete   ) keyData.key = int(CVi::KeyData::KeyCode::DELETE);
+  else if (keyData.key == Qt::Key_Pause    ) keyData.key = int(CVi::KeyData::KeyCode::PAUSE);
+  else if (keyData.key == Qt::Key_Print    ) keyData.key = int(CVi::KeyData::KeyCode::PRINT);
+  else if (keyData.key == Qt::Key_SysReq   ) keyData.key = int(CVi::KeyData::KeyCode::SYS_REQ);
+  else if (keyData.key == Qt::Key_Clear    ) keyData.key = int(CVi::KeyData::KeyCode::CLEAR);
+  else if (keyData.key == Qt::Key_Home     ) keyData.key = int(CVi::KeyData::KeyCode::HOME);
+  else if (keyData.key == Qt::Key_End      ) keyData.key = int(CVi::KeyData::KeyCode::END);
+  else if (keyData.key == Qt::Key_Left     ) keyData.key = int(CVi::KeyData::KeyCode::LEFT);
+  else if (keyData.key == Qt::Key_Up       ) keyData.key = int(CVi::KeyData::KeyCode::UP);
+  else if (keyData.key == Qt::Key_Right    ) keyData.key = int(CVi::KeyData::KeyCode::RIGHT);
+  else if (keyData.key == Qt::Key_Down     ) keyData.key = int(CVi::KeyData::KeyCode::DOWN);
+  else if (keyData.key == Qt::Key_PageUp   ) keyData.key = int(CVi::KeyData::KeyCode::PAGE_UP);
+  else if (keyData.key == Qt::Key_PageDown ) keyData.key = int(CVi::KeyData::KeyCode::PAGE_DOWN);
 
-  else if (keyData.key == Qt::Key_Shift  ) keyData.key = int(CViKeyData::KeyCode::SHIFT);
-  else if (keyData.key == Qt::Key_Control) keyData.key = int(CViKeyData::KeyCode::CONTROL);
-  else if (keyData.key == Qt::Key_Meta   ) keyData.key = int(CViKeyData::KeyCode::META);
-  else if (keyData.key == Qt::Key_Alt    ) keyData.key = int(CViKeyData::KeyCode::ALT);
-//else if (keyData.key == Qt::Key_Super  ) keyData.key = int(CViKeyData::KeyCode::SUPER);
-//else if (keyData.key == Qt::Key_Hyper  ) keyData.key = int(CViKeyData::KeyCode::HYPER);
+  else if (keyData.key == Qt::Key_Shift  ) keyData.key = int(CVi::KeyData::KeyCode::SHIFT);
+  else if (keyData.key == Qt::Key_Control) keyData.key = int(CVi::KeyData::KeyCode::CONTROL);
+  else if (keyData.key == Qt::Key_Meta   ) keyData.key = int(CVi::KeyData::KeyCode::META);
+  else if (keyData.key == Qt::Key_Alt    ) keyData.key = int(CVi::KeyData::KeyCode::ALT);
+//else if (keyData.key == Qt::Key_Super  ) keyData.key = int(CVi::KeyData::KeyCode::SUPER);
+//else if (keyData.key == Qt::Key_Hyper  ) keyData.key = int(CVi::KeyData::KeyCode::HYPER);
 
-  else if (keyData.key == Qt::Key_CapsLock) keyData.key = int(CViKeyData::KeyCode::CAPS_LOCK);
-  else if (keyData.key == Qt::Key_NumLock ) keyData.key = int(CViKeyData::KeyCode::NUM_LOCK);
+  else if (keyData.key == Qt::Key_CapsLock) keyData.key = int(CVi::KeyData::KeyCode::CAPS_LOCK);
+  else if (keyData.key == Qt::Key_NumLock ) keyData.key = int(CVi::KeyData::KeyCode::NUM_LOCK);
 
-  else if (keyData.key == Qt::Key_F1 ) keyData.key = int(CViKeyData::KeyCode::F1);
-  else if (keyData.key == Qt::Key_F2 ) keyData.key = int(CViKeyData::KeyCode::F2);
-  else if (keyData.key == Qt::Key_F3 ) keyData.key = int(CViKeyData::KeyCode::F3);
-  else if (keyData.key == Qt::Key_F4 ) keyData.key = int(CViKeyData::KeyCode::F4);
-  else if (keyData.key == Qt::Key_F5 ) keyData.key = int(CViKeyData::KeyCode::F5);
-  else if (keyData.key == Qt::Key_F6 ) keyData.key = int(CViKeyData::KeyCode::F6);
-  else if (keyData.key == Qt::Key_F7 ) keyData.key = int(CViKeyData::KeyCode::F7);
-  else if (keyData.key == Qt::Key_F8 ) keyData.key = int(CViKeyData::KeyCode::F8);
-  else if (keyData.key == Qt::Key_F9 ) keyData.key = int(CViKeyData::KeyCode::F9);
-  else if (keyData.key == Qt::Key_F10) keyData.key = int(CViKeyData::KeyCode::F10);
-  else if (keyData.key == Qt::Key_F11) keyData.key = int(CViKeyData::KeyCode::F11);
-  else if (keyData.key == Qt::Key_F12) keyData.key = int(CViKeyData::KeyCode::F11);
+  else if (keyData.key == Qt::Key_F1 ) keyData.key = int(CVi::KeyData::KeyCode::F1);
+  else if (keyData.key == Qt::Key_F2 ) keyData.key = int(CVi::KeyData::KeyCode::F2);
+  else if (keyData.key == Qt::Key_F3 ) keyData.key = int(CVi::KeyData::KeyCode::F3);
+  else if (keyData.key == Qt::Key_F4 ) keyData.key = int(CVi::KeyData::KeyCode::F4);
+  else if (keyData.key == Qt::Key_F5 ) keyData.key = int(CVi::KeyData::KeyCode::F5);
+  else if (keyData.key == Qt::Key_F6 ) keyData.key = int(CVi::KeyData::KeyCode::F6);
+  else if (keyData.key == Qt::Key_F7 ) keyData.key = int(CVi::KeyData::KeyCode::F7);
+  else if (keyData.key == Qt::Key_F8 ) keyData.key = int(CVi::KeyData::KeyCode::F8);
+  else if (keyData.key == Qt::Key_F9 ) keyData.key = int(CVi::KeyData::KeyCode::F9);
+  else if (keyData.key == Qt::Key_F10) keyData.key = int(CVi::KeyData::KeyCode::F10);
+  else if (keyData.key == Qt::Key_F11) keyData.key = int(CVi::KeyData::KeyCode::F11);
+  else if (keyData.key == Qt::Key_F12) keyData.key = int(CVi::KeyData::KeyCode::F11);
 
   keyData.is_shift   = (e->modifiers() & Qt::ShiftModifier  );
   keyData.is_control = (e->modifiers() & Qt::ControlModifier);
@@ -411,38 +463,85 @@ keyPressEvent(QKeyEvent *e)
 }
 
 QSize
-CQViApp::
+Widget::
 sizeHint() const
 {
   auto s1 = canvas_->sizeHint();
   auto s2 = status_->sizeHint();
 
-  return QSize(s1.width() + vscroll_->width(), s1.height() + s2.height() + hscroll_->height() + 4);
+  return QSize(s1.width () +               vscroll_->width (),
+               s1.height() + s2.height() + hscroll_->height() + 4);
 }
 
 QSize
-CQViApp::
+Widget::
 canvasSizeHint() const
 {
-  return QSize(100*char_width_, 60*char_height_);
+  return QSize(100*fontData_.char_width, 60*fontData_.char_height);
+}
+
+bool
+Widget::
+mouseToPos(const QPoint &pos, int &ix, int &iy) const
+{
+  ix = 0;
+  iy = -1;
+
+  for (const auto &yLine : yLineMap_) {
+    if (pos.y() < yLine.first) {
+      iy = yLine.second;
+      break;
+    }
+  }
+
+  if (iy < 0) {
+    iy = 0;
+    return false;
+  }
+
+  auto *line = vi_->getLine(iy);
+
+  int x1 = -x_offset_;
+
+  for (const auto &c : line->chars()) {
+    uint n = 1;
+
+    if (c == '\t') {
+      if (vi_->getListMode())
+        n = 2;
+      else
+        n = 8 - (ix % 8);
+    }
+
+    int x2 = x1 + n*fontData_.char_width;
+
+    if (pos.x() >= x1 && pos.x() < x2)
+      break;
+
+    ++ix;
+
+    x1 = x2;
+  }
+
+  return true;
 }
 
 //------
 
-CQVi::
-CQVi(CQViApp *app) :
- CVi(), app_(app)
+App::
+App(Widget *app) :
+ CVi::App(), app_(app)
 {
   setObjectName("vi");
 
-  setInterface(new CQViInterface(this));
+  setInterface(new Interface(this));
 }
 
-CViCmdLine *
-CQVi::
+CVi::CmdLine *
+App::
 createCmdLine() const
 {
-  auto *cmdLine = new CQViCmdLine(const_cast<CQViApp *>(app_));
+  auto *cmdLine = new CmdLine(const_cast<Widget *>(app_));
 
   app_->setCmdLine(cmdLine);
 
@@ -450,28 +549,28 @@ createCmdLine() const
 }
 
 int
-CQVi::
+App::
 getPageTop() const
 {
   return app_->pageTop();
 }
 
 int
-CQVi::
+App::
 getPageBottom() const
 {
   return app_->pageBottom();
 }
 
 int
-CQVi::
+App::
 getPageLength() const
 {
   return app_->pageLength();
 }
 
 void
-CQVi::
+App::
 scrollTop()
 {
   uint cx, cy;
@@ -481,7 +580,7 @@ scrollTop()
 }
 
 void
-CQVi::
+App::
 scrollMiddle()
 {
   uint cx, cy;
@@ -491,7 +590,7 @@ scrollMiddle()
 }
 
 void
-CQVi::
+App::
 scrollBottom()
 {
   uint cx, cy;
@@ -501,7 +600,7 @@ scrollBottom()
 }
 
 void
-CQVi::
+App::
 scrollCursor()
 {
   uint cx, cy;
@@ -510,10 +609,17 @@ scrollCursor()
   app_->scrollTo(cx, cy);
 }
 
+void
+App::
+update()
+{
+  app_->update();
+}
+
 //------
 
-CQViCanvas::
-CQViCanvas(CQViApp *app) :
+Canvas::
+Canvas(Widget *app) :
  QWidget(app), app_(app)
 {
   setObjectName("canvas");
@@ -522,7 +628,7 @@ CQViCanvas(CQViApp *app) :
 }
 
 void
-CQViCanvas::
+Canvas::
 paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
@@ -533,7 +639,7 @@ paintEvent(QPaintEvent *)
 }
 
 QSize
-CQViCanvas::
+Canvas::
 sizeHint() const
 {
   return app_->canvasSizeHint();
@@ -541,9 +647,9 @@ sizeHint() const
 
 //------
 
-CQViCmdLine::
-CQViCmdLine(CQViApp *app) :
- CViCmdLine(app->vi()), app_(app)
+CmdLine::
+CmdLine(Widget *app) :
+ CVi::CmdLine(app->vi()), app_(app)
 {
   setObjectName("cmdLine");
 
@@ -555,34 +661,23 @@ CQViCmdLine(CQViApp *app) :
 }
 
 void
-CQViCmdLine::
+CmdLine::
 setVisible(bool visible)
 {
   QFrame::setVisible(visible);
 }
 
 void
-CQViCmdLine::
-setLine(const std::string &line)
+CmdLine::
+updateLine()
 {
-  CViCmdLine::setLine(line);
-
-  edit_->setText(QString::fromStdString(getLine()));
-}
-
-void
-CQViCmdLine::
-keyPress(char c)
-{
-  CViCmdLine::keyPress(c);
-
   edit_->setText(QString::fromStdString(getLine()));
 }
 
 //------
 
-CQViStatus::
-CQViStatus(CQViApp *app) :
+Status::
+Status(Widget *app) :
  QLabel(app), app_(app)
 {
   setObjectName("status");
@@ -594,57 +689,68 @@ CQViStatus(CQViApp *app) :
 
 //------
 
-CQViInterface::
-CQViInterface(CQVi *vi) :
+Interface::
+Interface(App *vi) :
  vi_(vi)
 {
 }
 
 int
-CQViInterface::
+Interface::
 getPageTop() const
 {
   return vi_->getPageTop();
 }
 
 int
-CQViInterface::
+Interface::
 getPageBottom() const
 {
   return vi_->getPageBottom();
 }
 
 int
-CQViInterface::
+Interface::
 getPageLength() const
 {
   return vi_->getPageLength();
 }
 
 void
-CQViInterface::
+Interface::
 scrollTop()
 {
   vi_->scrollTop();
 }
 
 void
-CQViInterface::
+Interface::
 scrollMiddle()
 {
   vi_->scrollMiddle();
 }
 
 void
-CQViInterface::
+Interface::
 scrollBottom()
 {
   vi_->scrollBottom();
 }
 
 void
-CQViInterface::
+Interface::
+stateChanged()
+{
+  vi_->update();
+}
+
+void
+Interface::
 positionChanged()
 {
   vi_->scrollCursor();
+
+  vi_->update();
+}
+
 }

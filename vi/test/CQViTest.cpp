@@ -1,15 +1,14 @@
 #include <CQVi.h>
-
-#include <QApplication>
+#include <CQApp.h>
 
 int
 main(int argc, char **argv)
 {
-  QApplication app(argc, argv);
+  CQApp app(argc, argv);
 
   std::string filename;
 
-  auto *edit = new CQViApp;
+  auto *edit = new CQVi::Widget;
 
   edit->init();
 

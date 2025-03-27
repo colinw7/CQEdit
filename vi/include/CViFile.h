@@ -1,3 +1,5 @@
+#include <string>
+
 class CViLine;
 
 class CViFile {

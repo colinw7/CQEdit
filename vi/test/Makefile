@@ -417,7 +417,8 @@ compiler_clean: compiler_moc_predefs_clean
 ../obj/CQViTest.o: CQViTest.cpp ../include/CQVi.h \
 		../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
-		../../../CRegExp/include/CRegExp.h
+		../../../CRegExp/include/CRegExp.h \
+		../../../CQUtil/include/CQApp.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQViTest.o CQViTest.cpp
 
 ####### Install

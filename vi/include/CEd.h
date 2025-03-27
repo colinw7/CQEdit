@@ -2,24 +2,27 @@
 #define CED_H
 
 #include <CRegExp.h>
+
 #include <sys/types.h>
 
-class CEd;
-class CVi;
+namespace CVi {
 
-class CEdPointCondition {
+class Ed;
+class App;
+
+class PointCondition {
  public:
-  CEdPointCondition() { }
+  PointCondition() { }
 
-  virtual ~CEdPointCondition() { }
+  virtual ~PointCondition() { }
 
-  virtual bool execute(CEd *) { return true; }
+  virtual bool execute(Ed *) { return true; }
 };
 
-class CEdLineCondition : public CEdPointCondition {
+class LineCondition : public PointCondition {
  public:
-  CEdLineCondition(int line=-1) :
-   CEdPointCondition(), line_(line) {
+  LineCondition(int line=-1) :
+   PointCondition(), line_(line) {
   }
 
   void setLine(int line) { line_ = line; }
@@ -29,17 +32,17 @@ class CEdLineCondition : public CEdPointCondition {
   int line_ { 0 };
 };
 
-class CEdRegExpCondition : public CEdPointCondition {
+class RegExpCondition : public PointCondition {
  public:
-  CEdRegExpCondition(const std::string &expr) :
-   CEdPointCondition(), expr_(expr) {
+  RegExpCondition(const std::string &expr) :
+   PointCondition(), expr_(expr) {
   }
 
  private:
   CRegExp expr_;
 };
 
-class CEd {
+class Ed {
  private:
   using StringList = std::vector<std::string>;
 
@@ -85,10 +88,10 @@ class CEd {
     }
 
    private:
-    CEdLineCondition start_;        // start position
-    CEdLineCondition end_;          // end position
-    char             cmd_ { '\0' }; // command name
-    StringList       lines_;        // lines (for a, c, i, ...)
+    LineCondition start_;        // start position
+    LineCondition end_;          // end position
+    char          cmd_ { '\0' }; // command name
+    StringList    lines_;        // lines (for a, c, i, ...)
   };
 
  public:
@@ -98,9 +101,9 @@ class CEd {
   };
 
  public:
-  CEd(CVi *file);
+  Ed(App *app);
 
-  virtual ~CEd();
+  virtual ~Ed();
 
   void init();
 
@@ -164,16 +167,18 @@ class CEd {
   void edNotifyQuit(bool force);
 
  private:
-  CEd(const CEd &rhs);
-  CEd &operator=(const CEd &rhs);
+  Ed(const Ed &rhs);
+  Ed &operator=(const Ed &rhs);
 
  private:
-  CVi*      file_           { nullptr };
+  App*      app_            { nullptr };
   Mode      mode_           { COMMAND }; // current mode, command or input
   InputData input_data_;
   bool      ex_             { false };   // vi/ex mode
   bool      case_sensitive_ { true  };   // case sensitive
   bool      quit_           { false };   // quit
 };
+
+}
 
 #endif
