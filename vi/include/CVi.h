@@ -3,12 +3,15 @@
 
 #include <CUndo.h>
 #include <CRegExp.h>
+#include <CSyntax.h>
 
 #include <vector>
 #include <map>
 #include <memory>
 #include <cassert>
 #include <optional>
+
+class CSyntax;
 
 namespace CVi {
 
@@ -122,7 +125,7 @@ class ReplaceUndoCmd : public UndoCmd {
   bool exec() override;
 
  private:
-  int         line_num_ { 0 };
+  int         line_num_  { 0 };
   int         char_num1_ { 0 };
   int         char_num2_ { 0 };
   std::string str_;
@@ -273,8 +276,19 @@ class CmdLine {
 // need abstract line and file ?
 class Line {
  public:
+  struct Style {
+    CSyntaxToken token;
+
+    Style() { }
+
+    Style(const CSyntaxToken &t) :
+     token(t) {
+    }
+  };
+
   using const_char_iterator = std::string::const_iterator;
 
+ public:
   Line();
   Line(const Line &line);
 
@@ -340,20 +354,29 @@ class Line {
 
   // changed
   bool getChanged() const { return changed_; }
-
   virtual void setChanged(bool value);
+
+  // annotations
+  void clearAnnotations();
+  void addAnnotation(uint start, uint end, const CSyntaxToken &token);
+
+  bool getCharStyle(int i, Style &style) const;
 
   // print
   virtual void print(std::ostream &os) const;
 
   friend std::ostream &operator<<(std::ostream &os, const Line &line);
 
- private:
+ protected:
   const char *getSubCString(int spos, int epos) const;
 
  private:
+  using CharStyle = std::map<int, Style>;
+
   std::string chars_;
   bool        changed_ { false };
+
+  CharStyle charStyle_;
 };
 
 //---
@@ -502,6 +525,8 @@ class Interface {
 
   virtual void positionChanged() { }
 
+  virtual void selectionChanged() { }
+
   virtual void updateSyntax() { }
 
   virtual void quit() { exit(0); }
@@ -579,6 +604,32 @@ class App {
  public:
   using const_line_iterator = Lines::const_iterator;
 
+  enum class VisualMode {
+    NONE,
+    CHAR,
+    LINE,
+    BLOCK
+  };
+
+  enum class SelectionOp {
+    NONE,
+    SWAP_CASE,
+    TO_UPPER,
+    TO_LOWER
+  };
+
+  struct Selection {
+    uint row1 { 0 };
+    uint col1 { 0 };
+    uint row2 { 0 };
+    uint col2 { 0 };
+    bool set  { false };
+
+    Selection(uint row1_=0, uint col1_=0, uint row2_=0, uint col2_=0, bool set_=false) :
+     row1(row1_), col1(col1_), row2(row2_), col2(col2_), set(set_) {
+    }
+  };
+
  public:
   App();
 
@@ -605,6 +656,9 @@ class App {
 
   //---
 
+  const std::string &getFileName() const { return filename_; }
+  void setFileName(const std::string &filename);
+
   bool loadLines(const std::string &fileName);
   bool saveLines(const std::string &fileName);
 
@@ -615,13 +669,30 @@ class App {
   void setInsertMode(bool insertMode);
 
   bool getOverwriteMode() const { return overwriteMode_; }
-  void setOverwriteMode(bool value) { overwriteMode_ = value; }
+  void setOverwriteMode(bool value);
 
   bool getListMode() const { return listMode_; }
   void setListMode(bool value) { listMode_ = value; }
 
-  bool getVisual() const { return visual_; }
-  void setVisual(bool value) { visual_ = value; }
+  bool getNumberMode() const { return numberMode_; }
+  void setNumberMode(bool value) { numberMode_ = value; }
+
+  bool getCaseSensitive() const;
+  void setCaseSensitive(bool value);
+
+  VisualMode getVisualMode() const { return visual_; }
+  void setVisualMode(VisualMode mode);
+
+  void deleteSelection();
+  void changeSelection();
+  void yankSelection();
+  void lshiftSelection();
+  void rshiftSelection();
+  void processSelection(SelectionOp op);
+
+  void setCursorList(bool left);
+
+  int getLineLength(int r) const;
 
   void setCmdLineMode(bool cmdLineMode, const std::string &str="");
   bool getCmdLineMode() const { return cmdLineMode_; }
@@ -635,11 +706,14 @@ class App {
   void processCommandChar(const KeyData &key);
   void processNormalChar (const KeyData &key);
   void processControlChar(const KeyData &key);
+  void processVisualChar (const KeyData &key);
   void processCmdLineChar(const KeyData &key);
 
-  void normalInsertChar(char key);
+  void processNormalInsertChar(char key);
 
-  bool processMoveChar(const KeyData &keyData, int x, int y);
+  bool processMoveChar(const KeyData &keyData, int &x, int &y);
+
+  void updateSelectRange();
 
   bool doFindChar(char c, uint count, bool forward, bool till);
 
@@ -651,17 +725,28 @@ class App {
   void getPos(uint *x, uint *y) const;
   void setPos(uint x, uint y);
 
-  const Lines &lines() const { return lines_; }
+  uint getRow() const;
+  uint getCol() const;
 
-  const_line_iterator beginLine() const { return lines_.begin(); }
-  const_line_iterator endLine  () const { return lines_.end  (); }
+  const Lines &lines() const { return lines_; }
 
   uint getNumLines() const;
 
   const Line *getLine(uint line_num) const { return lines_.getLine(line_num); }
   Line *getLine(uint line_num) { return lines_.getLine(line_num); }
 
- private:
+  CSyntax *syntax() const { return syntax_; }
+  void setSyntax(CSyntax *syntax);
+
+  void undo();
+  void redo();
+
+  const Selection &getSelection() const { return selection_; }
+
+  bool getSelectStart(int *row, int *col) const;
+  bool getSelectEnd  (int *row, int *col) const;
+
+ protected:
   friend class Ed;
 
   friend class UndoCmd;
@@ -676,13 +761,7 @@ class App {
   friend class JoinLineUndoCmd;
   friend class MoveToUndoCmd;
 
-  const std::string &getFileName() const { return filename_; }
-  void setFileName(const std::string &filename);
-
   Ed *getEd() const { return ed_; }
-
-  uint getRow() const;
-  uint getCol() const;
 
   bool isLinesEmpty() const;
 
@@ -925,9 +1004,6 @@ class App {
 
   void addUndo(UndoCmd *cmd);
 
-  void undo();
-  void redo();
-
   bool canUndo() const;
   bool canRedo() const;
 
@@ -943,8 +1019,6 @@ class App {
 
   Buffer &getBuffer(char c);
 
-  void getSelectStart(int *row, int *col) const;
-  void getSelectEnd(int *row, int *col) const;
   void setSelectRange(int row1, int col1, int row2, int col2);
   void clearSelection();
   void rangeSelect(int row1, int col1, int row2, int col2, bool select);
@@ -967,7 +1041,7 @@ class App {
 
   Options &getOptions() { return options_; }
 
-  void setNameValue(const std::string &name, const std::string &value);
+  virtual void setNameValue(const std::string &name, const std::string &value);
 
  private:
   struct MarkPos {
@@ -989,17 +1063,7 @@ class App {
     }
   };
 
-  struct Selection {
-    uint row1 { 0 };
-    uint col1 { 0 };
-    uint row2 { 0 };
-    uint col2 { 0 };
-    bool set  { false };
-
-    Selection(uint row1_=0, uint col1_=0, uint row2_=9, uint col2_=0, bool set_=false) :
-     row1(row1_), col1(col1_), row2(row2_), col2(col2_), set(set_) {
-    }
-  };
+  using CursorPosList = std::vector<CursorPos>;
 
   using CmdLineP   = std::unique_ptr<CmdLine>;
   using GroupList  = std::vector<Group *>;
@@ -1018,22 +1082,26 @@ class App {
   CUndo undo_;
 
   // cursor
-  CursorPos cursorPos_;
+  CursorPos     cursorPos_;
+  CursorPosList extraCursorPosList_;
 
   // state
-  char lastKey_       { '\0' };
-  uint count_         { 0 };
-  bool insertMode_    { false };
-  bool overwriteMode_ { false };
-  bool listMode_      { false };
-  bool cmdLineMode_   { false };
-  bool extraLineChar_ { false };
-  bool visual_        { false };
-  bool changed_       { false };
-  bool unsaved_       { false };
-  char register_      { '\0' };
+  char       lastKey_       { '\0' };
+  uint       count_         { 0 };
+  bool       insertMode_    { false };
+  bool       overwriteMode_ { false };
+  bool       listMode_      { false };
+  bool       numberMode_    { false };
+  bool       cmdLineMode_   { false };
+  bool       extraLineChar_ { false };
+  VisualMode visual_        { VisualMode::NONE };
+  bool       changed_       { false };
+  bool       unsaved_       { false };
+  char       register_      { '\0' };
 
   bool debug_ { false };
+
+  std::vector<int> insertRows_;
 
   // command line
   CmdLineP    cmdLine_;
@@ -1057,8 +1125,11 @@ class App {
 
   // selection
   Selection selection_;
+  Selection lastSelection_;
 
   NameValues nameValues_;
+
+  CSyntax *syntax_ { nullptr };
 };
 
 }

@@ -1,6 +1,7 @@
 #include <CQVi.h>
 #include <CQUtil.h>
 #include <CKeyType.h>
+#include <CSyntaxC.h>
 
 #include <QLineEdit>
 #include <QScrollBar>
@@ -8,13 +9,71 @@
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPainter>
+#include <cmath>
 
 namespace CQVi {
+
+Mgr *
+Mgr::
+instance()
+{
+  static Mgr *inst;
+
+  if (! inst)
+    inst = new Mgr;
+
+  return inst;
+}
+
+Mgr::
+Mgr()
+{
+//setFont(QFont("Courier", 18));
+  setFont(QFont("Inconsolata", 18));
+}
+
+Mgr::
+~Mgr()
+{
+}
+
+void
+Mgr::
+addWidget(Widget *w)
+{
+  widgets_.push_back(w);
+
+  w->updateMgr();
+}
+
+void
+Mgr::
+removeWidget(Widget *w)
+{
+  widgets_.remove(w);
+}
+
+void
+Mgr::
+update()
+{
+  for (auto *w : widgets_)
+    w->updateMgr();
+}
+
+//---
 
 Widget::
 Widget(QWidget *parent) :
  QWidget(parent)
 {
+  Mgr::instance()->addWidget(this);
+}
+
+Widget::
+~Widget()
+{
+  Mgr::instance()->removeWidget(this);
 }
 
 void
@@ -23,12 +82,9 @@ init()
 {
   setObjectName("app");
 
-//setFont(QFont("Courier", 18));
-  setFont(QFont("Inconsolata", 18));
+  app_ = std::make_unique<App>(this);
 
-  vi_ = std::make_unique<App>(this);
-
-  vi_->init();
+  app_->init();
 
   auto *layout = new QVBoxLayout(this);
   layout->setMargin(0); layout->setSpacing(0);
@@ -57,20 +113,19 @@ init()
     cmdLine_->setVisible(false);
   }
 
-  status_ = new Status(this);
-
-  layout->addWidget(status_);
+//status_ = new Status(this);
+//layout->addWidget(status_);
 }
 
 void
 Widget::
-setFont(const QFont &font)
+updateMgr()
 {
-  fontData_.font = font;
+  auto font = Mgr::instance()->font();
 
-  QWidget::setFont(fontData_.font);
+  QWidget::setFont(font);
 
-  QFontMetrics fm(fontData_.font);
+  QFontMetrics fm(font);
 
   fontData_.char_rect   = fm.boundingRect("X");
   fontData_.char_width  = fm.horizontalAdvance("X");
@@ -94,13 +149,36 @@ vscrollSlot(int)
   update();
 }
 
+//---
+
+const std::string &
+Widget::
+getFilename() const
+{
+  return app_->getFileName();
+}
+
+void
+Widget::
+setFilename(const std::string &filename)
+{
+  app_->setFileName(filename);
+}
+
 void
 Widget::
 loadFile(const std::string &filename)
 {
   setWindowTitle(filename.c_str());
 
-  vi_->loadLines(filename);
+  app_->loadLines(filename);
+}
+
+void
+Widget::
+saveFile(const std::string &filename)
+{
+  app_->saveLines(filename);
 }
 
 void
@@ -113,38 +191,119 @@ void
 Widget::
 draw(QPainter *painter)
 {
+  auto bg   = Mgr::instance()->bg();
+  auto fg   = Mgr::instance()->fg();
+  auto font = Mgr::instance()->font();
+
+  int w = canvas_->width ();
   int h = canvas_->height();
 
-  painter->setFont(font());
+  painter->setFont(font);
 
-  painter->fillRect(rect(), QBrush(bg()));
+  painter->fillRect(rect(), QBrush(bg));
 
-  painter->setPen(fg());
+  painter->setPen(fg);
 
-  x_offset_ = hscroll_->value();
-  y_offset_ = vscroll_->value();
+  xOffset_ = hscroll_->value();
+  yOffset_ = vscroll_->value();
 
   // get cursor pos
   uint cx, cy;
-  vi_->getPos(&cx, &cy);
+  app_->getPos(&cx, &cy);
 
   char cc = ' '; // cursor char
   uint cp = 0;   // cursor pos
 
   uint iy = 0;
-  int  y  = -y_offset_;
+  int  y  = -yOffset_;
 
   maxLineLength_ = 0;
 
   //---
 
-  auto drawLine = [&](CVi::Line *line) {
-    uint ix1 = 0;
-    uint ix2 = 0;
+  static char numberBuffer[256];
 
-    int x = -x_offset_;
+  lineDigits_   = -1;
+  lmargin_      = 0;
+  numberFormat_ = "";
+
+  auto getLineNumberStr = [&](int i) {
+    if (lineDigits_ < 0) {
+      int n = app_->getNumLines();
+
+      lineDigits_ = (n > 0 ? int(std::log10(n)) + 1 : 1);
+
+      sprintf(numberBuffer, "%% %dd ", lineDigits_);
+
+      numberFormat_ = numberBuffer;
+
+      lmargin_ = (lineDigits_ + 1)*fontData_.char_width;
+    }
+
+    sprintf(numberBuffer, numberFormat_.c_str(), i);
+
+    return QString(numberBuffer);
+  };
+
+  auto visualMode = app_->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  app_->getSelectStart(&selRow1, &selCol1);
+  app_->getSelectEnd  (&selRow2, &selCol2);
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+  }
+
+  auto isSelected = [&](int row, int col) {
+    if (visualMode == App::VisualMode::NONE) return false;
+
+    if (row < selRow1 || row > selRow2) return false;
+
+    if      (visualMode == App::VisualMode::CHAR) {
+      if (row == selRow1) { if (col < selCol1) return false; }
+      if (row == selRow2) { if (col > selCol2) return false; }
+    }
+    else if (visualMode == App::VisualMode::BLOCK) {
+      if (col < selCol1 || col > selCol2) return false;
+    }
+    return true;
+  };
+
+  auto drawLine = [&](CVi::Line *line) {
+    int x = -xOffset_;
+
+    if (app_->getNumberMode()) {
+      auto numberStr = getLineNumberStr(iy);
+
+      painter->setPen(numberFg());
+      painter->drawText(x, y + fontData_.char_ascent, numberStr);
+
+      x += numberStr.size()*fontData_.char_width;
+    }
+
+    uint ix1 = 0; // char pos
+    uint ix2 = 0; // adjusted char pos (tabs)
 
     for (const auto &c : line->chars()) {
+      auto isSel = isSelected(iy, ix1);
+
+      if (isSel)
+        painter->fillRect(QRect(x, y, fontData_.char_width, fontData_.char_height),
+                          QBrush(selBg()));
+
       if (ix1 == cx && iy == cy) {
         cc = c;
         cp = ix2;
@@ -152,13 +311,21 @@ draw(QPainter *painter)
 
       uint n = 1;
 
-      if (! isspace(c))
+      if (! isspace(c)) {
+        CVi::Line::Style style;
+
+        auto fgc = fg;
+
+        if (line->getCharStyle(ix1, style))
+          fgc = app_->tokenColor(style.token);
+
+        painter->setPen(fgc);
         painter->drawText(x, y + fontData_.char_ascent, QString(c));
+      }
       else if (c == '\t') {
-        if (vi_->getListMode()) {
+        if (app_->getListMode()) {
           painter->setPen(emptyFg());
           painter->drawText(x, y + fontData_.char_ascent, "^I");
-          painter->setPen(fg());
 
           n = 2;
         }
@@ -174,14 +341,13 @@ draw(QPainter *painter)
     }
 
     if (ix1 == cx && iy == cy) {
-      cc = (vi_->getListMode() ? '$' : ' ');
+      cc = (app_->getListMode() ? '$' : ' ');
       cp = ix2;
     }
 
-    if (vi_->getListMode()) {
+    if (app_->getListMode()) {
       painter->setPen(emptyFg());
       painter->drawText(x, y + fontData_.char_ascent, QString("$"));
-      painter->setPen(fg());
 
       ++ix2;
     }
@@ -194,7 +360,7 @@ draw(QPainter *painter)
   // draw lines
   y1_ = y;
 
-  for (auto *line : vi_->lines()) {
+  for (auto *line : app_->lines()) {
     if (y > h)
       break;
 
@@ -209,19 +375,18 @@ draw(QPainter *painter)
     ++iy;
   }
 
-  y2_ = y1_ + vi_->getNumLines()*fontData_.char_height;
+  y2_ = y1_ + app_->getNumLines()*fontData_.char_height;
 
   //---
 
   // draw cursor
-  int xc = cp*fontData_.char_width  - x_offset_;
-  int yc = cy*fontData_.char_height - y_offset_;
+  int xc = lmargin_ + cp*fontData_.char_width  - xOffset_;
+  int yc = cy*fontData_.char_height - yOffset_;
 
   painter->fillRect(QRect(xc, yc, fontData_.char_width, fontData_.char_height),
                     QBrush(cursorBg()));
 
   painter->setPen(cursorFg());
-
   painter->drawText(xc, yc + fontData_.char_ascent, QString(cc));
 
   //---
@@ -237,32 +402,47 @@ draw(QPainter *painter)
 
   //---
 
+  rows_ = h/fontData_.char_height;
+  cols_ = (w - lmargin_)/fontData_.char_width;
+
   updateScrollbars();
+
+  //---
+
+  if (sizeChanged_) {
+    sizeChanged_ = false;
+
+    Q_EMIT sizeChanged();
+  }
 }
 
+#if 0
 void
 Widget::
 updateStatus()
 {
   uint cx, cy;
 
-  vi_->getPos(&cx, &cy);
+  app_->getPos(&cx, &cy);
 
   auto text = QString("Row %1, Col %2").arg(cy + 1).arg(cx + 1);
 
-  if (vi_->getInsertMode())
+  if (app_->getInsertMode())
     text += "  INS";
 
-  if (vi_->count() > 1)
-    text += "  #" + QString::number(vi_->count());
+  if (app_->count() > 1)
+    text += "  #" + QString::number(app_->count());
 
   status_->setText(text);
 }
+#endif
 
 void
 Widget::
 resizeEvent(QResizeEvent *)
 {
+  sizeChanged_ = true;
+
   updateScrollbars();
 }
 
@@ -270,7 +450,7 @@ int
 Widget::
 pageTop() const
 {
-  return y_offset_/fontData_.char_height;
+  return yOffset_/fontData_.char_height;
 }
 
 int
@@ -279,7 +459,7 @@ pageBottom() const
 {
   int pos = pageTop() + pageLength();
 
-  int nl = vi_->getNumLines();
+  int nl = app_->getNumLines();
 
   if (pos >= nl)
     pos = nl - 1;
@@ -298,8 +478,8 @@ void
 Widget::
 scrollTo(uint x, uint y, bool force)
 {
-  int x1 = x*fontData_.char_width  - x_offset_;
-  int y1 = y*fontData_.char_height - y_offset_;
+  int x1 = x*fontData_.char_width  - xOffset_;
+  int y1 = y*fontData_.char_height - yOffset_;
 
   int w = canvas_->width ();
   int h = canvas_->height();
@@ -323,7 +503,7 @@ updateScrollbars()
   int h = canvas_->height();
 
   int aw = maxLineLength_*fontData_.char_width;
-  int ah = vi_->getNumLines()*fontData_.char_height;
+  int ah = app_->getNumLines()*fontData_.char_height;
 
   int hs = std::min(w, aw);
   int vs = std::min(h, ah);
@@ -348,7 +528,7 @@ mousePressEvent(QMouseEvent *e)
   int ix, iy;
 
   if (mouseToPos(press_pos_, ix, iy)) {
-    vi_->setPos(ix, iy);
+    app_->setPos(ix, iy);
 
     update();
   }
@@ -393,7 +573,7 @@ keyPressEvent(QKeyEvent *e)
   auto keyType = CQUtil::convertKey(e->key(), e->modifiers());
 
   if (uint(keyType) <= 0xFF)
-    vi_->processChar(keyType);
+    app_->processChar(keyType);
 #else
   CVi::KeyData keyData;
 
@@ -456,7 +636,7 @@ keyPressEvent(QKeyEvent *e)
   keyData.is_alt     = (e->modifiers() & Qt::AltModifier    );
   keyData.is_meta    = (e->modifiers() & Qt::MetaModifier   );
 
-  vi_->processChar(keyData);
+  app_->processChar(keyData);
 #endif
 
   update();
@@ -467,7 +647,8 @@ Widget::
 sizeHint() const
 {
   auto s1 = canvas_->sizeHint();
-  auto s2 = status_->sizeHint();
+//auto s2 = status_->sizeHint();
+  auto s2 = QSize(0, 0);
 
   return QSize(s1.width () +               vscroll_->width (),
                s1.height() + s2.height() + hscroll_->height() + 4);
@@ -499,15 +680,17 @@ mouseToPos(const QPoint &pos, int &ix, int &iy) const
     return false;
   }
 
-  auto *line = vi_->getLine(iy);
+  bool found = false;
 
-  int x1 = -x_offset_;
+  auto *line = app_->getLine(iy);
+
+  int x1 = lmargin_ - xOffset_;
 
   for (const auto &c : line->chars()) {
     uint n = 1;
 
     if (c == '\t') {
-      if (vi_->getListMode())
+      if (app_->getListMode())
         n = 2;
       else
         n = 8 - (ix % 8);
@@ -515,22 +698,24 @@ mouseToPos(const QPoint &pos, int &ix, int &iy) const
 
     int x2 = x1 + n*fontData_.char_width;
 
-    if (pos.x() >= x1 && pos.x() < x2)
+    if (pos.x() >= x1 && pos.x() < x2) {
+      found = true;
       break;
+    }
 
     ++ix;
 
     x1 = x2;
   }
 
-  return true;
+  return found;
 }
 
 //------
 
 App::
-App(Widget *app) :
- CVi::App(), app_(app)
+App(Widget *widget) :
+ CVi::App(), widget_(widget)
 {
   setObjectName("vi");
 
@@ -541,9 +726,9 @@ CVi::CmdLine *
 App::
 createCmdLine() const
 {
-  auto *cmdLine = new CmdLine(const_cast<Widget *>(app_));
+  auto *cmdLine = new CmdLine(const_cast<Widget *>(widget_));
 
-  app_->setCmdLine(cmdLine);
+  widget_->setCmdLine(cmdLine);
 
   return cmdLine;
 }
@@ -552,21 +737,21 @@ int
 App::
 getPageTop() const
 {
-  return app_->pageTop();
+  return widget_->pageTop();
 }
 
 int
 App::
 getPageBottom() const
 {
-  return app_->pageBottom();
+  return widget_->pageBottom();
 }
 
 int
 App::
 getPageLength() const
 {
-  return app_->pageLength();
+  return widget_->pageLength();
 }
 
 void
@@ -576,7 +761,7 @@ scrollTop()
   uint cx, cy;
   getPos(&cx, &cy);
 
-  app_->scrollTo(cx, cy, /*force*/true);
+  widget_->scrollTo(cx, cy, /*force*/true);
 }
 
 void
@@ -586,7 +771,7 @@ scrollMiddle()
   uint cx, cy;
   getPos(&cx, &cy);
 
-  app_->scrollTo(cx, cy - getPageLength()/2, /*force*/true);
+  widget_->scrollTo(cx, cy - getPageLength()/2, /*force*/true);
 }
 
 void
@@ -596,7 +781,7 @@ scrollBottom()
   uint cx, cy;
   getPos(&cx, &cy);
 
-  app_->scrollTo(cx, cy - getPageLength(), /*force*/true);
+  widget_->scrollTo(cx, cy - getPageLength(), /*force*/true);
 }
 
 void
@@ -606,21 +791,87 @@ scrollCursor()
   uint cx, cy;
   getPos(&cx, &cy);
 
-  app_->scrollTo(cx, cy);
+  widget_->scrollTo(cx, cy);
+}
+
+void
+App::
+stateChanged()
+{
+  update();
+
+  Q_EMIT widget_->stateChanged();
+}
+
+void
+App::
+positionChanged()
+{
+  scrollCursor();
+
+  update();
+
+  Q_EMIT widget_->positionChanged();
+}
+
+void
+App::
+selectionChanged()
+{
+  update();
+
+  Q_EMIT widget_->selectionChanged();
 }
 
 void
 App::
 update()
 {
-  app_->update();
+  widget_->update();
+}
+
+QColor
+App::
+tokenColor(CSyntaxToken token) const
+{
+  switch (token) {
+    case CSyntaxToken::PREPRO : return widget_->preProFg();
+    case CSyntaxToken::KEYWORD: return widget_->keywordFg();
+    case CSyntaxToken::STRING : return widget_->stringFg();
+    case CSyntaxToken::COMMENT: return widget_->commentFg();
+    default                   : return Mgr::instance()->fg();
+  }
+}
+
+void
+App::
+setNameValue(const std::string &name, const std::string &value)
+{
+  if      (name == "bgColor")
+    Mgr::instance()->setBg(QColor(QString::fromStdString(value)));
+  else if (name == "fgColor")
+    Mgr::instance()->setFg(QColor(QString::fromStdString(value)));
+  else if (name == "cursorBgColor")
+    widget_->setCursorBg(QColor(QString::fromStdString(value)));
+  else if (name == "cursorFgColor")
+    widget_->setCursorFg(QColor(QString::fromStdString(value)));
+  else if (name == "emptyFgColor")
+    widget_->setEmptyFg(QColor(QString::fromStdString(value)));
+  else if (name == "numberFgColor")
+    widget_->setNumberFg(QColor(QString::fromStdString(value)));
+  else if (name == "keywordFgColor")
+    widget_->setKeywordFg(QColor(QString::fromStdString(value)));
+  else if (name == "font")
+    Mgr::instance()->setFont(QFont(QString::fromStdString(value)));
+
+  CVi::App::setNameValue(name, value);
 }
 
 //------
 
 Canvas::
-Canvas(Widget *app) :
- QWidget(app), app_(app)
+Canvas(Widget *widget) :
+ QWidget(widget), widget_(widget)
 {
   setObjectName("canvas");
 
@@ -633,23 +884,23 @@ paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
 
-  app_->draw(&painter);
+  widget_->draw(&painter);
 
-  app_->updateStatus();
+  //widget_->updateStatus();
 }
 
 QSize
 Canvas::
 sizeHint() const
 {
-  return app_->canvasSizeHint();
+  return widget_->canvasSizeHint();
 }
 
 //------
 
 CmdLine::
-CmdLine(Widget *app) :
- CVi::CmdLine(app->vi()), app_(app)
+CmdLine(Widget *widget) :
+ CVi::CmdLine(widget->app()), widget_(widget)
 {
   setObjectName("cmdLine");
 
@@ -676,9 +927,10 @@ updateLine()
 
 //------
 
+#if 0
 Status::
-Status(Widget *app) :
- QLabel(app), app_(app)
+Status(Widget *widget) :
+ QLabel(widget), widget_(widget)
 {
   setObjectName("status");
 
@@ -686,12 +938,13 @@ Status(Widget *app) :
 
   setFixedHeight(fm.height() + 4);
 }
+#endif
 
 //------
 
 Interface::
-Interface(App *vi) :
- vi_(vi)
+Interface(App *app) :
+ app_(app)
 {
 }
 
@@ -699,58 +952,63 @@ int
 Interface::
 getPageTop() const
 {
-  return vi_->getPageTop();
+  return app_->getPageTop();
 }
 
 int
 Interface::
 getPageBottom() const
 {
-  return vi_->getPageBottom();
+  return app_->getPageBottom();
 }
 
 int
 Interface::
 getPageLength() const
 {
-  return vi_->getPageLength();
+  return app_->getPageLength();
 }
 
 void
 Interface::
 scrollTop()
 {
-  vi_->scrollTop();
+  app_->scrollTop();
 }
 
 void
 Interface::
 scrollMiddle()
 {
-  vi_->scrollMiddle();
+  app_->scrollMiddle();
 }
 
 void
 Interface::
 scrollBottom()
 {
-  vi_->scrollBottom();
+  app_->scrollBottom();
 }
 
 void
 Interface::
 stateChanged()
 {
-  vi_->update();
+  app_->stateChanged();
 }
 
 void
 Interface::
 positionChanged()
 {
-  vi_->scrollCursor();
+  app_->positionChanged();
+}
 
-  vi_->update();
+void
+Interface::
+selectionChanged()
+{
+  app_->selectionChanged();
 }
 
 }

@@ -15,8 +15,11 @@ CONFIG += debug
 # Input
 SOURCES += \
 CQViTest.cpp \
+CQViOptionsDlg.cpp \
 
 HEADERS += \
+CQViTest.h \
+CQViOptionsDlg.h \
 
 DESTDIR     = ../bin
 OBJECTS_DIR = ../obj

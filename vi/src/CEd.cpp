@@ -45,13 +45,13 @@ execFile(const std::string &fileName)
 
   std::vector<std::string>::const_iterator p1, p2;
 
-  for (p1 = lines.begin(), p2 = lines.end(); p1 != p2; ++p1) {
-    std::string line = CStrUtil::stripSpaces(*p1);
+  for (const auto &line : lines) {
+    auto line1 = CStrUtil::stripSpaces(line);
 
-    if (line.empty() || line[0] == '#')
+    if (line1.empty() || line1[0] == '#')
       continue;
 
-    execCmd(line);
+    execCmd(line1);
   }
 
   return true;
@@ -79,10 +79,8 @@ execCmd(const std::string &cmd)
 
       int i = start;
 
-      StringList::const_iterator p1, p2;
-
-      for (p1 = input_data_.getLines().begin(), p2 = input_data_.getLines().end(); p1 != p2; ++p1)
-        addLine(i++, *p1);
+      for (const auto &line : input_data_.getLines())
+        addLine(i++, line);
 
       app_->endGroup();
 
@@ -300,21 +298,55 @@ execCmd(const std::string &cmd)
     std::string cmd1;
     (void) readWord(cmd1);
 
-    if (cmd1 == "set") {
+    if      (cmd1 == "set") {
       parse.skipSpace();
 
       std::string name;
       (void) readWord(name);
 
-      std::string value;
-      (void) readWord(value);
+      parse.skipSpace();
 
-      if (value == "")
-        value = "1";
+      std::string value;
+
+      if      (parse.isChar('=')) {
+        parse.skipChar();
+
+        parse.skipSpace();
+
+        while (! parse.eof()) {
+          char c;
+
+          if (parse.readChar(&c))
+            value += c;
+        }
+      }
+      else if (parse.isChar('?')) {
+        error("'set option?' not implemented");
+        return false;
+      }
+      else {
+        (void) readWord(value);
+
+        if (value == "all") {
+          error("'set all' not implemented");
+          return false;
+        }
+
+        if (value == "")
+          value = "1";
+      }
 
       app_->setNameValue(name, value);
 
       return true;
+    }
+    else if (cmd1 == "map" || cmd1 == "unmap") {
+      error("Map not implemented");
+      return false;
+    }
+    else if (cmd1 == "ab") {
+      error("Abreviations not implemented");
+      return false;
     }
 
     parse.setPos(pos);
@@ -455,7 +487,7 @@ execCmd(const std::string &cmd)
 
         CRegExp regexp(str);
 
-        regexp.setCaseSensitive(case_sensitive_);
+        regexp.setCaseSensitive(getCaseSensitive());
 
         uint fline_num, fchar_num;
 
@@ -1051,7 +1083,7 @@ findNext(const std::string &str, int *line_num, int *char_num)
 {
   CRegExp regexp(str);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   uint fline_num, fchar_num;
 
@@ -1098,7 +1130,7 @@ findPrev(const std::string &str, int *line_num, int *char_num)
 {
   CRegExp regexp(str);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   uint fline_num, fchar_num;
 
@@ -1150,7 +1182,7 @@ doSubstitute(int line_num1, int line_num2, const std::string &find,
 
   CRegExp regexp(find);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   for (int i = line_num1; i <= line_num2; ++i) {
     uint fline_num, fchar_num, len;
@@ -1181,7 +1213,7 @@ doFindNext(int line_num1, int line_num2, const std::string &find)
 {
   CRegExp regexp(find);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   app_->findNext(regexp, line_num1 - 1, 0, line_num2 - 1, -1);
 }
@@ -1192,7 +1224,7 @@ doFindPrev(int line_num1, int line_num2, const std::string &find)
 {
   CRegExp regexp(find);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   app_->findPrev(regexp, line_num1 - 1, -1, line_num2 - 1, 0);
 }
@@ -1205,7 +1237,7 @@ doGlob(int line_num1, int line_num2, const std::string &find, const std::string 
 
   CRegExp regexp(find);
 
-  regexp.setCaseSensitive(case_sensitive_);
+  regexp.setCaseSensitive(getCaseSensitive());
 
   for (int i = line_num1; i <= line_num2; ++i) {
     auto *line = app_->getLine(i - 1);
@@ -1323,9 +1355,7 @@ doExecute(int line_num1, int line_num2, const std::string &cmdStr)
   std::string src;
 
   for (int i = line_num1; i <= line_num2; ++i) {
-    if (i > line_num1) src += "\n";
-
-    src += app_->getLine(line_num1 - 1)->getString();
+    src += app_->getLine(line_num1 - 1)->getString() + "\n";
 
     deleteLine(line_num1 - 1);
   }
@@ -1339,6 +1369,8 @@ doExecute(int line_num1, int line_num2, const std::string &cmdStr)
 
   cmd.start();
 
+  cmd.wait();
+
   std::vector<std::string> lines;
 
   CStrUtil::addLines(dest, lines);
@@ -1347,6 +1379,8 @@ doExecute(int line_num1, int line_num2, const std::string &cmdStr)
 
   for (int l = 0; l < numLines; ++l)
     addLine(line_num1 + l - 1, lines[l]);
+
+  app_->setPos(0, line_num1 + numLines - 1);
 
   app_->endGroup();
 }

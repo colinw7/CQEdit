@@ -52,8 +52,13 @@ OBJECTS_DIR   = ../obj/
 
 ####### Files
 
-SOURCES       = CQViTest.cpp 
-OBJECTS       = ../obj/CQViTest.o
+SOURCES       = CQViTest.cpp \
+		CQViOptionsDlg.cpp .moc/moc_CQViTest.cpp \
+		.moc/moc_CQViOptionsDlg.cpp
+OBJECTS       = ../obj/CQViTest.o \
+		../obj/CQViOptionsDlg.o \
+		../obj/moc_CQViTest.o \
+		../obj/moc_CQViOptionsDlg.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -147,7 +152,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		CQViTest.pro  CQViTest.cpp
+		CQViTest.pro CQViTest.h \
+		CQViOptionsDlg.h CQViTest.cpp \
+		CQViOptionsDlg.cpp
 QMAKE_TARGET  = CQViTest
 DESTDIR       = ../bin/
 TARGET        = ../bin/CQViTest
@@ -364,7 +371,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents CQViTest.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents CQViTest.h CQViOptionsDlg.h $(DISTDIR)/
+	$(COPY_FILE) --parents CQViTest.cpp CQViOptionsDlg.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -396,8 +404,21 @@ compiler_moc_predefs_clean:
 .moc/moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -std=c++17 -DCQUTIL_IMAGE -DCQUTIL_FONT -g -Wall -Wextra -dM -E -o .moc/moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all:
+compiler_moc_header_make_all: .moc/moc_CQViTest.cpp .moc/moc_CQViOptionsDlg.cpp
 compiler_moc_header_clean:
+	-$(DEL_FILE) .moc/moc_CQViTest.cpp .moc/moc_CQViOptionsDlg.cpp
+.moc/moc_CQViTest.cpp: CQViTest.h \
+		../../../CQUtil/include/CQMainWindow.h \
+		.moc/moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/colinw/git/CQEdit/vi/test/.moc/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/colinw/git/CQEdit/vi/test -I/home/colinw/git/CQEdit/vi/test -I/home/colinw/git/CQEdit/vi/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include CQViTest.h -o .moc/moc_CQViTest.cpp
+
+.moc/moc_CQViOptionsDlg.cpp: CQViOptionsDlg.h \
+		../../../CQUtil/include/CQDialog.h \
+		.moc/moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/colinw/git/CQEdit/vi/test/.moc/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/colinw/git/CQEdit/vi/test -I/home/colinw/git/CQEdit/vi/test -I/home/colinw/git/CQEdit/vi/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CImageLib/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CFont/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CConfig/include -I/home/colinw/git/COS/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CMath/include -I/home/colinw/git/CReadLine/include -I/home/colinw/git/CRegExp/include -I/home/colinw/git/CRGBName/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include CQViOptionsDlg.h -o .moc/moc_CQViOptionsDlg.cpp
+
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
 compiler_moc_source_make_all:
@@ -410,7 +431,7 @@ compiler_yacc_impl_make_all:
 compiler_yacc_impl_clean:
 compiler_lex_make_all:
 compiler_lex_clean:
-compiler_clean: compiler_moc_predefs_clean 
+compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean 
 
 ####### Compile
 
@@ -418,8 +439,46 @@ compiler_clean: compiler_moc_predefs_clean
 		../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
 		../../../CRegExp/include/CRegExp.h \
-		../../../CQUtil/include/CQApp.h
+		../include/CSyntax.h \
+		CQViTest.h \
+		../../../CQUtil/include/CQMainWindow.h \
+		CQViOptionsDlg.h \
+		../../../CQUtil/include/CQDialog.h \
+		../include/CSyntaxC.h \
+		../include/CSyntaxCPP.h \
+		../../../CQUtil/include/CQApp.h \
+		../../../CQUtil/include/CQTabWidget.h \
+		../../../CQUtil/include/CQMenu.h \
+		../../../CQUtil/include/CQToolBar.h \
+		../../../CQUtil/include/CQFontChooser.h \
+		../../../CQUtil/include/CQColorChooser.h \
+		../../../CQUtil/include/CQPixmapCache.h \
+		svg/add_file_svg.h \
+		svg/open_svg.h \
+		svg/save_svg.h \
+		svg/save_as_svg.h \
+		svg/copy_svg.h \
+		svg/cut_svg.h \
+		svg/paste_svg.h \
+		svg/undo_svg.h \
+		svg/redo_svg.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQViTest.o CQViTest.cpp
+
+../obj/CQViOptionsDlg.o: CQViOptionsDlg.cpp CQViOptionsDlg.h \
+		../../../CQUtil/include/CQDialog.h \
+		../include/CQVi.h \
+		../include/CVi.h \
+		../../../CUndo/include/CUndo.h \
+		../../../CRegExp/include/CRegExp.h \
+		../include/CSyntax.h \
+		../../../CQUtil/include/CQColorChooser.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQViOptionsDlg.o CQViOptionsDlg.cpp
+
+../obj/moc_CQViTest.o: .moc/moc_CQViTest.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQViTest.o .moc/moc_CQViTest.cpp
+
+../obj/moc_CQViOptionsDlg.o: .moc/moc_CQViOptionsDlg.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQViOptionsDlg.o .moc/moc_CQViOptionsDlg.cpp
 
 ####### Install
 

@@ -19,6 +19,12 @@ SOURCES += \
 CQVi.cpp \
 CVi.cpp \
 CEd.cpp \
+\
+CSyntaxC.cpp \
+CSyntax.cpp \
+CSyntaxCPP.cpp \
+CSyntaxPython.cpp \
+CSyntaxVHDL.cpp \
 
 HEADERS += \
 ../include/CQVi.h \

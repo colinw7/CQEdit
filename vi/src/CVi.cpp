@@ -1,5 +1,7 @@
 #include <CVi.h>
 #include <CEd.h>
+#include <CSyntaxC.h>
+#include <CSyntaxCPP.h>
 #include <CFile.h>
 #include <CStrUtil.h>
 
@@ -154,11 +156,8 @@ saveLines(const std::string &filename)
 
   setFileName(filename);
 
-  auto p1 = beginLine();
-  auto p2 = endLine  ();
-
-  for ( ; p1 != p2; ++p1) {
-    file.write((*p1)->getCString());
+  for (auto *line : lines_) {
+    file.write(line->getCString());
 
     file.putC('\n');
   }
@@ -189,6 +188,8 @@ processChar(const KeyData &keyData)
     processInsertChar(keyData);
   else if (getCmdLineMode())
     processCmdLineChar(keyData);
+  else if (getVisualMode() != VisualMode::NONE)
+    processVisualChar(keyData);
   else
     processCommandChar(keyData);
 }
@@ -273,11 +274,10 @@ processCommandChar(const KeyData &keyData)
         }
         else {
           uint start_x, start_y;
-
           getPos(&start_x, &start_y);
 
-          uint end_x = start_x;
-          uint end_y = start_y;
+          int end_x = start_x;
+          int end_y = start_y;
 
           bool rc = processMoveChar(keyData, end_x, end_y);
 
@@ -304,7 +304,6 @@ processCommandChar(const KeyData &keyData)
           deleteChar();
         else {
           uint start_x, start_y;
-
           getPos(&start_x, &start_y);
 
           int end_x = start_x;
@@ -332,28 +331,38 @@ processCommandChar(const KeyData &keyData)
 
         break;
       }
-      case 'g': { // test code !!!
-        uint x, y;
+      case 'g': {
+        uint x1, y1;
+        getPos(&x1, &y1);
 
-        getPos(&x, &y);
+        setSelectRange(y1, x1, y1, x1);
 
-        setSelectRange(x, y, x, y);
-
-        int select_end_x, select_end_y;
-
-        getSelectEnd(&select_end_x, &select_end_y);
-
-        bool rc = processMoveChar(keyData, select_end_x, select_end_y);
-
-        if (rc) {
-          int select_start_x, select_start_y;
-
-          getSelectStart(&select_start_x, &select_start_y);
-
-          rangeSelect(select_start_x, select_start_y, select_end_x, select_end_y, true);
+        // last visual mode
+        if      (key == 'v') {
+          selection_ = lastSelection_;
         }
-        else
-          clearSelection();
+        // select next match
+        else if (key == 'n') {
+          if (hasFindPattern())
+            findNext(getFindPattern());
+        }
+        // select prev match
+        else if (key == 'N') {
+          if (hasFindPattern())
+            findPrev(getFindPattern());
+        }
+        // test code !!!
+        else {
+          int x2 = x1, y2 = y1;
+          bool rc = processMoveChar(keyData, x2, y2);
+
+          if (rc)
+            setPos(x2, y2);
+        }
+
+        setVisualMode(VisualMode::CHAR);
+
+        updateSelectRange();
 
         break;
       }
@@ -390,7 +399,6 @@ processCommandChar(const KeyData &keyData)
           yankWords(register_, std::max(count_, 1U));
         else {
           uint start_x, start_y;
-
           getPos(&start_x, &start_y);
 
           int end_x = start_x;
@@ -435,25 +443,19 @@ processCommandChar(const KeyData &keyData)
         if      (key == '!')
           str = ":.!";
         else {
-          uint pos_x, pos_y;
+          uint pos_x1, pos_y1;
+          getPos(&pos_x1, &pos_y1);
 
-          getPos(&pos_x, &pos_y);
+          setSelectRange(pos_y1, pos_x1, pos_y1, pos_x1);
 
-          setSelectRange(pos_y, pos_x, pos_y, pos_x);
-
-          bool rc = processMoveChar(keyData, pos_x, pos_y);
+          int pos_x2 = pos_x1, pos_y2 = pos_y1;
+          bool rc = processMoveChar(keyData, pos_x2, pos_y2);
 
           if (rc) {
-            int sel_x, sel_y;
-
-            getSelectStart(&sel_x, &sel_y);
-
-            int d = std::abs(sel_y - int(pos_y));
+            int d = std::abs(pos_y2 - int(pos_y1));
 
             if (d != 0) {
-              getSelectEnd(&sel_x, &sel_y);
-
-              cursorTo(sel_y, pos_x);
+              cursorTo(pos_y2, pos_x2);
 
               str = ":.,+" + CStrUtil::toString(d) + "!";
             }
@@ -466,28 +468,9 @@ processCommandChar(const KeyData &keyData)
 
         break;
       }
-      case '<': {
-        uint start_x, start_y;
 
-        getPos(&start_x, &start_y);
-
-        int end_x = start_x;
-        int end_y = start_y;
-
-        if      (key == '<')
-          shiftLeft(start_y, end_y);
-        else {
-          bool rc = processMoveChar(keyData, end_x, end_y);
-
-          if (rc)
-            shiftRight(start_y, end_y);
-        }
-
-        break;
-      }
       case '>': {
         uint start_x, start_y;
-
         getPos(&start_x, &start_y);
 
         int end_x = start_x;
@@ -504,6 +487,25 @@ processCommandChar(const KeyData &keyData)
 
         break;
       }
+      case '<': {
+        uint start_x, start_y;
+        getPos(&start_x, &start_y);
+
+        int end_x = start_x;
+        int end_y = start_y;
+
+        if      (key == '<')
+          shiftLeft(start_y, end_y);
+        else {
+          bool rc = processMoveChar(keyData, end_x, end_y);
+
+          if (rc)
+            shiftRight(start_y, end_y);
+        }
+
+        break;
+      }
+
       case '[': {
         if (key == '[')
           prevSection();
@@ -559,7 +561,7 @@ processCommandChar(const KeyData &keyData)
   return;
 
  done:
-  count_    = 0;
+  count_   = 0;
   lastKey_ = '\0';
 }
 
@@ -916,6 +918,7 @@ processNormalChar(const KeyData &keyData)
     case ')': // sentence forward
       nextSentence();
       break;
+
     case '{': // paragraph backward
       prevParagraph();
       break;
@@ -1204,23 +1207,44 @@ processNormalChar(const KeyData &keyData)
 
       break;
 
-    case 'v': // char visual
     case 'V': // line visual
-      setVisual(! getVisual());
+      if (getVisualMode() != VisualMode::LINE)
+        setVisualMode(VisualMode::LINE);
+      else
+        setVisualMode(VisualMode::NONE);
 
-      if (! getVisual())
-        clearSelection();
-      else {
+      if (getVisualMode() == VisualMode::LINE) {
         uint pos_x, pos_y;
-
         getPos(&pos_x, &pos_y);
 
-        int sel_x, sel_y;
+        int n = std::max(count_, 1U);
 
-        getSelectEnd(&sel_x, &sel_y);
+        setSelectRange(pos_y, 0, pos_y + n - 1, 999);
 
-        setSelectRange(pos_x, pos_y, sel_x, sel_y);
+        cursorDown(n - 1);
       }
+      else
+        clearSelection();
+
+      break;
+    case 'v': // char visual
+      if (getVisualMode() != VisualMode::CHAR)
+        setVisualMode(VisualMode::CHAR);
+      else
+        setVisualMode(VisualMode::NONE);
+
+      if (getVisualMode() == VisualMode::CHAR) {
+        uint pos_x, pos_y;
+        getPos(&pos_x, &pos_y);
+
+        int n = std::max(count_, 1U);
+
+        setSelectRange(pos_y, pos_x, pos_y, pos_x + n - 1);
+
+        cursorRight(n - 1);
+      }
+      else
+        clearSelection();
 
       break;
 
@@ -1236,7 +1260,9 @@ processNormalChar(const KeyData &keyData)
       break;
     }
 
-    case int(KeyData::KeyCode::ESCAPE): case '\033':
+    case int(KeyData::KeyCode::ESCAPE):
+    case '\033':
+      setVisualMode(VisualMode::NONE);
       break;
 
     default:
@@ -1246,7 +1272,7 @@ processNormalChar(const KeyData &keyData)
 
  done:
   count_    = 0;
-  lastKey_ = '\0';
+  lastKey_  = '\0';
   register_ = '\0';
 }
 
@@ -1349,8 +1375,26 @@ processControlChar(const KeyData &keyData)
       break;
     }
     case 'v': // block visual
-      // TODO
+      if (getVisualMode() != VisualMode::BLOCK)
+        setVisualMode(VisualMode::BLOCK);
+      else
+        setVisualMode(VisualMode::NONE);
+
+      if (getVisualMode() == VisualMode::BLOCK) {
+        uint pos_x, pos_y;
+        getPos(&pos_x, &pos_y);
+
+        int n = std::max(count_, 1U);
+
+        setSelectRange(pos_y, pos_x, pos_y, pos_x + n - 1);
+
+        cursorRight(n - 1);
+      }
+      else
+        clearSelection();
+
       break;
+
     case 'y':
     case 0x19 /*EM*/: {
       int row1 = iface_->getPageBottom();
@@ -1387,7 +1431,7 @@ processInsertChar(const KeyData &keyData)
   lastCommand_.addKey(key);
 
   if (isalpha(key) || isdigit(key)) {
-    normalInsertChar(key);
+    processNormalInsertChar(key);
 
     return;
   }
@@ -1396,7 +1440,7 @@ processInsertChar(const KeyData &keyData)
     case '`':
     case '-':
     case '=':
-      normalInsertChar(key);
+      processNormalInsertChar(key);
 
       break;
 
@@ -1471,22 +1515,26 @@ processInsertChar(const KeyData &keyData)
     case ',':
     case '.':
     case '/':
-      normalInsertChar(key);
+      processNormalInsertChar(key);
 
       break;
 
-    case int(KeyData::KeyCode::ESCAPE): case '\033':
+    case int(KeyData::KeyCode::ESCAPE):
+    case '\033':
       setInsertMode(false);
+      setVisualMode(VisualMode::NONE);
 
       cursorLeft(1);
 
       break;
 
     case ' ':
-      normalInsertChar(key);
+      processNormalInsertChar(key);
 
       break;
 
+    case int(KeyData::KeyCode::ENTER):
+    case int(KeyData::KeyCode::RETURN):
     case '\r':
       splitLine();
       break;
@@ -1532,8 +1580,401 @@ processInsertChar(const KeyData &keyData)
   }
 
   count_    = 0;
-  lastKey_ = '\0';
+  lastKey_  = '\0';
   register_ = '\0';
+}
+
+void
+App::
+processVisualChar(const KeyData &keyData)
+{
+  char key = char(keyData.key);
+
+  if      (lastKey_ != '\0') {
+    switch (lastKey_) {
+      case 'a': {
+        switch (keyData.key) {
+          case 'w':
+            nextWord();
+            break;
+          case 'W':
+            nextWORD();
+            break;
+          case 's':
+            nextSentence();
+            break;
+          case 'p':
+            nextParagraph();
+            break;
+
+          default:
+            error(std::string("Unsupported key ") + key);
+            break;
+        }
+        break;
+      }
+      case 'i': {
+        switch (keyData.key) {
+          case 'w':
+          case 'W':
+          case 's':
+          case 'p':
+          default:
+            error(std::string("Unsupported key ") + key);
+            break;
+        }
+        break;
+      }
+      case 'g': {
+        auto selection = getSelection();
+
+        // last visual mode
+        if      (key == 'v') {
+        }
+        // select next match
+        else if (key == 'n') {
+          if (hasFindPattern())
+            findNext(getFindPattern());
+        }
+        // select prev match
+        else if (key == 'N') {
+          if (hasFindPattern())
+            findPrev(getFindPattern());
+        }
+        // format lines to 'textwidth' length
+        else if (key == 'q') {
+          error("Unimplemented");
+          break;
+        }
+        // test code !!!
+        else {
+          int x2 = selection.col2, y2 = selection.row2;
+          bool rc = processMoveChar(keyData, x2, y2);
+
+          if (rc)
+            setPos(x2, y2);
+        }
+
+        updateSelectRange();
+
+        break;
+      }
+      default:
+        error(std::string("Unsupported key ") + key);
+        break;
+    }
+
+    lastKey_ = '\0';
+
+    return;
+  }
+
+  //---
+
+  switch (keyData.key) {
+    // cursor movement
+    case 'h':
+    case '\b':
+    case int(KeyData::KeyCode::BACKSPACE): {
+      cursorLeft(std::max(count_, 1U));
+
+      break;
+    }
+    case int(KeyData::KeyCode::LEFT): {
+      if (keyData.is_shift) {
+        for (uint i = 0; i < std::max(count_, 1U); ++i)
+          prevWord();
+      }
+      else
+        cursorLeft(std::max(count_, 1U));
+
+      break;
+    }
+    case 'j': {
+      cursorDown(std::max(count_, 1U));
+
+      break;
+    }
+    case int(KeyData::KeyCode::DOWN): {
+      if (keyData.is_shift) {
+        int num = iface_->getPageLength();
+
+        cursorDown(num);
+
+        iface_->scrollTop();
+      }
+      else
+        cursorDown(std::max(count_, 1U));
+
+      break;
+    }
+    case 'k': {
+      cursorUp(std::max(count_, 1U));
+
+      break;
+    }
+    case int(KeyData::KeyCode::UP): {
+      if (keyData.is_shift) {
+        int num = iface_->getPageLength();
+
+        cursorUp(num);
+
+        iface_->scrollBottom();
+      }
+      else
+        cursorUp(std::max(count_, 1U));
+
+      break;
+    }
+    case 'l':
+    case ' ':
+    case '\f': {
+      cursorRight(std::max(count_, 1U));
+
+      break;
+    }
+    case int(KeyData::KeyCode::RIGHT): {
+      if (keyData.is_shift) {
+        for (uint i = 0; i < std::max(count_, 1U); ++i)
+          nextWord();
+      }
+      else
+        cursorRight(std::max(count_, 1U));
+
+      break;
+    }
+
+    case 'b': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        prevWord();
+
+      break;
+    }
+    case 'B': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        prevWORD();
+
+      break;
+    }
+    case 'w': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        nextWord();
+
+      break;
+    }
+    case 'W': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        nextWORD();
+
+      break;
+    }
+    case 'e': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        endWord();
+
+      break;
+    }
+    case 'E': {
+      for (uint i = 0; i < std::max(count_, 1U); ++i)
+        endWORD();
+
+      break;
+    }
+
+    // Other visual point
+    case 'o':
+    case 'O': {
+      int selRow1, selCol1, selRow2, selCol2;
+      getSelectStart(&selRow1, &selCol1);
+      getSelectEnd  (&selRow2, &selCol2);
+
+      uint x, y;
+      getPos(&x, &y);
+
+      if      (getVisualMode() == VisualMode::LINE) {
+        if      (int(y) == selRow1)
+          setPos(0, selRow2);
+        else if (int(y) == selRow2)
+          setPos(0, selRow1);
+      }
+      else if (getVisualMode() == VisualMode::CHAR) {
+        if      (int(y) == selRow1)
+          setPos(selCol2, selRow2);
+        else if (int(y) == selRow2)
+          setPos(selCol1, selRow1);
+      }
+      else {
+        if (keyData.key == 'o') {
+          if      (int(y) == selRow1 && int(x) == selCol1)
+            setPos(selCol2, selRow2);
+          else if (int(y) == selRow2 && int(x) == selCol2)
+            setPos(selCol1, selRow1);
+        }
+        else {
+          if      (int(x) == selCol1)
+            setPos(selCol2, y);
+          else if (int(x) == selCol2)
+            setPos(selCol1, y);
+        }
+      }
+
+      break;
+    }
+
+    // switch case
+    case '~':
+      processSelection(SelectionOp::SWAP_CASE);
+      break;
+    // delete selection
+    case 'd':
+      deleteSelection();
+      break;
+    // change selection
+    case 'c':
+      changeSelection();
+      break;
+    // yank selection
+    case 'y':
+      yankSelection();
+      break;
+    // shift right selection
+    case '>':
+      rshiftSelection();
+      break;
+    // shift left selection
+    case '<':
+      lshiftSelection();
+      break;
+    // filter though external command
+    case '!': {
+      std::string str = "'<,'>!";
+      setCmdLineMode(true, str);
+      break;
+    }
+    case '=': { // filter through format command
+      error("Unimplemented");
+      break;
+    }
+
+    // start ex command for selection
+    case ':': {
+      std::string str = "'<,'>";
+      setCmdLineMode(true, str);
+      break;
+    }
+    // single char replace
+    case 'r': {
+      error("Unimplemented");
+      break;
+    }
+    // insert replace
+    case 's': {
+      error("Unimplemented");
+      break;
+    }
+    // change selection lines
+    case 'C': {
+      error("Unimplemented");
+      break;
+    }
+    // substitute selection lines
+    case 'S': {
+      error("Unimplemented");
+      break;
+    }
+    // replace selection lines
+    case 'R': {
+      error("Unimplemented");
+      break;
+    }
+    case 'x': // delete
+      deleteSelection();
+      break;
+    case 'D': // delete to end of line
+      deleteSelection();
+      break;
+    case 'X': // delete
+      deleteSelection();
+      break;
+    case 'Y': // yank
+      yankSelection();
+      break;
+    case 'p': // put
+    case 'P': {
+      error("Unimplemented");
+      break;
+    }
+    case 'J': {
+      error("Join");
+      break;
+    }
+    case 'U': {
+      processSelection(SelectionOp::TO_UPPER);
+      break;
+    }
+    case 'u': {
+      processSelection(SelectionOp::TO_LOWER);
+      break;
+    }
+    case 'I': {
+      setCursorList(/*left*/true);
+      setInsertMode(true);
+      break;
+    }
+    case 'A': {
+      setCursorList(/*left*/false);
+      setInsertMode(true);
+      break;
+    }
+
+    case 'a': // add
+    case 'i': // insert ?
+    case 'g': { // goto
+      lastKey_ = key;
+      break;
+    }
+
+    case 'V': // line visual
+      if (getVisualMode() != VisualMode::LINE)
+        setVisualMode(VisualMode::LINE);
+      else
+        setVisualMode(VisualMode::NONE);
+
+      break;
+    case 'v': // char visual
+      if (keyData.is_control) {
+        if (getVisualMode() != VisualMode::BLOCK)
+          setVisualMode(VisualMode::BLOCK);
+        else
+          setVisualMode(VisualMode::NONE);
+      }
+      else {
+        if (getVisualMode() != VisualMode::CHAR)
+          setVisualMode(VisualMode::CHAR);
+        else
+          setVisualMode(VisualMode::NONE);
+      }
+
+      break;
+
+    case int(KeyData::KeyCode::ESCAPE):
+    case '\033':
+      setVisualMode(VisualMode::NONE);
+      break;
+
+    case int(KeyData::KeyCode::SHIFT):
+    case int(KeyData::KeyCode::CONTROL):
+    case int(KeyData::KeyCode::CAPS_LOCK):
+    case int(KeyData::KeyCode::META):
+    case int(KeyData::KeyCode::ALT):
+    case int(KeyData::KeyCode::SUPER):
+    case int(KeyData::KeyCode::HYPER):
+      break;
+
+    default:
+      error(std::string("Unsupported key ") + key);
+      break;
+  }
 }
 
 void
@@ -1575,21 +2016,27 @@ processCmdLineChar(const KeyData &keyData)
 
 void
 App::
-normalInsertChar(char key)
+processNormalInsertChar(char key)
 {
   if (getOverwriteMode())
     replaceChar(key);
   else
     insertChar(key);
 
+  for (auto &pos :  extraCursorPosList_) {
+    insertChar(pos.row, pos.col, key);
+
+    ++pos.col;
+  }
+
   count_    = 0;
-  lastKey_ = '\0';
+  lastKey_  = '\0';
   register_ = '\0';
 }
 
 bool
 App::
-processMoveChar(const KeyData &keyData, int new_pos_x, int new_pos_y)
+processMoveChar(const KeyData &keyData, int &new_pos_x, int &new_pos_y)
 {
   uint x = new_pos_x;
   uint y = new_pos_y;
@@ -1619,16 +2066,16 @@ processMoveChar(const KeyData &keyData, int new_pos_x, int new_pos_y)
     case '\b':
     case int(KeyData::KeyCode::BACKSPACE):
     case int(KeyData::KeyCode::LEFT): {
-      rc = cursorLeft (1, &y, &x);
+      rc = cursorLeft(1, &y, &x);
       break;
     }
     case 'j':
     case int(KeyData::KeyCode::DOWN):
-      rc = cursorDown (1, &y, &x);
+      rc = cursorDown(1, &y, &x);
       break;
     case 'k':
     case int(KeyData::KeyCode::UP):
-      rc = cursorUp   (1, &y, &x);
+      rc = cursorUp(1, &y, &x);
       break;
     case 'l':
     case int(KeyData::KeyCode::RIGHT):
@@ -1669,6 +2116,21 @@ processMoveChar(const KeyData &keyData, int new_pos_x, int new_pos_y)
   }
 
   return rc;
+}
+
+//---
+
+void
+App::
+updateSelectRange()
+{
+  int select_start_row, select_start_col;
+  getSelectStart(&select_start_row, &select_start_col);
+
+  uint x, y;
+  getPos(&x, &y);
+
+  rangeSelect(select_start_row, select_start_col, y, x, true);
 }
 
 //---
@@ -1714,9 +2176,9 @@ setInsertMode(bool insertMode)
 
   insertMode_ = insertMode;
 
-  setOverwriteMode(false);
-
   iface_->stateChanged();
+
+  setOverwriteMode(false);
 
   if (insertMode) {
     startGroup();
@@ -1728,6 +2190,438 @@ setInsertMode(bool insertMode)
 
     setExtraLineChar(false);
   }
+
+  if (! insertMode_)
+    extraCursorPosList_.clear();
+}
+
+void
+App::
+setOverwriteMode(bool value)
+{
+  if (overwriteMode_ == value)
+    return;
+
+  overwriteMode_ = value;
+
+  iface_->stateChanged();
+}
+
+void
+App::
+setVisualMode(VisualMode mode)
+{
+  if (visual_ == mode)
+    return;
+
+  visual_ = mode;
+
+  iface_->stateChanged();
+}
+
+
+void
+App::
+changeSelection()
+{
+  insertRows_.clear();
+
+  // TODO: repeat edits on first line to all lines
+  if (getVisualMode() == App::VisualMode::BLOCK) {
+    auto selection = getSelection();
+
+    for (uint r = selection.row1; r <= selection.row2; ++r)
+      insertRows_.push_back(r);
+  }
+
+  setInsertMode(true);
+
+  deleteSelection();
+}
+
+void
+App::
+deleteSelection()
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    startGroup();
+
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    setPos(selRow1, selCol1);
+
+    subDeleteChars(selRow1, selCol1, getLineLength(selRow1) - selCol1);
+
+    for (int r = selRow1 + 1; r < selRow2; ++r) {
+      setPos(r, 0);
+
+      subDeleteChars(r, 0, getLineLength(r));
+    }
+
+    setPos(selRow2, 0);
+
+    subDeleteChars(selRow2, 0, selCol2 + 1);
+
+    endGroup();
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    startGroup();
+
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    for (int r = selRow1; r <= selRow2; ++r)
+      subDeleteLine(r);
+
+    endGroup();
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    startGroup();
+
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    for (int r = selRow2; r >= selRow1; --r) {
+      setPos(r, selCol1);
+
+      subDeleteChars(r, selCol1, selCol2 - selCol1 + 1);
+    }
+
+    endGroup();
+  }
+
+  clearSelection();
+
+  setVisualMode(VisualMode::NONE);
+}
+
+void
+App::
+yankSelection()
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  std::vector<std::string> lines;
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    int r = selRow1;
+
+    std::string line;
+
+    for (int c = selCol1; c <= getLineLength(r); ++c)
+      line += getChar(r, c);
+
+    lines.push_back(line);
+
+    for (r = selRow1 + 1; r < selRow2; ++r) {
+      line = "";
+
+      for (int c = 0; c < getLineLength(r); ++c)
+        line += getChar(r, c);
+
+      lines.push_back(line);
+    }
+
+    line = "";
+
+    for (int c = 0; c <= selCol2; ++c)
+      line += getChar(r, c);
+
+    lines.push_back(line);
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    for (int r = selRow1; r <= selRow2; ++r) {
+      std::string line;
+
+      for (int c = 0; c <= getLineLength(r); ++c)
+        line += getChar(r, c);
+
+      lines.push_back(line);
+    }
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    for (int r = selRow1; r <= selRow2; ++r) {
+      std::string line;
+
+      for (int c = selCol1; c <= selCol2; ++c)
+        line += getChar(r, c);
+
+      lines.push_back(line);
+    }
+  }
+
+  auto &buffer = getBuffer('\0');
+
+  buffer.clear();
+
+  for (auto &line : lines)
+    buffer.addLine(line, /*new_line*/true);
+
+  clearSelection();
+
+  setVisualMode(VisualMode::NONE);
+}
+
+void
+App::
+lshiftSelection()
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  int line1 { 0 }, line2 { 0 };
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+
+  shiftLeft(line1, line2);
+
+  clearSelection();
+
+  setVisualMode(VisualMode::NONE);
+}
+
+void
+App::
+rshiftSelection()
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  int line1 { 0 }, line2 { 0 };
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    line1 = selRow1;
+    line2 = selRow2;
+  }
+
+  shiftRight(line1, line2);
+
+  clearSelection();
+
+  setVisualMode(VisualMode::NONE);
+}
+
+void
+App::
+processSelection(SelectionOp op)
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  auto processChar = [&](int r, int c) {
+    auto *line = getLine(r); assert(line);
+    auto c1 = line->getChar(c);
+    if      (op == SelectionOp::SWAP_CASE) {
+      if      (std::islower(c1)) c1 = char(std::toupper(int(c1)));
+      else if (std::isupper(c1)) c1 = char(std::tolower(int(c1)));
+    }
+    else if (op == SelectionOp::TO_UPPER) {
+      if (std::islower(c1)) c1 = char(std::toupper(int(c1)));
+    }
+    else if (op == SelectionOp::TO_LOWER) {
+      if (std::isupper(c1)) c1 = char(std::tolower(int(c1)));
+    }
+    line->setChar(c, c1);
+  };
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    int r = selRow1;
+
+    for (int c = selCol1; c <= getLineLength(r); ++c)
+      processChar(r, c);
+
+    for (r = selRow1 + 1; r < selRow2; ++r) {
+      for (int c = 0; c < getLineLength(r); ++c)
+        processChar(r, c);
+    }
+
+    for (int c = 0; c <= selCol2; ++c)
+      processChar(r, c);
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    for (int r = selRow1; r <= selRow2; ++r)
+      for (int c = 0; c <= getLineLength(r); ++c)
+        processChar(r, c);
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    for (int r = selRow1; r <= selRow2; ++r)
+      for (int c = selCol1; c <= selCol2; ++c)
+        processChar(r, c);
+  }
+}
+
+void
+App::
+setCursorList(bool left)
+{
+  auto visualMode = this->getVisualMode();
+
+  int selRow1, selCol1, selRow2, selCol2;
+  getSelectStart(&selRow1, &selCol1);
+  getSelectEnd  (&selRow2, &selCol2);
+
+  CursorPosList cursorPosList;
+
+  if      (visualMode == App::VisualMode::CHAR) {
+    if      (selRow1 > selRow2) {
+      std::swap(selRow1, selRow2);
+      std::swap(selCol1, selCol2);
+    }
+    else if (selRow1 == selRow2 && selCol1 > selCol2) {
+      std::swap(selCol1, selCol2);
+    }
+
+    int r = selRow1;
+
+    cursorPosList.push_back(CursorPos(selRow1, left ? selCol1 : selCol2 + 1));
+
+    for (r = selRow1 + 1; r < selRow2; ++r)
+      cursorPosList.push_back(CursorPos(r, left ? 0 : getLineLength(r)));
+
+    cursorPosList.push_back(CursorPos(r, left ? 0 : getLineLength(r)));
+  }
+  else if (visualMode == App::VisualMode::LINE) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+
+    for (int r = selRow1; r <= selRow2; ++r)
+      cursorPosList.push_back(CursorPos(r, left ? 0 : getLineLength(r)));
+  }
+  else if (visualMode == App::VisualMode::BLOCK) {
+    if (selRow1 > selRow2)
+      std::swap(selRow1, selRow2);
+    if (selCol1 > selCol2)
+      std::swap(selCol1, selCol2);
+
+    for (int r = selRow1; r <= selRow2; ++r)
+      cursorPosList.push_back(CursorPos(r, left ? selCol1 : selCol2 + 1));
+  }
+
+  cursorPos_ = cursorPosList[0];
+
+  extraCursorPosList_.clear();
+
+  for (size_t i = 1; i < cursorPosList.size(); ++i)
+    extraCursorPosList_.push_back(cursorPosList[i]);
+}
+
+int
+App::
+getLineLength(int r) const
+{
+  auto *line = getLine(r);
+  if (! line) return 0;
+  return int(line->getLength());
 }
 
 void
@@ -1736,14 +2630,34 @@ setCmdLineMode(bool cmdLineMode, const std::string &str)
 {
   cmdLineMode_ = cmdLineMode;
 
-  cmdLine_->setVisible(cmdLineMode);
+  cmdLine_->setVisible(cmdLineMode_);
 
   if (cmdLineMode_)
     cmdLine_->setLine(str);
   else
-    cmdLine_->setLine(str);
+    cmdLine_->setLine("");
 
   cmdLine_->cursorEnd();
+
+  if (! cmdLineMode_) {
+    setVisualMode(VisualMode::NONE);
+
+    clearSelection();
+  }
+}
+
+bool
+App::
+getCaseSensitive() const
+{
+  return ed_->getCaseSensitive();
+}
+
+void
+App::
+setCaseSensitive(bool value)
+{
+  ed_->setCaseSensitive(value);
 }
 
 std::string
@@ -1789,7 +2703,6 @@ App::
 getRow() const
 {
   uint x, y;
-
   getPos(&x, &y);
 
   return y;
@@ -1800,7 +2713,6 @@ App::
 getCol() const
 {
   uint x, y;
-
   getPos(&x, &y);
 
   return x;
@@ -1813,7 +2725,6 @@ fixPos()
   bool changed = false;
 
   uint x, y;
-
   getPos(&x, &y);
 
   if (y >= getNumLines()) {
@@ -1876,7 +2787,6 @@ App::
 getChar() const
 {
   uint x, y;
-
   getPos(&x, &y);
 
   return getChar(y, x);
@@ -2375,50 +3285,50 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
 {
   CASSERT(line_num1 < getNumLines() && line_num2 < getNumLines(), "Invalid Line Num");
 
-  std::vector<BufferLine> lines;
+  std::vector<BufferLine> bufferLines;
 
   if      (line_num1 < line_num2) {
     const auto *line1 = getLine(line_num1);
 
-    const std::string &str1 = line1->getString();
+    const auto &str1 = line1->getString();
 
-    lines.push_back(BufferLine(str1.substr(char_num1), is_line));
+    bufferLines.push_back(BufferLine(str1.substr(char_num1), is_line));
 
     for (uint i = line_num1 + 1; i < line_num2; ++i) {
       const auto *line = getLine(i);
 
-      lines.push_back(BufferLine(line->getString(), true));
+      bufferLines.push_back(BufferLine(line->getString(), true));
     }
 
     const auto *line2 = getLine(line_num2);
 
-    const std::string &str2 = line2->getString();
+    const auto &str2 = line2->getString();
 
-    lines.push_back(BufferLine(str2.substr(0, char_num2), is_line));
+    bufferLines.push_back(BufferLine(str2.substr(0, char_num2), is_line));
   }
   else if (line_num2 < line_num1) {
     const auto *line2 = getLine(line_num2);
 
-    const std::string &str2 = line2->getString();
+    const auto &str2 = line2->getString();
 
-    lines.push_back(BufferLine(str2.substr(char_num2), is_line));
+    bufferLines.push_back(BufferLine(str2.substr(char_num2), is_line));
 
     for (uint i = line_num2 + 1; i < line_num1; ++i) {
       const auto *line = getLine(i);
 
-      lines.push_back(BufferLine(line->getString(), true));
+      bufferLines.push_back(BufferLine(line->getString(), true));
     }
 
     const auto *line1 = getLine(line_num1);
 
     const std::string &str1 = line1->getString();
 
-    lines.push_back(BufferLine(str1.substr(0, char_num1), is_line));
+    bufferLines.push_back(BufferLine(str1.substr(0, char_num1), is_line));
   }
    else {
     const auto *line1 = getLine(line_num1);
 
-    const std::string &str1 = line1->getString();
+    const auto &str1 = line1->getString();
 
     std::string str2;
 
@@ -2427,26 +3337,20 @@ subYankTo(char id, uint line_num1, uint char_num1, uint line_num2, uint char_num
     else
       str2 = str1.substr(char_num2, char_num1 - char_num2 + 1);
 
-    lines.push_back(BufferLine(str2, is_line));
+    bufferLines.push_back(BufferLine(str2, is_line));
   }
-
-  auto p1 = lines.begin();
-  auto p2 = lines.end  ();
 
   if (inGroup()) {
     auto *group = groupList_.back();
 
-    for ( ; p1 != p2; ++p1)
-      group->addLine((*p1).getLine(), (*p1).hasNewLine());
+    for (const auto &bufferLine : bufferLines)
+      group->addLine(bufferLine.getLine(), bufferLine.hasNewLine());
   }
   else {
     auto &buffer = getBuffer(id);
 
-    for ( ; p1 != p2; ++p1) {
-      auto &bufferLine = *p1;
-
+    for (const auto &bufferLine : bufferLines)
       buffer.addLine(bufferLine.getLine(), bufferLine.hasNewLine());
-    }
   }
 }
 
@@ -2587,7 +3491,6 @@ App::
 insertChar(char c)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   insertChar(y, x, c);
@@ -2635,7 +3538,6 @@ App::
 replaceChar(char c)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   replaceChar(y, x, c);
@@ -2785,12 +3687,14 @@ App::
 cursorLeft(uint n)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   bool rc = cursorLeft(n, &y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 
   return rc;
 }
@@ -2814,12 +3718,14 @@ App::
 cursorRight(uint n)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   bool rc = cursorRight(n, &y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 
   return rc;
 }
@@ -2847,12 +3753,14 @@ App::
 cursorUp(uint n)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   bool rc = cursorUp(n, &y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 
   return rc;
 }
@@ -2887,12 +3795,14 @@ App::
 cursorDown(uint n)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   bool rc = cursorDown(n, &y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 
   return rc;
 }
@@ -2930,12 +3840,14 @@ App::
 cursorToLeft()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorToLeft(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 void
@@ -2950,12 +3862,14 @@ App::
 cursorToRight()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorToRight(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 void
@@ -2974,7 +3888,6 @@ App::
 cursorSkipSpace()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorSkipSpace(&y, &x);
@@ -2999,7 +3912,6 @@ App::
 cursorFirstNonBlankUp()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorFirstNonBlankUp(&y, &x);
@@ -3021,7 +3933,6 @@ App::
 cursorFirstNonBlankDown()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorFirstNonBlankDown(&y, &x);
@@ -3043,7 +3954,6 @@ App::
 cursorFirstNonBlank()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   cursorFirstNonBlank(&y, &x);
@@ -3074,12 +3984,14 @@ App::
 nextWord()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   nextWord(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 // a word a series of alphanumeric or _ characters OR
@@ -3151,12 +4063,14 @@ App::
 nextWORD()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   nextWORD(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 // a WORD is a series of non-blank characters
@@ -3219,12 +4133,14 @@ App::
 prevWord()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   prevWord(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 void
@@ -3280,12 +4196,14 @@ App::
 prevWORD()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   prevWORD(&y, &x);
 
   setPos(x, y);
+
+  if (getVisualMode() != VisualMode::NONE)
+    updateSelectRange();
 }
 
 void
@@ -3334,7 +4252,6 @@ App::
 endWord()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   endWord(&y, &x);
@@ -3435,7 +4352,6 @@ App::
 endWORD()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   endWORD(&y, &x);
@@ -3516,7 +4432,6 @@ App::
 getWord(std::string &word)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   return getWord(y, x, word);
@@ -3558,7 +4473,6 @@ App::
 nextSentence()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   nextSentence(&y, &x);
@@ -3649,7 +4563,6 @@ App::
 prevSentence()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   prevSentence(&y, &x);
@@ -3743,7 +4656,6 @@ App::
 nextParagraph()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   nextParagraph(&y, &x);
@@ -3777,7 +4689,6 @@ App::
 prevParagraph()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   prevParagraph(&y, &x);
@@ -3811,7 +4722,6 @@ App::
 nextSection()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   nextSection(&y, &x);
@@ -3845,7 +4755,6 @@ App::
 prevSection()
 {
   uint x, y;
-
   getPos(&x, &y);
 
   prevSection(&y, &x);
@@ -4441,6 +5350,26 @@ bool
 App::
 getMarkPos(const std::string &name, uint *row, uint *col)
 {
+  if (name == "<") {
+    int row1, col1;
+    if (! getSelectStart(&row1, &col1))
+      return false;
+    *row = row1;
+    *col = col1;
+    return true;
+  }
+
+  if (name == ">") {
+    int row1, col1;
+    if (! getSelectEnd(&row1, &col1))
+      return false;
+    *row = row1;
+    *col = col1;
+    return true;
+  }
+
+  //---
+
   auto p = markPosMap_.find(name);
   if (p == markPosMap_.end()) return false;
 
@@ -4457,7 +5386,6 @@ App::
 setMarkPos(const std::string &name)
 {
   uint x, y;
-
   getPos(&x, &y);
 
   setMarkPos(name, y, x);
@@ -4824,20 +5752,36 @@ findPrev(const Line *line, const CRegExp &pattern, int char_num1, int char_num2,
   return true;
 }
 
-void
+bool
 App::
 getSelectStart(int *row, int *col) const
 {
-  *row = selection_.row1;
-  *col = selection_.col1;
+  if (selection_.set) {
+    *row = selection_.row1;
+    *col = selection_.col1;
+  }
+  else {
+    *row = -1;
+    *col = -1;
+  }
+
+  return selection_.set;
 }
 
-void
+bool
 App::
 getSelectEnd(int *row, int *col) const
 {
-  *row = selection_.row2;
-  *col = selection_.col2;
+  if (selection_.set) {
+    *row = selection_.row2;
+    *col = selection_.col2;
+  }
+  else {
+    *row = -1;
+    *col = -1;
+  }
+
+  return selection_.set;
 }
 
 void
@@ -4850,13 +5794,19 @@ setSelectRange(int row1, int col1, int row2, int col2)
   selection_.col1 = col1;
   selection_.row2 = row2;
   selection_.col2 = col2;
+
+  iface_->selectionChanged();
 }
 
 void
 App::
 clearSelection()
 {
+  lastSelection_ = selection_;
+
   selection_.set = false;
+
+  iface_->selectionChanged();
 }
 
 void
@@ -4869,6 +5819,8 @@ rangeSelect(int row1, int col1, int row2, int col2, bool select)
   selection_.col1 = col1;
   selection_.row2 = row2;
   selection_.col2 = col2;
+
+  iface_->selectionChanged();
 }
 
 //---
@@ -4910,16 +5862,94 @@ setNameValue(const std::string &name, const std::string &value)
 {
   if      (name == "list") {
     if (value == "1")
-      listMode_ = true;
+      setListMode(true);
   }
   else if (name == "nolist") {
     if (value == "1")
-      listMode_ = false;
+      setListMode(false);
+  }
+  else if (name == "number") {
+    if (value == "1")
+      setNumberMode(true);
+  }
+  else if (name == "nonumber") {
+    if (value == "1")
+      setNumberMode(false);
+  }
+  else if (name == "ignorecase") {
+    if (value == "1")
+      setCaseSensitive(false);
+  }
+  else if (name == "noignorecase") {
+    if (value == "1")
+      setCaseSensitive(true);
+  }
+  else if (name == "syntax") {
+    if      (value == "c")
+      setSyntax(new CSyntaxC);
+    else if (value == "cpp")
+      setSyntax(new CSyntaxCPP);
+    else
+      setSyntax(nullptr);
   }
 
   nameValues_[name] = value;
 
   iface_->stateChanged();
+}
+
+void
+App::
+setSyntax(CSyntax *syntax)
+{
+  delete syntax_;
+
+  syntax_ = syntax;
+
+  if (syntax_) {
+    class Notifier : public CSyntaxNotifier {
+     public:
+      Notifier(App *app) :
+       app_(app) {
+      }
+
+      App *app() const { return app_; }
+
+      void setLine(Line *line) {
+        line_ = line;
+      }
+
+      void addToken(uint, uint word_start, const std::string &word, CSyntaxToken token) override {
+        line_->addAnnotation(word_start, int(word_start + word.size() - 1), token);
+      }
+
+     private:
+      App*  app_  { nullptr };
+      Line* line_ { nullptr };
+    };
+
+    //---
+
+    Notifier notifier(this);
+
+    syntax_->init();
+
+    syntax_->setNotifier(&notifier);
+
+    for (auto *line : lines_) {
+      notifier.setLine(line);
+
+      line->clearAnnotations();
+
+      syntax_->processLine(line->chars());
+    }
+
+    syntax_->term();
+  }
+  else {
+    for (auto *line : lines_)
+      line->clearAnnotations();
+  }
 }
 
 //------
@@ -5478,6 +6508,33 @@ Line::
 setChanged(bool changed)
 {
   changed_ = changed;
+}
+
+void
+Line::
+addAnnotation(uint start, uint end, const CSyntaxToken &token)
+{
+  for (uint i = start; i <= end; ++i)
+    charStyle_[i] = Style(token);
+}
+
+void
+Line::
+clearAnnotations()
+{
+  charStyle_.clear();
+}
+
+bool
+Line::
+getCharStyle(int i, Style &style) const
+{
+  auto p = charStyle_.find(i);
+  if (p == charStyle_.end()) return false;
+
+  style = (*p).second;
+
+  return true;
 }
 
 void

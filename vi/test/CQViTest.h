@@ -1,66 +1,70 @@
-#include <CQMainWindow.h>
-#include <CQMenu.h>
-#include <CQToolBar.h>
+#ifndef CQViTest_H
+#define CQViTest_H
 
-class CQEdit;
+#include <CQMainWindow.h>
+
+#include <vector>
+
+class CQTabWidget;
+class CQMenu;
+class CQMenuItem;
+class CQToolBar;
 class CQFontChooser;
 class CQColorChooser;
-class QTabWidget;
-class QLabel;
-class QToolButton;
-class QComboBox;
-class QLineEdit;
 
-class CQEditTest : public CQMainWindow {
+class QToolButton;
+class QLabel;
+
+namespace CQVi {
+class Widget;
+}
+
+class CQViTest : public CQMainWindow {
   Q_OBJECT
 
  public:
-  CQEditTest();
- ~CQEditTest();
+  CQViTest();
+ ~CQViTest();
 
   void addFile(const std::string &filename);
 
-  CQEdit *getEdit() const { return edit_; }
+  QSize sizeHint() const override;
 
  private:
   void createMenus() override;
   void createToolBars() override;
   void createStatusBar() override;
 
-  void setCurrent(CQEdit *edit, CQEdit *output);
-
- private slots:
-  void currentFileChanged(int);
+ private Q_SLOTS:
+  void updateState();
 
   void newFileSlot();
   void addFileSlot();
   void replaceFileSlot();
+
   void saveFileSlot();
   void saveFileAsSlot();
+
   void closeFileSlot();
 
   void undo();
   void redo();
 
-  void setFont(const QFont&);
-  void setSelectionColor(const QColor &qcolor);
+  void setOptions();
 
-  void modeChanged(const QString &modeName);
+  void setFont(const QFont &f);
+  void setSelectionColor(const QColor &c);
 
-  void setBg();
-
-  void updateStatus();
-  void outputMessage(const QString &msg);
-  void errorMessage(const QString &msg);
-  void updateTitle();
+  CQVi::Widget *currentEdit() const;
 
  private:
-  QTabWidget     *fileTab_ { nullptr };
-  CQEdit         *edit_    { nullptr };
-  CQEdit         *output_  { nullptr };
-  CQFontChooser  *font_    { nullptr };
-  CQColorChooser *color_   { nullptr };
-  QComboBox      *mode_    { nullptr };
+  using Edits = std::vector<CQVi::Widget *>;
+
+  CQTabWidget*  fileTab_ { nullptr };
+  Edits         edits_;
+
+  CQFontChooser  *font_  { nullptr };
+  CQColorChooser *color_ { nullptr };
 
   // File Menu
   CQMenu *fileMenu_ { nullptr };
@@ -85,6 +89,7 @@ class CQEditTest : public CQMainWindow {
   CQMenu *viewMenu_ { nullptr };
 
   CQMenuItem *bgItem_ { nullptr };
+  CQMenuItem *fgItem_ { nullptr };
 
   // Help Menu
   CQMenu *helpMenu_ { nullptr };
@@ -104,3 +109,5 @@ class CQEditTest : public CQMainWindow {
   QLabel      *sizeLabel_     { nullptr };
   QLabel      *positionLabel_ { nullptr };
 };
+
+#endif

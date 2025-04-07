@@ -122,139 +122,139 @@ void
 CQEditTest::
 createMenus()
 {
-  fileMenu = new CQMenu(this, "&File");
+  fileMenu_ = new CQMenu(this, "&File");
 
   //----
 
-  newItem = new CQMenuItem(fileMenu, "&New");
+  newItem_ = new CQMenuItem(fileMenu_, "&New");
 
-  newItem->setShortcut("Ctrl+N");
-  newItem->setStatusTip("Create New file");
+  newItem_->setShortcut("Ctrl+N");
+  newItem_->setStatusTip("Create New file");
 
-  connect(newItem->getAction(), SIGNAL(triggered()), this, SLOT(newFileSlot()));
-
-  //----
-
-  loadItem = new CQMenuItem(fileMenu, "&Add");
-
-  loadItem->setShortcut("Ctrl+A");
-  loadItem->setStatusTip("Add new file");
-  loadItem->setIcon(CQPixmapCacheInst->getIcon("ADD_FILE"));
-
-  connect(loadItem->getAction(), SIGNAL(triggered()), this, SLOT(addFileSlot()));
+  connect(newItem_->getAction(), SIGNAL(triggered()), this, SLOT(newFileSlot()));
 
   //----
 
-  loadItem = new CQMenuItem(fileMenu, "&Replace");
+  loadItem_ = new CQMenuItem(fileMenu_, "&Add");
 
-  loadItem->setShortcut("Ctrl+R");
-  loadItem->setStatusTip("Replace current file");
-  loadItem->setIcon(CQPixmapCacheInst->getIcon("OPEN"));
+  loadItem_->setShortcut("Ctrl+A");
+  loadItem_->setStatusTip("Add new file");
+  loadItem_->setIcon(CQPixmapCacheInst->getIcon("ADD_FILE"));
 
-  connect(loadItem->getAction(), SIGNAL(triggered()), this, SLOT(replaceFileSlot()));
-
-  //----
-
-  saveItem = new CQMenuItem(fileMenu, "&Save");
-
-  saveItem->setShortcut("Ctrl+S");
-  saveItem->setStatusTip("Save current file");
-
-  saveItem->setIcon(CQPixmapCacheInst->getIcon("SAVE"));
-
-  connect(saveItem->getAction(), SIGNAL(triggered()), this, SLOT(saveFileSlot()));
+  connect(loadItem_->getAction(), SIGNAL(triggered()), this, SLOT(addFileSlot()));
 
   //----
 
-  saveAsItem = new CQMenuItem(fileMenu, "Save &As...");
+  loadItem_ = new CQMenuItem(fileMenu_, "&Replace");
 
-  saveAsItem->setShortcut("Ctrl+A");
-  saveAsItem->setStatusTip("Save current file with new name");
+  loadItem_->setShortcut("Ctrl+R");
+  loadItem_->setStatusTip("Replace current file");
+  loadItem_->setIcon(CQPixmapCacheInst->getIcon("OPEN"));
 
-  saveAsItem->setIcon(CQPixmapCacheInst->getIcon("SAVE_AS"));
-
-  connect(saveAsItem->getAction(), SIGNAL(triggered()), this, SLOT(saveFileAsSlot()));
-
-  //----
-
-  closeItem = new CQMenuItem(fileMenu, "Close");
-
-  closeItem->setShortcut("Ctrl+C");
-  closeItem->setStatusTip("Close current file");
-
-  //closeItem->setIcon(save_as_data, SAVE_AS_DATA_LEN);
-
-  connect(closeItem->getAction(), SIGNAL(triggered()), this, SLOT(closeFileSlot()));
+  connect(loadItem_->getAction(), SIGNAL(triggered()), this, SLOT(replaceFileSlot()));
 
   //----
 
-  fileMenu->addSeparator();
+  saveItem_ = new CQMenuItem(fileMenu_, "&Save");
+
+  saveItem_->setShortcut("Ctrl+S");
+  saveItem_->setStatusTip("Save current file");
+
+  saveItem_->setIcon(CQPixmapCacheInst->getIcon("SAVE"));
+
+  connect(saveItem_->getAction(), SIGNAL(triggered()), this, SLOT(saveFileSlot()));
 
   //----
 
-  quitItem = new CQMenuItem(fileMenu, "&Quit");
+  saveAsItem_ = new CQMenuItem(fileMenu_, "Save &As...");
 
-  quitItem->setShortcut("Ctrl+Q");
-  quitItem->setStatusTip("Quit the application");
+  saveAsItem_->setShortcut("Ctrl+A");
+  saveAsItem_->setStatusTip("Save current file with new name");
 
-  connect(quitItem->getAction(), SIGNAL(triggered()), this, SLOT(close()));
+  saveAsItem_->setIcon(CQPixmapCacheInst->getIcon("SAVE_AS"));
+
+  connect(saveAsItem_->getAction(), SIGNAL(triggered()), this, SLOT(saveFileAsSlot()));
+
+  //----
+
+  closeItem_ = new CQMenuItem(fileMenu_, "Close");
+
+  closeItem_->setShortcut("Ctrl+C");
+  closeItem_->setStatusTip("Close current file");
+
+  //closeItem_->setIcon(save_as_data, SAVE_AS_DATA_LEN);
+
+  connect(closeItem_->getAction(), SIGNAL(triggered()), this, SLOT(closeFileSlot()));
+
+  //----
+
+  fileMenu_->addSeparator();
+
+  //----
+
+  quitItem_ = new CQMenuItem(fileMenu_, "&Quit");
+
+  quitItem_->setShortcut("Ctrl+Q");
+  quitItem_->setStatusTip("Quit the application");
+
+  connect(quitItem_->getAction(), SIGNAL(triggered()), this, SLOT(close()));
 
   //--------
 
-  editMenu = new CQMenu(this, "&Edit");
+  editMenu_ = new CQMenu(this, "&Edit");
 
   //----
 
-  cutItem = new CQMenuItem(editMenu, "C&ut");
+  cutItem_ = new CQMenuItem(editMenu_, "C&ut");
 
-  cutItem->setShortcut("Ctrl+X");
-  cutItem->setStatusTip("Cut selected text");
+  cutItem_->setShortcut("Ctrl+X");
+  cutItem_->setStatusTip("Cut selected text");
 
-  cutItem->setIcon(CQPixmapCacheInst->getIcon("CUT"));
+  cutItem_->setIcon(CQPixmapCacheInst->getIcon("CUT"));
 
-  copyItem = new CQMenuItem(editMenu, "&Copy");
+  copyItem_ = new CQMenuItem(editMenu_, "&Copy");
 
-  copyItem->setShortcut("Ctrl+C");
-  copyItem->setStatusTip("Copy selected text");
+  copyItem_->setShortcut("Ctrl+C");
+  copyItem_->setStatusTip("Copy selected text");
 
-  copyItem->setIcon(CQPixmapCacheInst->getIcon("COPY"));
+  copyItem_->setIcon(CQPixmapCacheInst->getIcon("COPY"));
 
-  pasteItem = new CQMenuItem(editMenu, "&Paste");
+  pasteItem_ = new CQMenuItem(editMenu_, "&Paste");
 
-  pasteItem->setShortcut("Ctrl+V");
-  pasteItem->setStatusTip("Paste selected text");
+  pasteItem_->setShortcut("Ctrl+V");
+  pasteItem_->setStatusTip("Paste selected text");
 
-  pasteItem->setIcon(CQPixmapCacheInst->getIcon("PASTE"));
+  pasteItem_->setIcon(CQPixmapCacheInst->getIcon("PASTE"));
 
-  editMenu->addSeparator();
+  editMenu_->addSeparator();
 
-  undoItem = new CQMenuItem(editMenu, "&Undo");
+  undoItem_ = new CQMenuItem(editMenu_, "&Undo");
 
-  undoItem->setShortcut("Ctrl+Z");
-  undoItem->setStatusTip("Undo last change");
+  undoItem_->setShortcut("Ctrl+Z");
+  undoItem_->setStatusTip("Undo last change");
 
-  undoItem->setIcon(CQPixmapCacheInst->getIcon("UNDO"));
+  undoItem_->setIcon(CQPixmapCacheInst->getIcon("UNDO"));
 
-  connect(undoItem->getAction(), SIGNAL(triggered()), this, SLOT(undo()));
+  connect(undoItem_->getAction(), SIGNAL(triggered()), this, SLOT(undo()));
 
-  redoItem = new CQMenuItem(editMenu, "&Redo");
+  redoItem_ = new CQMenuItem(editMenu_, "&Redo");
 
-  redoItem->setShortcut("Ctrl+Y");
-  redoItem->setStatusTip("Redo last undo");
+  redoItem_->setShortcut("Ctrl+Y");
+  redoItem_->setStatusTip("Redo last undo");
 
-  redoItem->setIcon(CQPixmapCacheInst->getIcon("REDO"));
+  redoItem_->setIcon(CQPixmapCacheInst->getIcon("REDO"));
 
-  connect(redoItem->getAction(), SIGNAL(triggered()), this, SLOT(redo()));
+  connect(redoItem_->getAction(), SIGNAL(triggered()), this, SLOT(redo()));
 
   //--------
 
-  viewMenu = new CQMenu(this, "&View");
+  viewMenu_ = new CQMenu(this, "&View");
 
-  bgItem = new CQMenuItem(viewMenu, "Set &Background");
+  bgItem_ = new CQMenuItem(viewMenu_, "Set &Background");
 
-  bgItem->setStatusTip("Set Background");
+  bgItem_->setStatusTip("Set Background");
 
-  connect(bgItem->getAction(), SIGNAL(triggered()), this, SLOT(setBg()));
+  connect(bgItem_->getAction(), SIGNAL(triggered()), this, SLOT(setBg()));
 
   //--------
 
@@ -262,47 +262,47 @@ createMenus()
 
   //--------
 
-  helpMenu = new CQMenu(this, "&Help");
+  helpMenu_ = new CQMenu(this, "&Help");
 
   //----
 
-  aboutItem = new CQMenuItem(helpMenu, "&About");
+  aboutItem_ = new CQMenuItem(helpMenu_, "&About");
 
-  aboutItem->setStatusTip("Show the application's About box");
+  aboutItem_->setStatusTip("Show the application's About box");
 
-//connect(aboutItem->getAction(), SIGNAL(triggered()), this, SLOT(about()));
+//connect(aboutItem_->getAction(), SIGNAL(triggered()), this, SLOT(about()));
 }
 
 void
 CQEditTest::
 createToolBars()
 {
-  fileToolBar = new CQToolBar(this, "&File");
+  fileToolBar_ = new CQToolBar(this, "&File");
 
-  fileToolBar->addItem(loadItem);
-  fileToolBar->addItem(saveItem);
-  fileToolBar->addItem(saveAsItem);
-
-  //----
-
-  editToolBar = new CQToolBar(this, "&Edit");
-
-  //editToolBar->setIconSize(QSize(16, 16));
-
-  editToolBar->addItem(cutItem);
-  editToolBar->addItem(copyItem);
-  editToolBar->addItem(pasteItem);
-
-  editToolBar->addSeparator();
-
-  editToolBar->addItem(undoItem);
-  editToolBar->addItem(redoItem);
+  fileToolBar_->addItem(loadItem_);
+  fileToolBar_->addItem(saveItem_);
+  fileToolBar_->addItem(saveAsItem_);
 
   //----
 
-  styleToolBar = new CQToolBar(this, "&Style");
+  editToolBar_ = new CQToolBar(this, "&Edit");
 
-  //styleToolBar->setIconSize(QSize(16, 16));
+  //editToolBar_->setIconSize(QSize(16, 16));
+
+  editToolBar_->addItem(cutItem_);
+  editToolBar_->addItem(copyItem_);
+  editToolBar_->addItem(pasteItem_);
+
+  editToolBar_->addSeparator();
+
+  editToolBar_->addItem(undoItem_);
+  editToolBar_->addItem(redoItem_);
+
+  //----
+
+  styleToolBar_ = new CQToolBar(this, "&Style");
+
+  //styleToolBar_->setIconSize(QSize(16, 16));
 
   font_ = new CQFontChooser(this);
 
@@ -310,7 +310,7 @@ createToolBars()
 
   connect(font_, SIGNAL(fontChanged(const QFont &)), this, SLOT(setFont(const QFont &)));
 
-  styleToolBar->addWidget(font_);
+  styleToolBar_->addWidget(font_);
 
   color_ = new CQColorChooser(this);
 
@@ -319,13 +319,13 @@ createToolBars()
   connect(color_, SIGNAL(colorApplied(const QColor &)),
           this, SLOT(setSelectionColor(const QColor &)));
 
-  styleToolBar->addWidget(color_);
+  styleToolBar_->addWidget(color_);
 
   //----
 
-  modeToolBar = new CQToolBar(this, "&Mode");
+  modeToolBar_ = new CQToolBar(this, "&Mode");
 
-  //modeToolBar->setIconSize(QSize(16, 16));
+  //modeToolBar_->setIconSize(QSize(16, 16));
 
   mode_ = new QComboBox(this);
 
@@ -335,57 +335,57 @@ createToolBars()
   connect(mode_, SIGNAL(currentIndexChanged(const QString &)),
           this, SLOT(modeChanged(const QString &)));
 
-  modeToolBar->addWidget(mode_);
+  modeToolBar_->addWidget(mode_);
 }
 
 void
 CQEditTest::
 createStatusBar()
 {
-  statusLabel = new QLabel(" ");
+  statusLabel_ = new QLabel(" ");
 
-  statusLabel->setAlignment(Qt::AlignHCenter);
-  statusLabel->setMinimumSize(statusLabel->sizeHint());
+  statusLabel_->setAlignment(Qt::AlignHCenter);
+  statusLabel_->setMinimumSize(statusLabel_->sizeHint());
 
-  statusBar()->addWidget(statusLabel);
+  statusBar()->addWidget(statusLabel_);
 
-  messageLabel = new QLabel(" ");
+  messageLabel_ = new QLabel(" ");
 
-  messageLabel->setAlignment(Qt::AlignHCenter);
-  messageLabel->setMinimumSize(messageLabel->sizeHint());
+  messageLabel_->setAlignment(Qt::AlignHCenter);
+  messageLabel_->setMinimumSize(messageLabel_->sizeHint());
 
-  statusBar()->addPermanentWidget(messageLabel);
+  statusBar()->addPermanentWidget(messageLabel_);
 
-  insButton = new QToolButton();
+  insButton_ = new QToolButton();
 
-  insButton->setText("INS");
+  insButton_->setText("INS");
 
-  insButton->setMinimumSize(insButton->sizeHint());
+  insButton_->setMinimumSize(insButton_->sizeHint());
 
-  statusBar()->addPermanentWidget(insButton);
+  statusBar()->addPermanentWidget(insButton_);
 
-  sizeLabel = new QLabel(" ");
+  sizeLabel_ = new QLabel(" ");
 
-  sizeLabel->setAlignment(Qt::AlignHCenter);
-  sizeLabel->setMinimumSize(sizeLabel->sizeHint());
+  sizeLabel_->setAlignment(Qt::AlignHCenter);
+  sizeLabel_->setMinimumSize(sizeLabel_->sizeHint());
 
-  statusBar()->addPermanentWidget(sizeLabel);
+  statusBar()->addPermanentWidget(sizeLabel_);
 
-  positionLabel = new QLabel(" ");
+  positionLabel_ = new QLabel(" ");
 
-  positionLabel->setAlignment(Qt::AlignHCenter);
-  positionLabel->setMinimumSize(positionLabel->sizeHint());
+  positionLabel_->setAlignment(Qt::AlignHCenter);
+  positionLabel_->setMinimumSize(positionLabel_->sizeHint());
 
-  statusBar()->addPermanentWidget(positionLabel);
+  statusBar()->addPermanentWidget(positionLabel_);
 }
 
 void
 CQEditTest::
 currentFileChanged(int)
 {
-  QWidget *w = fileTab_->currentWidget();
+  auto *w = fileTab_->currentWidget();
 
-  QTabWidget *editTab = qobject_cast<QTabWidget *>(w);
+  auto *editTab = qobject_cast<QTabWidget *>(w);
 
   if (! editTab) return;
 
@@ -415,8 +415,7 @@ void
 CQEditTest::
 addFileSlot()
 {
-  QString fileName =
-    QFileDialog::getOpenFileName(this, "Open File", "", "Text Files (*.txt *.*)");
+  auto fileName = QFileDialog::getOpenFileName(this, "Open File", "", "Text Files (*.txt *.*)");
 
   addFile(fileName.toStdString());
 }
@@ -425,8 +424,7 @@ void
 CQEditTest::
 replaceFileSlot()
 {
-  QString fileName =
-    QFileDialog::getOpenFileName(this, "Open File", "", "Text Files (*.txt *.*)");
+  auto fileName = QFileDialog::getOpenFileName(this, "Open File", "", "Text Files (*.txt *.*)");
 
   if (fileName.length())
     edit_->getFile()->loadLines(fileName.toStdString());
@@ -524,7 +522,7 @@ void
 CQEditTest::
 setBg()
 {
-  CQEditBg *dialog = new CQEditBg(this);
+  auto *dialog = new CQEditBg(this);
 
   dialog->init();
 
@@ -547,7 +545,7 @@ updateStatus()
 
   if (! edit_) return;
 
-  CQEditFile *file = edit_->getFile();
+  auto *file = edit_->getFile();
 
   QString mode;
 
@@ -559,24 +557,24 @@ updateStatus()
   else
     mode = "Text";
 
-  QString msg = QString("Mode: %1").arg(mode);
+  auto msg = QString("Mode: %1").arg(mode);
 
-  statusLabel->setText(msg);
+  statusLabel_->setText(msg);
 
   if      (file->getInsertMode())
-    insButton->setText("INS");
+    insButton_->setText("INS");
   else if (file->getVisual())
-    insButton->setText("VIS");
+    insButton_->setText("VIS");
   else
-    insButton->setText("OVR");
+    insButton_->setText("OVR");
 
-  QString size = QString("(%1x%2)").arg(file->getNumRows() + 1).arg(file->getNumCols() + 1);
+  auto size = QString("(%1x%2)").arg(file->getNumRows() + 1).arg(file->getNumCols() + 1);
 
-  sizeLabel->setText(size);
+  sizeLabel_->setText(size);
 
-  QString pos = QString("(%1,%2)").arg(file->getRow() + 1).arg(file->getCol() + 1);
+  auto pos = QString("(%1,%2)").arg(file->getRow() + 1).arg(file->getCol() + 1);
 
-  positionLabel->setText(pos);
+  positionLabel_->setText(pos);
 
   bool changed = file->getChanged();
 
@@ -586,8 +584,8 @@ updateStatus()
     lastChanged = changed;
   }
 
-  undoItem->getAction()->setEnabled(file->canUndo());
-  redoItem->getAction()->setEnabled(file->canRedo());
+  undoItem_->getAction()->setEnabled(file->canUndo());
+  redoItem_->getAction()->setEnabled(file->canRedo());
 }
 
 void
@@ -601,7 +599,7 @@ void
 CQEditTest::
 errorMessage(const QString &msg)
 {
-  messageLabel->setText(msg);
+  messageLabel_->setText(msg);
 }
 
 void

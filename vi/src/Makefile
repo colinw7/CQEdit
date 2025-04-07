@@ -51,10 +51,20 @@ OBJECTS_DIR   = ../obj/
 
 SOURCES       = CQVi.cpp \
 		CVi.cpp \
-		CEd.cpp .moc/moc_CQVi.cpp
+		CEd.cpp \
+		CSyntaxC.cpp \
+		CSyntax.cpp \
+		CSyntaxCPP.cpp \
+		CSyntaxPython.cpp \
+		CSyntaxVHDL.cpp .moc/moc_CQVi.cpp
 OBJECTS       = ../obj/CQVi.o \
 		../obj/CVi.o \
 		../obj/CEd.o \
+		../obj/CSyntaxC.o \
+		../obj/CSyntax.o \
+		../obj/CSyntaxCPP.o \
+		../obj/CSyntaxPython.o \
+		../obj/CSyntaxVHDL.o \
 		../obj/moc_CQVi.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -153,7 +163,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../include/CVi.h \
 		../include/CEd.h CQVi.cpp \
 		CVi.cpp \
-		CEd.cpp
+		CEd.cpp \
+		CSyntaxC.cpp \
+		CSyntax.cpp \
+		CSyntaxCPP.cpp \
+		CSyntaxPython.cpp \
+		CSyntaxVHDL.cpp
 QMAKE_TARGET  = CQVi
 DESTDIR       = ../lib/
 TARGET        = libCQVi.a
@@ -375,7 +390,7 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../include/CQVi.h ../include/CVi.h ../include/CEd.h $(DISTDIR)/
-	$(COPY_FILE) --parents CQVi.cpp CVi.cpp CEd.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents CQVi.cpp CVi.cpp CEd.cpp CSyntaxC.cpp CSyntax.cpp CSyntaxCPP.cpp CSyntaxPython.cpp CSyntaxVHDL.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -414,6 +429,7 @@ compiler_moc_header_clean:
 		../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
 		../../../CRegExp/include/CRegExp.h \
+		../include/CSyntax.h \
 		.moc/moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/colinw/git/CQEdit/vi/src/.moc/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/colinw/git/CQEdit/vi/src -I/home/colinw/git/CQEdit/vi/src -I/home/colinw/git/CQEdit/vi/include -I/home/colinw/git/CQUtil/include -I/home/colinw/git/CCommand/include -I/home/colinw/git/CUndo/include -I/home/colinw/git/CUtil/include -I/home/colinw/git/CFile/include -I/home/colinw/git/CStrUtil/include -I/home/colinw/git/CRegExp/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../include/CQVi.h -o .moc/moc_CQVi.cpp
@@ -438,15 +454,20 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 		../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
 		../../../CRegExp/include/CRegExp.h \
+		../include/CSyntax.h \
 		../../../CQUtil/include/CQUtil.h \
 		../../../CQUtil/include/CQUtilMeta.h \
-		../../../CUtil/include/CKeyType.h
+		../../../CUtil/include/CKeyType.h \
+		../include/CSyntaxC.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CQVi.o CQVi.cpp
 
 ../obj/CVi.o: CVi.cpp ../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
 		../../../CRegExp/include/CRegExp.h \
+		../include/CSyntax.h \
 		../include/CEd.h \
+		../include/CSyntaxC.h \
+		../include/CSyntaxCPP.h \
 		../../../CFile/include/CFile.h \
 		../../../CFile/include/CFileBase.h \
 		../../../CFile/include/CFileType.h \
@@ -457,6 +478,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 		../../../CRegExp/include/CRegExp.h \
 		../include/CVi.h \
 		../../../CUndo/include/CUndo.h \
+		../include/CSyntax.h \
 		../../../CFile/include/CFile.h \
 		../../../CFile/include/CFileBase.h \
 		../../../CFile/include/CFileType.h \
@@ -464,6 +486,41 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 		../../../CStrUtil/include/CStrParse.h \
 		../../../CCommand/include/CCommand.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CEd.o CEd.cpp
+
+../obj/CSyntaxC.o: CSyntaxC.cpp ../include/CSyntaxC.h \
+		../include/CSyntax.h \
+		../../../CFile/include/CFile.h \
+		../../../CFile/include/CFileBase.h \
+		../../../CFile/include/CFileType.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CSyntaxC.o CSyntaxC.cpp
+
+../obj/CSyntax.o: CSyntax.cpp ../include/CSyntaxC.h \
+		../include/CSyntax.h \
+		../../../CFile/include/CFile.h \
+		../../../CFile/include/CFileBase.h \
+		../../../CFile/include/CFileType.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CSyntax.o CSyntax.cpp
+
+../obj/CSyntaxCPP.o: CSyntaxCPP.cpp ../include/CSyntaxCPP.h \
+		../include/CSyntax.h \
+		../../../CFile/include/CFile.h \
+		../../../CFile/include/CFileBase.h \
+		../../../CFile/include/CFileType.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CSyntaxCPP.o CSyntaxCPP.cpp
+
+../obj/CSyntaxPython.o: CSyntaxPython.cpp ../include/CSyntaxPython.h \
+		../include/CSyntax.h \
+		../../../CFile/include/CFile.h \
+		../../../CFile/include/CFileBase.h \
+		../../../CFile/include/CFileType.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CSyntaxPython.o CSyntaxPython.cpp
+
+../obj/CSyntaxVHDL.o: CSyntaxVHDL.cpp ../include/CSyntaxVHDL.h \
+		../include/CSyntax.h \
+		../../../CFile/include/CFile.h \
+		../../../CFile/include/CFileBase.h \
+		../../../CFile/include/CFileType.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/CSyntaxVHDL.o CSyntaxVHDL.cpp
 
 ../obj/moc_CQVi.o: .moc/moc_CQVi.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../obj/moc_CQVi.o .moc/moc_CQVi.cpp
