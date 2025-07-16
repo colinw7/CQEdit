@@ -5,7 +5,7 @@
 
 #include <vector>
 
-class CQTabWidget;
+class CQTabSplit;
 class CQMenu;
 class CQMenuItem;
 class CQToolBar;
@@ -26,7 +26,7 @@ class CQViTest : public CQMainWindow {
   CQViTest();
  ~CQViTest();
 
-  void addFile(const std::string &filename);
+  void addFile(const QString &filename);
 
   QSize sizeHint() const override;
 
@@ -36,6 +36,8 @@ class CQViTest : public CQMainWindow {
   void createStatusBar() override;
 
  private Q_SLOTS:
+  void tabIndexChanged(int ind);
+
   void updateState();
 
   void newFileSlot();
@@ -60,8 +62,8 @@ class CQViTest : public CQMainWindow {
  private:
   using Edits = std::vector<CQVi::Widget *>;
 
-  CQTabWidget*  fileTab_ { nullptr };
-  Edits         edits_;
+  CQTabSplit* fileTab_ { nullptr };
+  Edits       edits_;
 
   CQFontChooser  *font_  { nullptr };
   CQColorChooser *color_ { nullptr };

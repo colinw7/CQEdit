@@ -5,7 +5,7 @@
 #include <CSyntaxCPP.h>
 
 #include <CQApp.h>
-#include <CQTabWidget.h>
+#include <CQTabSplit.h>
 #include <CQMenu.h>
 #include <CQToolBar.h>
 #include <CQFontChooser.h>
@@ -58,18 +58,25 @@ CQViTest::
 CQViTest() :
  CQMainWindow("CQVi")
 {
+  setObjectName("test");
+
   auto *frame = new QWidget;
+
+  frame->setObjectName("frame");
 
   auto *vlayout = new QVBoxLayout(frame);
   vlayout->setMargin(0); vlayout->setSpacing(0);
 
   //---
 
-  fileTab_ = new CQTabWidget;
+  fileTab_ = new CQTabSplit;
 
-  fileTab_->setTabPosition(QTabWidget::North);
-
+//fileTab_->setTabPosition(QTabWidget::North);
+  fileTab_->setState(CQTabSplit::State::TAB);
+  fileTab_->setGrouped(true);
   fileTab_->setFocusPolicy(Qt::NoFocus);
+
+  connect(fileTab_, SIGNAL(currentIndexChanged(int)), this, SLOT(tabIndexChanged(int)));
 
   vlayout->addWidget(fileTab_);
 
@@ -92,7 +99,7 @@ CQViTest::
 
 void
 CQViTest::
-addFile(const std::string &filename)
+addFile(const QString &filename)
 {
   auto *edit = new CQVi::Widget;
 
@@ -102,9 +109,9 @@ addFile(const std::string &filename)
 
   edit->init();
 
-  edit->loadFile(filename);
+  edit->loadFile(filename.toStdString());
 
-  fileTab_->addTab(edit, QString::fromStdString(filename));
+  fileTab_->addWidget(edit, filename);
 
   edits_.push_back(edit);
 
@@ -301,6 +308,7 @@ createToolBars()
 
   font_->setFont(CQVi::Mgr::instance()->font());
   font_->setStyle(CQFontChooser::FontButton);
+  font_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   connect(font_, SIGNAL(fontChanged(const QFont &)), this, SLOT(setFont(const QFont &)));
 
@@ -309,6 +317,7 @@ createToolBars()
   color_ = new CQColorChooser(this);
 
   color_->setStyles(CQColorChooser::ColorButton);
+  color_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   connect(color_, SIGNAL(colorApplied(const QColor &)),
           this, SLOT(setSelectionColor(const QColor &)));
@@ -375,6 +384,16 @@ createStatusBar()
 
 void
 CQViTest::
+tabIndexChanged(int ind)
+{
+  auto *w = fileTab_->widget(ind);
+
+  if (w)
+    w->setFocus();
+}
+
+void
+CQViTest::
 updateState()
 {
   auto *edit = currentEdit();
@@ -391,6 +410,8 @@ updateState()
     text = "VLINE";
   else if (edit->app()->getVisualMode() == CVi::App::VisualMode::BLOCK)
     text = "VBLOCK";
+  else if (edit->app()->getCmdLineMode())
+    text = "COMMAND";
 
   insButton_->setText(text);
 
@@ -418,7 +439,8 @@ addFileSlot()
   QString fileName =
     QFileDialog::getOpenFileName(this, "Open File", "", "Text Files (*.txt *.*)");
 
-  addFile(fileName.toStdString());
+  if (fileName != "")
+    addFile(fileName);
 }
 
 void
@@ -469,7 +491,7 @@ closeFileSlot()
   int ind = fileTab_->currentIndex();
 
   if (ind >= 0)
-    fileTab_->removeTab(ind);
+    fileTab_->removeWidget(ind);
 }
 
 void

@@ -423,6 +423,10 @@ processCommandChar(const KeyData &keyData)
           iface_->scrollBottom();
         else if (key == 't')
           iface_->scrollTop();
+        else if (key == 'f') // fold
+          error("Unimplemented");
+        else
+          error("Unimplemented");
 
         break;
       }
@@ -434,6 +438,8 @@ processCommandChar(const KeyData &keyData)
 
           iface_->quit();
         }
+        else
+          error("Unimplemented");
 
         break;
       }
@@ -2644,6 +2650,8 @@ setCmdLineMode(bool cmdLineMode, const std::string &str)
 
     clearSelection();
   }
+
+  iface_->stateChanged();
 }
 
 bool
@@ -2899,9 +2907,13 @@ void
 App::
 deleteAllLines()
 {
+  startGroup();
+
   subDeleteAllLines();
 
   addLine("");
+
+  endGroup();
 }
 
 void
@@ -2925,7 +2937,10 @@ void
 App::
 deleteLine(uint line_num)
 {
-  if (! CASSERT(line_num < getNumLines(), "Invalid Line Num")) return;
+  if (! CASSERT(line_num < getNumLines(), "Invalid Line Num"))
+    return;
+
+  startGroup();
 
   yankLines('\0', line_num, 1);
 
@@ -2933,6 +2948,8 @@ deleteLine(uint line_num)
 
   if (isLinesEmpty())
     addLine("");
+
+  endGroup();
 }
 
 void
@@ -6002,12 +6019,16 @@ addLine(uint line_num, Line *line)
     line->setChanged(true);
   }
   else {
-    lines_.push_back(lines_[lines_.size() - 1]);
+    if (! lines_.empty()) {
+      lines_.push_back(lines_[lines_.size() - 1]);
 
-    for (int i = int(lines_.size()) - 2; i >= int(line_num); --i)
-      lines_[i + 1] = lines_[i];
+      for (int i = int(lines_.size()) - 2; i >= int(line_num); --i)
+        lines_[i + 1] = lines_[i];
 
-    lines_[line_num] = line;
+      lines_[line_num] = line;
+    }
+    else
+      lines_.push_back(line);
 
     for (uint i = line_num; i < lines_.size(); ++i)
       lines_[i]->setChanged(true);
